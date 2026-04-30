@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Contrast ratios verified against WCAG 2.1 AA (4.5:1 normal, 3:1 large/bold).
+ * Background light: #FFFBF0 (L≈0.966) | Background dark: #06030F (L≈0.001)
+ * --c-faint is ONLY for decorative/non-informational elements (dots, dividers, rules).
+ */
+
+/* ── Light mode (default) ──────────────────────────────────────── */
+:root {
+  --c-bg:            #FFFBF0;
+  --c-bg-alt:        #FFF5E3;
+  --c-text:          #1A0A3C;   /* 17.7:1 ✓ */
+  --c-muted:         #5B4B7A;   /*  7.3:1 ✓ — body, descriptions */
+  --c-subtle:        #6D5E88;   /*  5.3:1 ✓ — captions, meta, labels */
+  --c-faint:         #8E7BA8;   /*  3.4:1   — decorative only */
+  --c-border:        rgba(26, 10, 60, 0.10);
+  --c-border-md:     rgba(26, 10, 60, 0.18);
+  --c-glass-bg:      rgba(255, 255, 255, 0.82);
+  --c-glass-border:  rgba(26, 10, 60, 0.10);
+  --c-glass-shadow:  0 2px 24px rgba(26, 10, 60, 0.07), 0 1px 4px rgba(26, 10, 60, 0.04);
+  --c-input-bg:      rgba(26, 10, 60, 0.05);
+  --c-scrollbar:     #1A1230;
+
+  /* Logo gradient stops — never change the gradient string, only these values */
+  --logo-c1: #FF6B35;
+  --logo-c2: #7C3AED;
+  --logo-c3: #7C3AED;  /* same as c2 = effectively 2-stop in light mode */
+
+  /* Accessible accent text colors — dark enough for light bg */
+  --c-accent-yellow: #8A6200;   /*  5.4:1 ✓ */
+  --c-accent-coral:  #B83E18;   /*  5.5:1 ✓ */
+  --c-accent-cyan:   #006A82;   /*  6.1:1 ✓ */
+  --c-accent-purple: #6D28D9;   /*  6.9:1 ✓ */
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────── */
+html.dark {
+  --c-bg:            #06030F;
+  --c-bg-alt:        #0F0A1E;
+  --c-text:          #F8F4FF;   /* 19.1:1 ✓ */
+  --c-muted:         #C5B7D8;   /* 11.1:1 ✓ */
+  --c-subtle:        #9B8CB8;   /*  7.1:1 ✓ */
+  --c-faint:         #614E7B;   /*  3.0:1   — decorative only */
+  --c-border:        rgba(255, 255, 255, 0.10);
+  --c-border-md:     rgba(255, 255, 255, 0.18);
+  --c-glass-bg:      rgba(255, 255, 255, 0.05);
+  --c-glass-border:  rgba(255, 255, 255, 0.10);
+  --c-glass-shadow:  none;
+  --c-input-bg:      rgba(255, 255, 255, 0.06);
+  --c-scrollbar:     #FFC530;
+
+  /* Logo gradient stops */
+  --logo-c1: #FFC530;
+  --logo-c2: #FF6B35;
+  --logo-c3: #A855F7;
+
+  /* Accent text colors — vivid brand colors work on dark bg */
+  --c-accent-yellow: #FFC530;   /* 13.3:1 ✓ */
+  --c-accent-coral:  #FF8055;   /*  8.3:1 ✓ */
+  --c-accent-cyan:   #22C7E5;   /* 10.4:1 ✓ */
+  --c-accent-purple: #C084FC;   /*  8.0:1 ✓ */
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────── */
+@layer utilities {
+  /* Light mode: dark amber→dark coral (accessible on cream)
+     Dark mode:  vivid yellow→vivid coral */
+  .text-gradient-yellow {
+    background: linear-gradient(135deg, #FF6B35 0%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  html.dark .text-gradient-yellow {
+    background: linear-gradient(135deg, #FFC530 0%, #FF6B35 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #6D28D9 0%, #006A82 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  html.dark .text-gradient-purple {
+    background: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Fixed gradient string — only CSS vars inside change, never the property itself.
+     This prevents the background-clip:text repaint bug on theme toggle. */
+  .logo-gradient {
+    background: linear-gradient(135deg, var(--logo-c1) 0%, var(--logo-c2) 60%, var(--logo-c3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: var(--c-glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--c-glass-shadow);
+  }
+
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--c-border-md), transparent);
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--c-bg); }
+::-webkit-scrollbar-thumb { background: var(--c-scrollbar); border-radius: 3px; }
