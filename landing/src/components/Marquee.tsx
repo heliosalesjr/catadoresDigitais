@@ -3,9 +3,9 @@ const tags = [
   'Desenvolvimento Web',
   'Marketing Digital',
   'Inteligência Artificial',
-  'Project-Based Learning',
+  'Letramento Digital',
   'Portfólio Real',
-  'Formação Gratuita',
+  
   'Cidade Estrutural',
   'Tecnologia para Todos',
   'Transformação de Trajetórias',
