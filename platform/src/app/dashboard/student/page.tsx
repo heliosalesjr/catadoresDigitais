@@ -3,9 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { signOut } from '@/lib/auth-helpers'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/context/ThemeContext'
+import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi2'
 
 export default function StudentDashboard() {
   const { user, loading } = useAuth()
+  const { isDark, toggle } = useTheme()
   const router = useRouter()
 
   async function handleSignOut() {
@@ -16,39 +19,51 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400">Carregando...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--c-bg)' }}>
+        <p style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-8" style={{ background: 'var(--c-bg)' }}>
       <div className="max-w-4xl mx-auto">
         <header className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-white">Meu Painel</h1>
-            <p className="text-gray-400 mt-1">Catadores Digitais</p>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--c-text)' }}>Meu Painel</h1>
+            <p className="mt-1 text-sm" style={{ color: 'var(--c-subtle)' }}>Catadores Digitais</p>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggle}
+              aria-label="Alternar tema"
+              className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
+            </button>
             {user?.photoURL && (
               <img src={user.photoURL} alt={user.name} className="w-9 h-9 rounded-full" />
             )}
             <div className="flex flex-col items-end">
-              <span className="text-white text-sm font-medium">{user?.name}</span>
-              <span className="text-gray-500 text-xs">{user?.email}</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>{user?.name}</span>
+              <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>{user?.email}</span>
             </div>
             <button
               onClick={handleSignOut}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
+              className="text-sm transition-colors"
+              style={{ color: 'var(--c-muted)' }}
             >
               Sair
             </button>
           </div>
         </header>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <p className="text-gray-400 text-sm">Conteúdo dos cursos em breve.</p>
+        <div
+          className="rounded-2xl p-6 border"
+          style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+        >
+          <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>Conteúdo dos cursos em breve.</p>
         </div>
       </div>
     </main>

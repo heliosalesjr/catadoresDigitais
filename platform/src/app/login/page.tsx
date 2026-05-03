@@ -36,11 +36,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="w-full max-w-sm p-8 rounded-2xl bg-gray-900 border border-gray-800 flex flex-col items-center gap-6">
+    <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--c-bg)' }}>
+      <div className="w-full max-w-sm p-8 rounded-2xl flex flex-col items-center gap-6 border" style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}>
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold text-white">Catadores Digitais</h1>
-          <p className="text-gray-400 text-sm">Faça login para acessar a plataforma</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>Catadores Digitais</h1>
+          <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>Faça login para acessar a plataforma</p>
         </div>
 
         {error && (
