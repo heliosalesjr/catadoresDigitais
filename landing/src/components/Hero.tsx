@@ -183,13 +183,15 @@ export function Hero() {
         transition={{ delay: 1.8 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
-        <motion.div
+        <motion.button
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-8 h-8 rounded-full border border-[var(--c-border-md)] flex items-center justify-center"
+          className="w-8 h-8 rounded-full border border-[var(--c-border-md)] flex items-center justify-center cursor-pointer hover:border-brand-yellow/50 hover:text-brand-yellow transition-colors duration-200"
+          onClick={() => document.getElementById('cursos')?.scrollIntoView({ behavior: 'smooth' })}
+          aria-label="Ver as formações"
         >
           <HiArrowDown className="w-4 h-4 text-[var(--c-subtle)]" />
-        </motion.div>
+        </motion.button>
       </motion.div>
     </section>
   );
