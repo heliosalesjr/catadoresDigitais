@@ -67,14 +67,13 @@ export function Navbar() {
             >
               Em breve
             </a>
-            <button
-              disabled
-              title="Login disponível em breve"
-              className="flex items-center gap-2 font-dm font-medium text-sm text-[var(--c-faint)] border border-[var(--c-border)] px-4 py-2 rounded-full cursor-not-allowed"
+            <a
+              href={`${import.meta.env.VITE_PLATFORM_URL}/login`}
+              className="flex items-center gap-2 font-dm font-medium text-sm text-[var(--c-muted)] border border-[var(--c-border)] hover:border-brand-yellow/40 hover:text-brand-yellow px-4 py-2 rounded-full transition-colors duration-200"
             >
               <HiArrowRightOnRectangle className="w-4 h-4" />
               Login
-            </button>
+            </a>
           </div>
 
           {/* Mobile: theme toggle + hamburger */}
@@ -126,13 +125,14 @@ export function Navbar() {
                 >
                   Em breve — Inscrições
                 </a>
-                <button
-                  disabled
-                  className="font-dm font-medium text-[var(--c-faint)] border border-[var(--c-border)] py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                <a
+                  href={`${import.meta.env.VITE_PLATFORM_URL}/login`}
+                  onClick={() => setMenuOpen(false)}
+                  className="font-dm font-medium text-[var(--c-muted)] border border-[var(--c-border)] py-3 rounded-xl flex items-center justify-center gap-2"
                 >
                   <HiArrowRightOnRectangle className="w-4 h-4" />
                   Login
-                </button>
+                </a>
               </div>
             </nav>
           </motion.div>
