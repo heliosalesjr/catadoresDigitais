@@ -6,7 +6,8 @@ import { signOut } from '@/lib/auth-helpers'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
 import { useTheme } from '@/context/ThemeContext'
-import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi2'
+import { HiOutlineSun, HiOutlineMoon, HiAcademicCap, HiChevronRight } from 'react-icons/hi2'
+import Link from 'next/link'
 import type { UserProfile } from '@/types'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -98,6 +99,26 @@ export default function AdminDashboard() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Quick access */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <Link
+            href="/dashboard/admin/turmas"
+            className="rounded-2xl border p-5 flex items-center justify-between group transition-colors"
+            style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FFC53018' }}>
+                <HiAcademicCap className="w-5 h-5" style={{ color: '#FFC530' }} />
+              </div>
+              <div>
+                <p className="font-semibold text-sm" style={{ color: 'var(--c-text)' }}>Turmas</p>
+                <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>Criar e gerenciar turmas</p>
+              </div>
+            </div>
+            <HiChevronRight className="w-4 h-4" style={{ color: 'var(--c-faint)' }} />
+          </Link>
         </div>
 
         {/* Users list */}
