@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const doc = await ref.get()
   if (!doc.exists) return Response.json({ error: 'Aula não encontrada.' }, { status: 404 })
 
-  const allowed = ['title', 'description', 'teacherUid', 'teacherName',
+  const allowed = ['title', 'description', 'teachers',
                    'driveLinks', 'date', 'startTime', 'endTime', 'attendance']
   const update: Record<string, unknown> = {}
   for (const key of allowed) {

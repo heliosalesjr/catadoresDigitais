@@ -28,12 +28,16 @@ export interface DriveLink {
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | null
 
+export interface AulaTeacher {
+  uid: string
+  name: string
+}
+
 export interface Aula {
   id: string
   title: string
   description: string
-  teacherUid: string
-  teacherName: string
+  teachers: AulaTeacher[]
   driveLinks: DriveLink[]
   date: string       // "YYYY-MM-DD"
   startTime: string  // "19:00"

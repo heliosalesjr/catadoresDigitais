@@ -62,8 +62,7 @@ export async function POST(
     .add({
       title: body.title.trim(),
       description: body.description?.trim() ?? '',
-      teacherUid: body.teacherUid ?? auth.uid,
-      teacherName: body.teacherName?.trim() ?? '',
+      teachers: body.teachers ?? [],
       driveLinks: body.driveLinks ?? [],
       date: body.date,
       startTime: body.startTime,

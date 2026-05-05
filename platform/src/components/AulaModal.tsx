@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   HiXMark, HiPencilSquare, HiTrash, HiPlus, HiArrowTopRightOnSquare,
-  HiCheckCircle, HiXCircle, HiClock,
 } from 'react-icons/hi2'
-import type { Aula, DriveLink, AttendanceStatus } from '@/types'
+import type { Aula, AulaTeacher, DriveLink, AttendanceStatus } from '@/types'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -43,11 +42,17 @@ interface FormState {
   date: string
   title: string
   description: string
-  teacherName: string
+  teachers: AulaTeacher[]
   startTime: string
   endTime: string
   driveLinks: DriveLink[]
 }
+
+const inputStyle = {
+  background: 'var(--c-bg)',
+  borderColor: 'var(--c-border-md)',
+  color: 'var(--c-text)',
+} as const
 
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
@@ -64,7 +69,7 @@ export function AulaModal({
     date: aula?.date ?? date,
     title: aula?.title ?? '',
     description: aula?.description ?? '',
-    teacherName: aula?.teacherName ?? '',
+    teachers: aula?.teachers ?? [],
     startTime: aula?.startTime ?? '19:00',
     endTime: aula?.endTime ?? '22:00',
     driveLinks: aula?.driveLinks ?? [],
@@ -74,40 +79,55 @@ export function AulaModal({
     aula?.attendance ?? {}
   )
 
-  const canMarkAttendance = canEdit
+  const [availableTeachers, setAvailableTeachers] = useState<AulaTeacher[]>([])
+
+  useEffect(() => {
+    if (mode !== 'edit') return
+    fetch('/api/users/teachers')
+      .then((r) => r.ok ? r.json() : [])
+      .then(setAvailableTeachers)
+      .catch(() => {})
+  }, [mode])
 
   function setField<K extends keyof FormState>(k: K, v: FormState[K]) {
     setForm((f) => ({ ...f, [k]: v }))
   }
 
+  function addTeacher(uid: string) {
+    const t = availableTeachers.find((t) => t.uid === uid)
+    if (!t || form.teachers.find((ft) => ft.uid === uid)) return
+    setField('teachers', [...form.teachers, { uid: t.uid, name: t.name }])
+  }
+
+  function removeTeacher(uid: string) {
+    setField('teachers', form.teachers.filter((t) => t.uid !== uid))
+  }
+
   function addLink() {
-    setForm((f) => ({ ...f, driveLinks: [...f.driveLinks, { label: '', url: '' }] }))
+    setField('driveLinks', [...form.driveLinks, { label: '', url: '' }])
   }
 
   function updateLink(i: number, field: keyof DriveLink, value: string) {
-    setForm((f) => {
-      const links = [...f.driveLinks]
-      links[i] = { ...links[i], [field]: value }
-      return { ...f, driveLinks: links }
-    })
+    const links = [...form.driveLinks]
+    links[i] = { ...links[i], [field]: value }
+    setField('driveLinks', links)
   }
 
   function removeLink(i: number) {
-    setForm((f) => ({ ...f, driveLinks: f.driveLinks.filter((_, j) => j !== i) }))
+    setField('driveLinks', form.driveLinks.filter((_, j) => j !== i))
   }
 
   async function handleSave() {
     if (!form.title.trim()) return setError('O título é obrigatório.')
-    if (!form.startTime || !form.endTime) return setError('Informe o horário.')
-    setSaving(true)
-    setError(null)
-
     if (!form.date) return setError('Selecione uma data.')
+    if (!form.startTime || !form.endTime) return setError('Informe o horário.')
+    setError(null)
+    setSaving(true)
 
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      teacherName: form.teacherName.trim(),
+      teachers: form.teachers,
       startTime: form.startTime,
       endTime: form.endTime,
       driveLinks: form.driveLinks.filter((l) => l.url.trim()),
@@ -151,6 +171,10 @@ export function AulaModal({
       body: JSON.stringify({ attendance: updated }),
     })
   }
+
+  const unselectedTeachers = availableTeachers.filter(
+    (t) => !form.teachers.find((ft) => ft.uid === t.uid)
+  )
 
   return (
     <motion.div
@@ -200,11 +224,7 @@ export function AulaModal({
                 max={turmaEndDate}
                 onChange={(e) => setField('date', e.target.value)}
                 className="mt-1.5 rounded-lg px-2 py-1 text-xs border outline-none"
-                style={{
-                  background: 'var(--c-bg)',
-                  borderColor: 'var(--c-border-md)',
-                  color: 'var(--c-subtle)',
-                }}
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
               />
             ) : (
               <p className="text-xs mt-1 capitalize" style={{ color: 'var(--c-subtle)' }}>
@@ -248,55 +268,109 @@ export function AulaModal({
         {/* Body */}
         <div className="flex flex-col gap-5 p-5 overflow-y-auto">
 
-          {/* Time + Teacher row */}
-          <div className="flex flex-col gap-3">
+          {/* Time */}
+          <div className="flex gap-3">
             {mode === 'edit' ? (
               <>
-                <div className="flex gap-3">
-                  <div className="flex flex-col gap-1 flex-1">
-                    <label className="text-xs" style={{ color: 'var(--c-subtle)' }}>Início</label>
-                    <input
-                      type="time"
-                      value={form.startTime}
-                      onChange={(e) => setField('startTime', e.target.value)}
-                      className="rounded-xl px-3 py-2 text-sm border outline-none"
-                      style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 flex-1">
-                    <label className="text-xs" style={{ color: 'var(--c-subtle)' }}>Término</label>
-                    <input
-                      type="time"
-                      value={form.endTime}
-                      onChange={(e) => setField('endTime', e.target.value)}
-                      className="rounded-xl px-3 py-2 text-sm border outline-none"
-                      style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs" style={{ color: 'var(--c-subtle)' }}>Professor(a)</label>
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-xs" style={{ color: 'var(--c-subtle)' }}>Início</label>
                   <input
-                    type="text"
-                    value={form.teacherName}
-                    onChange={(e) => setField('teacherName', e.target.value)}
-                    placeholder="Nome do professor"
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => setField('startTime', e.target.value)}
                     className="rounded-xl px-3 py-2 text-sm border outline-none"
-                    style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                    style={inputStyle}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-xs" style={{ color: 'var(--c-subtle)' }}>Término</label>
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setField('endTime', e.target.value)}
+                    className="rounded-xl px-3 py-2 text-sm border outline-none"
+                    style={inputStyle}
                   />
                 </div>
               </>
             ) : (
-              <div className="flex flex-col gap-1">
-                {aula?.teacherName && (
-                  <p className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>
-                    Prof. {aula.teacherName}
+              <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                {aula?.startTime} – {aula?.endTime}
+              </p>
+            )}
+          </div>
+
+          {/* Teachers */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+              Professores
+            </p>
+
+            {mode === 'edit' ? (
+              <>
+                {/* Chips */}
+                {form.teachers.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {form.teachers.map((t) => (
+                      <span
+                        key={t.uid}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                        style={{
+                          borderColor: turmaIconColor,
+                          color: turmaIconColor,
+                          background: `${turmaIconColor}12`,
+                        }}
+                      >
+                        {t.name}
+                        <button
+                          type="button"
+                          onClick={() => removeTeacher(t.uid)}
+                          className="opacity-70 hover:opacity-100"
+                        >
+                          <HiXMark className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Dropdown */}
+                {unselectedTeachers.length > 0 && (
+                  <select
+                    value=""
+                    onChange={(e) => { addTeacher(e.target.value); e.target.value = '' }}
+                    className="rounded-xl px-3 py-2 text-sm border outline-none"
+                    style={inputStyle}
+                  >
+                    <option value="">Adicionar professor...</option>
+                    {unselectedTeachers.map((t) => (
+                      <option key={t.uid} value={t.uid}>{t.name}</option>
+                    ))}
+                  </select>
+                )}
+
+                {availableTeachers.length === 0 && (
+                  <p className="text-xs" style={{ color: 'var(--c-faint)' }}>
+                    Nenhum professor cadastrado na plataforma.
                   </p>
                 )}
-                <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
-                  {aula?.startTime} – {aula?.endTime}
-                </p>
-              </div>
+              </>
+            ) : (
+              aula?.teachers && aula.teachers.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {aula.teachers.map((t) => (
+                    <span
+                      key={t.uid}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium"
+                      style={{ background: `${turmaIconColor}12`, color: turmaIconColor }}
+                    >
+                      {t.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--c-faint)' }}>Sem professor atribuído.</p>
+              )
             )}
           </div>
 
@@ -312,11 +386,11 @@ export function AulaModal({
                 placeholder="Sobre o que é esta aula..."
                 rows={3}
                 className="rounded-xl px-3 py-2.5 text-sm border outline-none resize-none"
-                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                style={inputStyle}
               />
             ) : (
-              <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
-                {aula?.description || <span style={{ color: 'var(--c-faint)' }}>Sem descrição.</span>}
+              <p className="text-sm whitespace-pre-wrap" style={{ color: aula?.description ? 'var(--c-text)' : 'var(--c-faint)' }}>
+                {aula?.description || 'Sem descrição.'}
               </p>
             )}
           </div>
@@ -331,7 +405,7 @@ export function AulaModal({
                 <button
                   type="button"
                   onClick={addLink}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-colors"
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border"
                   style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
                 >
                   <HiPlus className="w-3 h-3" /> Adicionar
@@ -352,7 +426,7 @@ export function AulaModal({
                         onChange={(e) => updateLink(i, 'label', e.target.value)}
                         placeholder="Nome do arquivo"
                         className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
-                        style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                        style={inputStyle}
                       />
                       <input
                         type="url"
@@ -360,7 +434,7 @@ export function AulaModal({
                         onChange={(e) => updateLink(i, 'url', e.target.value)}
                         placeholder="URL do Drive"
                         className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
-                        style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                        style={inputStyle}
                       />
                       <button
                         type="button"
@@ -398,16 +472,13 @@ export function AulaModal({
             )}
           </div>
 
-          {/* Attendance — only in view mode and when aula exists */}
+          {/* Attendance */}
           {mode === 'view' && aula && students.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
                 Chamada
               </p>
-              <div
-                className="rounded-xl overflow-hidden border"
-                style={{ borderColor: 'var(--c-border)' }}
-              >
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--c-border)' }}>
                 {students.map((email, i) => {
                   const status = attendance[email] ?? null
                   return (
@@ -426,8 +497,8 @@ export function AulaModal({
                           return (
                             <button
                               key={s}
-                              onClick={() => canMarkAttendance && handleAttendance(email, s)}
-                              disabled={!canMarkAttendance}
+                              onClick={() => canEdit && handleAttendance(email, s)}
+                              disabled={!canEdit}
                               className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition-colors disabled:cursor-default"
                               style={{
                                 background: active ? cfg.bg : 'transparent',
