@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
 import { requireAuthAny } from '@/lib/require-auth-any'
+import type { Aula } from '@/types'
 
 export async function GET(
   _req: NextRequest,
@@ -20,11 +21,9 @@ export async function GET(
       .get()
 
     const aulas = snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
+      .map((d) => ({ id: d.id, ...(d.data() as Omit<Aula, 'id'>) }))
       .sort((a, b) =>
-        (`${a.date}T${a.startTime}` as string).localeCompare(
-          `${b.date}T${b.startTime}` as string
-        )
+        `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`)
       )
 
     return Response.json(aulas)

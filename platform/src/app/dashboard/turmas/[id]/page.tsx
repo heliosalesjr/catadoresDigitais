@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { TECH_ICONS } from '@/lib/icons'
-import { HiArrowLeft, HiCalendarDays, HiDocumentText, HiPencilSquare } from 'react-icons/hi2'
+import { HiArrowLeft, HiCalendarDays, HiPencilSquare } from 'react-icons/hi2'
 import { CalendarGrid } from '@/components/CalendarGrid'
-import type { Turma } from '@/types'
+import { ConteudoPanel } from '@/components/ConteudoPanel'
+import type { Turma, Aula } from '@/types'
 
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
@@ -35,13 +36,27 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
   const [turma, setTurma] = useState<Turma | null>(null)
   const [loading, setLoading] = useState(true)
   const [calendarOpen, setCalendarOpen] = useState(true)
+  const [aulas, setAulas] = useState<Aula[]>([])
+  const [selectedMonth, setSelectedMonth] = useState<Date | null>(null)
   const isMobile = useIsMobile()
 
   useEffect(() => {
     fetch(`/api/admin/turmas/${id}`)
       .then((r) => r.json())
-      .then((data: Turma) => { setTurma(data); setLoading(false) })
+      .then((data: Turma) => {
+        setTurma(data)
+        setLoading(false)
+        const [y, m] = data.startDate.split('-').map(Number)
+        setSelectedMonth(new Date(y, m - 1, 1))
+      })
   }, [id])
+
+  const fetchAulas = useCallback(async () => {
+    const res = await fetch(`/api/turmas/${id}/aulas`)
+    if (res.ok) setAulas(await res.json())
+  }, [id])
+
+  useEffect(() => { fetchAulas() }, [fetchAulas])
 
   if (loading) {
     return (
@@ -129,28 +144,21 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
         {/* Content panel */}
         <div
-          className="flex flex-col overflow-y-auto flex-1 min-w-0 min-h-0"
+          className="flex flex-col overflow-hidden flex-1 min-w-0 min-h-0"
           style={{
             borderRight: !isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
             borderBottom: isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
           }}
         >
-          <div
-            className="px-5 py-3 border-b flex items-center gap-2 flex-shrink-0"
-            style={{ borderColor: 'var(--c-border)' }}
-          >
-            <HiDocumentText className="w-4 h-4" style={{ color: 'var(--c-subtle)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Conteúdo</span>
-          </div>
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center flex flex-col items-center gap-3">
-              <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
-              <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Conteúdo em breve</p>
-              <p className="text-sm max-w-xs" style={{ color: 'var(--c-subtle)' }}>
-                O visualizador de PDFs e apresentações será adicionado aqui.
-              </p>
-            </div>
-          </div>
+          {selectedMonth && (
+            <ConteudoPanel
+              turma={turma}
+              aulas={aulas}
+              selectedMonth={selectedMonth}
+              canEdit={canEdit}
+              onRefresh={fetchAulas}
+            />
+          )}
         </div>
 
         {/* Calendar panel */}
@@ -168,10 +176,13 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
           {user && turma && (
             <CalendarGrid
               turma={turma}
+              aulas={aulas}
               canEdit={canEdit}
               currentUserUid={user.uid}
               isMobile={isMobile}
               onCollapse={() => setCalendarOpen(false)}
+              onRefresh={fetchAulas}
+              onMonthChange={setSelectedMonth}
             />
           )}
         </motion.div>

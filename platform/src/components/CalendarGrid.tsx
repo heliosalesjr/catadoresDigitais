@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiCalendarDays, HiChevronLeft, HiChevronRight, HiChevronDown, HiPlus,
@@ -49,13 +49,16 @@ function getDaysInGrid(month: Date): (Date | null)[] {
 
 interface Props {
   turma: Turma
+  aulas: Aula[]
   canEdit: boolean
   currentUserUid: string
   isMobile: boolean
   onCollapse: () => void
+  onRefresh: () => void
+  onMonthChange: (month: Date) => void
 }
 
-export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onCollapse }: Props) {
+export function CalendarGrid({ turma, aulas, canEdit, currentUserUid, isMobile, onCollapse, onRefresh, onMonthChange }: Props) {
   const startMonth = startOfMonth(parseLocalDate(turma.startDate))
   const endMonth = startOfMonth(parseLocalDate(turma.endDate))
   const totalMonths =
@@ -63,8 +66,6 @@ export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onColla
     (endMonth.getMonth() - startMonth.getMonth()) + 1
 
   const [currentMonth, setCurrentMonth] = useState<Date>(startMonth)
-  const [aulas, setAulas] = useState<Aula[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [selectedAula, setSelectedAula] = useState<Aula | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -77,25 +78,6 @@ export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onColla
   const canPrev = !isSameMonth(currentMonth, startMonth)
   const canNext = !isSameMonth(currentMonth, endMonth)
 
-  const fetchAulas = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/turmas/${turma.id}/aulas`)
-      if (res.ok) {
-        setAulas(await res.json())
-      } else {
-        const err = await res.json().catch(() => ({}))
-        console.error('[fetchAulas]', res.status, err)
-      }
-    } catch (err) {
-      console.error('[fetchAulas]', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [turma.id])
-
-  useEffect(() => { fetchAulas() }, [fetchAulas])
-
   // Group aulas by date
   const aulasByDate = aulas.reduce<Record<string, Aula[]>>((acc, a) => {
     ;(acc[a.date] ??= []).push(a)
@@ -103,13 +85,17 @@ export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onColla
   }, {})
 
   function prevMonth() {
+    const next = addMonths(currentMonth, -1)
     setMonthDir(-1)
-    setCurrentMonth((m) => addMonths(m, -1))
+    setCurrentMonth(next)
+    onMonthChange(next)
   }
 
   function nextMonth() {
+    const next = addMonths(currentMonth, 1)
     setMonthDir(1)
-    setCurrentMonth((m) => addMonths(m, 1))
+    setCurrentMonth(next)
+    onMonthChange(next)
   }
 
   function openModal(day: string, aula: Aula | null) {
@@ -296,7 +282,7 @@ export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onColla
           </motion.div>
         </AnimatePresence>
 
-        {!loading && aulas.length === 0 && (
+        {aulas.length === 0 && (
           <p className="text-center text-sm mt-6" style={{ color: 'var(--c-faint)' }}>
             {canEdit ? 'Clique em um dia ou em + para adicionar a primeira aula.' : 'Nenhuma aula cadastrada.'}
           </p>
@@ -317,7 +303,7 @@ export function CalendarGrid({ turma, canEdit, currentUserUid, isMobile, onColla
             canEdit={canEdit}
             currentUserUid={currentUserUid}
             onClose={() => setModalOpen(false)}
-            onSaved={() => { fetchAulas(); setModalOpen(false) }}
+            onSaved={() => { onRefresh(); setModalOpen(false) }}
           />
         )}
       </AnimatePresence>

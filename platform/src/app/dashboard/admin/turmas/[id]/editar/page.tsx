@@ -33,7 +33,6 @@ export default function EditarTurmaPage({ params }: { params: Promise<{ id: stri
         iconColor: turma.iconColor,
         startDate: turma.startDate,
         endDate: turma.endDate,
-        calendarId: turma.calendarId,
         students: turma.students,
       }}
     />
