@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IconPicker } from '@/components/IconPicker'
-import { useTheme } from '@/context/ThemeContext'
-import { HiOutlineSun, HiOutlineMoon, HiArrowLeft, HiXMark, HiPlus } from 'react-icons/hi2'
+import { HiArrowLeft, HiXMark, HiPlus } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 
 type FormData = Pick<Turma, 'name' | 'icon' | 'iconColor' | 'startDate' | 'endDate' | 'students'> & { calendarId?: string }
@@ -28,7 +27,6 @@ function toInputDate(d: Date): string {
 }
 
 export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
-  const { isDark, toggle } = useTheme()
   const router = useRouter()
 
   const [name, setName] = useState(initialData?.name ?? '')
@@ -112,18 +110,8 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
             >
               <HiArrowLeft className="w-4 h-4" />
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: 'var(--c-text)' }}>{title}</h1>
-              <p className="mt-1 text-sm" style={{ color: 'var(--c-subtle)' }}>Catadores Digitais</p>
-            </div>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--c-text)' }}>{title}</h1>
           </div>
-          <button
-            onClick={toggle}
-            className="w-9 h-9 rounded-full flex items-center justify-center border"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-          >
-            {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
-          </button>
         </header>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">

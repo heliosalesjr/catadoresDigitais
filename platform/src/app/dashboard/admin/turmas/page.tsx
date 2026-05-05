@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useTheme } from '@/context/ThemeContext'
 import { TECH_ICONS } from '@/lib/icons'
-import { HiOutlineSun, HiOutlineMoon, HiPlus, HiArrowLeft } from 'react-icons/hi2'
+import { HiPlus, HiArrowLeft } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 
 function fmt(iso: string) {
@@ -12,7 +11,6 @@ function fmt(iso: string) {
 }
 
 export default function TurmasPage() {
-  const { isDark, toggle } = useTheme()
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -23,9 +21,10 @@ export default function TurmasPage() {
   }, [])
 
   return (
-    <main className="min-h-screen p-8" style={{ background: 'var(--c-bg)' }}>
+    <main className="p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <header className="flex items-center justify-between mb-10">
+
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/admin"
@@ -34,29 +33,17 @@ export default function TurmasPage() {
             >
               <HiArrowLeft className="w-4 h-4" />
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: 'var(--c-text)' }}>Turmas</h1>
-              <p className="mt-1 text-sm" style={{ color: 'var(--c-subtle)' }}>Catadores Digitais</p>
-            </div>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>Turmas</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggle}
-              className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            >
-              {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
-            </button>
-            <Link
-              href="/dashboard/admin/turmas/nova"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
-              style={{ background: '#FFC530', color: '#1A0A3C' }}
-            >
-              <HiPlus className="w-4 h-4" />
-              Nova turma
-            </Link>
-          </div>
-        </header>
+          <Link
+            href="/dashboard/admin/turmas/nova"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: '#FFC530', color: '#1A0A3C' }}
+          >
+            <HiPlus className="w-4 h-4" />
+            Nova turma
+          </Link>
+        </div>
 
         {loading ? (
           <p style={{ color: 'var(--c-subtle)' }}>Carregando...</p>

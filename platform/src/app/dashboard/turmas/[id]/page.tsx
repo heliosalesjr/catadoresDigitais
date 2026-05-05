@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { TECH_ICONS } from '@/lib/icons'
 import {
-  HiOutlineSun, HiOutlineMoon, HiArrowLeft,
+  HiArrowLeft,
   HiChevronLeft, HiChevronRight, HiChevronDown,
   HiCalendarDays, HiDocumentText, HiPencilSquare,
 } from 'react-icons/hi2'
@@ -56,7 +56,7 @@ const CALENDAR_MOBILE_H = 400
 
 export default function TurmaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { isDark, toggle } = useTheme()
+  const { isDark } = useTheme()
   const { user } = useAuth()
   const [turma, setTurma] = useState<Turma | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,8 +118,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <motion.div
-      className="flex flex-col h-screen"
-      style={{ background: 'var(--c-bg)' }}
+      className="flex flex-col flex-1"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease }}
@@ -160,25 +159,16 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {isAdmin && (
-            <Link
-              href={`/dashboard/admin/turmas/${id}/editar`}
-              className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-              title="Editar turma"
-            >
-              <HiPencilSquare className="w-4 h-4" />
-            </Link>
-          )}
-          <button
-            onClick={toggle}
-            className="w-8 h-8 rounded-full flex items-center justify-center border"
+        {isAdmin && (
+          <Link
+            href={`/dashboard/admin/turmas/${id}/editar`}
+            className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors flex-shrink-0"
             style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            title="Editar turma"
           >
-            {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
-          </button>
-        </div>
+            <HiPencilSquare className="w-4 h-4" />
+          </Link>
+        )}
       </header>
 
       {/* Main — flex-col on mobile, flex-row on desktop */}
