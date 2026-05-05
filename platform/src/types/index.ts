@@ -16,8 +16,28 @@ export interface Turma {
   iconColor: string  // hex
   startDate: string  // ISO date YYYY-MM-DD
   endDate: string    // ISO date YYYY-MM-DD
-  calendarId?: string
-  students: string[] // emails for now
+  students: string[] // emails
   createdBy: string
+  createdAt: string
+}
+
+export interface DriveLink {
+  label: string
+  url: string
+}
+
+export type AttendanceStatus = 'present' | 'absent' | 'late' | null
+
+export interface Aula {
+  id: string
+  title: string
+  description: string
+  teacherUid: string
+  teacherName: string
+  driveLinks: DriveLink[]
+  date: string       // "YYYY-MM-DD"
+  startTime: string  // "19:00"
+  endTime: string    // "22:00"
+  attendance: Record<string, AttendanceStatus> // studentEmail -> status
   createdAt: string
 }
