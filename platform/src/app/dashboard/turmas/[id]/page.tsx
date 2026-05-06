@@ -88,7 +88,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <motion.div
-      className="flex flex-col flex-1"
+      className="flex flex-col flex-1 min-h-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease }}
@@ -140,11 +140,11 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
       </header>
 
       {/* Split layout */}
-      <div className="relative flex flex-1 overflow-hidden flex-col md:flex-row">
+      <div className="relative flex flex-1 min-h-0 flex-col md:flex-row">
 
         {/* Content panel */}
         <div
-          className="flex flex-col overflow-hidden flex-1 min-w-0 min-h-0"
+          className="flex-1 min-w-0 min-h-0 overflow-y-auto"
           style={{
             borderRight: !isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
             borderBottom: isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
@@ -199,7 +199,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setCalendarOpen(true)}
-              className="absolute bottom-6 right-6 w-14 h-14 rounded-full shadow-xl flex items-center justify-center"
+              className="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-full shadow-xl flex items-center justify-center"
               style={{ background: turma.iconColor, color: '#fff' }}
               title="Abrir calendário"
             >

@@ -96,10 +96,10 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh 
 
   return (
     <>
-      {/* Panel header */}
+      {/* Panel header — sticky inside the scroll container */}
       <div
-        className="px-5 py-3 border-b flex items-center gap-2 flex-shrink-0"
-        style={{ borderColor: 'var(--c-border)' }}
+        className="sticky top-0 z-10 px-5 py-3 border-b flex items-center gap-2"
+        style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
         <HiDocumentText className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-subtle)' }} />
         <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Conteúdo</span>
@@ -108,8 +108,8 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh 
         </span>
       </div>
 
-      {/* Aula list */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      {/* Aula list — grows naturally; parent handles scroll */}
+      <div className="p-4 flex flex-col gap-3">
         {monthAulas.length === 0 ? (
           <div className="flex-1 flex items-center justify-center py-16 text-center flex-col gap-2">
             <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
