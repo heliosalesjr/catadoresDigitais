@@ -262,7 +262,7 @@ export function CalendarGrid({ turma, aulas, canEdit, currentUserUid, isMobile, 
                   {dayAulas.slice(0, 2).map((a, j) => (
                     <div
                       key={j}
-                      className="w-full text-[9px] leading-tight px-1 py-0.5 rounded truncate text-center"
+                      className="w-full text-[10px] font-black leading-tight px-1 py-0.5 rounded truncate text-center"
                       style={{
                         background: `${turma.iconColor}22`,
                         color: turma.iconColor,
