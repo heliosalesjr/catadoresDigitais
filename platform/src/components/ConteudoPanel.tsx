@@ -6,6 +6,7 @@ import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare, HiPlus, HiXMark,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink } from '@/types'
+import { MaterialViewer } from './MaterialViewer'
 
 const MONTHS_PT = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -130,6 +131,7 @@ interface CardProps {
 }
 
 function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, onSubmit }: CardProps) {
+  const [viewingLink, setViewingLink] = useState<DriveLink | null>(null)
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
   const detectedType = adding?.url ? detectType(adding.url) : null
@@ -201,12 +203,10 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
         {aula.driveLinks.map((link, i) => {
           const type = detectType(link.url)
           return (
-            <a
+            <button
               key={i}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs rounded-lg px-2.5 py-1.5 transition-opacity hover:opacity-75"
+              onClick={() => setViewingLink(link)}
+              className="flex items-center gap-2 text-xs rounded-lg px-2.5 py-1.5 transition-opacity hover:opacity-75 text-left w-full"
               style={{ background: 'var(--c-bg)', color: 'var(--c-text)' }}
             >
               {type === 'video'
@@ -214,7 +214,7 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
                 : <HiArrowTopRightOnSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
               }
               <span className="truncate">{link.label || link.url}</span>
-            </a>
+            </button>
           )
         })}
 
@@ -285,6 +285,17 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
           )}
         </AnimatePresence>
       </div>
+
+      {/* Material viewer overlay */}
+      <AnimatePresence>
+        {viewingLink && (
+          <MaterialViewer
+            link={viewingLink}
+            accentColor={turma.iconColor}
+            onClose={() => setViewingLink(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
