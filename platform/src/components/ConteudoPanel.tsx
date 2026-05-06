@@ -3,10 +3,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare, HiPlus, HiXMark,
+  HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
+  HiPlus, HiXMark, HiTrash, HiLink, HiPencilSquare, HiListBullet,
 } from 'react-icons/hi2'
-import type { Turma, Aula, DriveLink } from '@/types'
+import type { Turma, Aula, DriveLink, Avaliacao } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
+import { AvaliacaoFormModal } from './AvaliacaoFormModal'
+import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 
 const MONTHS_PT = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -21,6 +24,18 @@ const inputStyle = {
   color: 'var(--c-text)',
 } as const
 
+const AVALIACAO_ICON = {
+  link: HiLink,
+  text: HiPencilSquare,
+  quiz: HiListBullet,
+} as const
+
+const AVALIACAO_LABEL = {
+  link: 'Link',
+  text: 'Texto',
+  quiz: 'Quiz',
+} as const
+
 function detectType(url: string): 'video' | 'file' {
   try {
     const h = new URL(url).hostname
@@ -32,6 +47,10 @@ function detectType(url: string): 'video' | 'file' {
 function parseLocalDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d)
+}
+
+function genId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 }
 
 interface Props {
@@ -111,6 +130,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh 
               onCancel={() => setAdding(null)}
               onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
               onSubmit={() => submitMaterial(aula)}
+              onRefresh={onRefresh}
             />
           ))
         )}
@@ -118,6 +138,8 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh 
     </>
   )
 }
+
+// ─── AulaCard ────────────────────────────────────────────────────────────────
 
 interface CardProps {
   aula: Aula
@@ -128,13 +150,42 @@ interface CardProps {
   onCancel: () => void
   onChange: (field: 'label' | 'url', value: string) => void
   onSubmit: () => void
+  onRefresh: () => void
 }
 
-function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, onSubmit }: CardProps) {
+function AulaCard({
+  aula, turma, canEdit, adding,
+  onStart, onCancel, onChange, onSubmit, onRefresh,
+}: CardProps) {
   const [viewingLink, setViewingLink] = useState<DriveLink | null>(null)
+  const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
+  const [testingAvaliacao, setTestingAvaliacao] = useState(false)
+
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
   const detectedType = adding?.url ? detectType(adding.url) : null
+  const avaliacoes = aula.avaliacoes ?? []
+
+  async function saveAvaliacao(data: Omit<Avaliacao, 'id' | 'createdAt'>) {
+    const newAv: Avaliacao = { ...data, id: genId(), createdAt: new Date().toISOString() }
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avaliacoes: [...avaliacoes, newAv] }),
+    })
+    setCreatingAvaliacao(false)
+    onRefresh()
+  }
+
+  async function deleteAvaliacao(id: string) {
+    if (!confirm('Excluir esta avaliação?')) return
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avaliacoes: avaliacoes.filter((a) => a.id !== id) }),
+    })
+    onRefresh()
+  }
 
   return (
     <motion.div
@@ -176,12 +227,11 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
         )}
       </div>
 
-      {/* Materials */}
+      {/* ── Materiais ── */}
       <div
         className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
         style={{ borderColor: 'var(--c-border)' }}
       >
-        {/* Section header */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
             Materiais
@@ -196,6 +246,7 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
             </button>
           )}
         </div>
+
         {aula.driveLinks.length === 0 && !adding && (
           <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhum material.</p>
         )}
@@ -218,7 +269,7 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
           )
         })}
 
-        {/* Inline add form */}
+        {/* Inline add material form */}
         <AnimatePresence>
           {adding && (
             <motion.div
@@ -242,7 +293,6 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
                     </span>
                   )}
                 </div>
-
                 <input
                   type="url"
                   value={adding.url}
@@ -262,7 +312,6 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
                   className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
                   style={inputStyle}
                 />
-
                 <div className="flex gap-2">
                   <button
                     onClick={onCancel}
@@ -286,13 +335,105 @@ function AulaCard({ aula, turma, canEdit, adding, onStart, onCancel, onChange, o
         </AnimatePresence>
       </div>
 
-      {/* Material viewer overlay */}
+      {/* ── Avaliações ── */}
+      <div
+        className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
+        style={{ borderColor: 'var(--c-border)' }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+            Avaliações
+          </span>
+          {canEdit && (
+            <button
+              onClick={() => setCreatingAvaliacao(true)}
+              className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border transition-opacity hover:opacity-80"
+              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+            >
+              <HiPlus className="w-3 h-3" /> Criar
+            </button>
+          )}
+        </div>
+
+        {avaliacoes.length === 0 ? (
+          <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhuma avaliação.</p>
+        ) : (
+          <>
+            {avaliacoes.map((av) => {
+              const TypeIcon = AVALIACAO_ICON[av.type]
+              return (
+                <div
+                  key={av.id}
+                  className="flex items-start gap-2 rounded-lg px-2.5 py-2"
+                  style={{ background: 'var(--c-bg)' }}
+                >
+                  <TypeIcon
+                    className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
+                    style={{ color: turma.iconColor }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs leading-snug" style={{ color: 'var(--c-text)' }}>
+                      {av.question}
+                    </p>
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded-full font-medium mt-1 inline-block"
+                      style={{ background: `${turma.iconColor}12`, color: turma.iconColor }}
+                    >
+                      {AVALIACAO_LABEL[av.type]}
+                    </span>
+                  </div>
+                  {canEdit && (
+                    <button
+                      onClick={() => deleteAvaliacao(av.id)}
+                      className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--c-faint)' }}
+                      title="Excluir avaliação"
+                    >
+                      <HiTrash className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+
+            <button
+              onClick={() => setTestingAvaliacao(true)}
+              className="mt-1 w-full py-1.5 rounded-lg text-xs font-semibold border transition-opacity hover:opacity-80"
+              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+            >
+              Testar avaliação
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Overlays ── */}
       <AnimatePresence>
         {viewingLink && (
           <MaterialViewer
             link={viewingLink}
             accentColor={turma.iconColor}
             onClose={() => setViewingLink(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {creatingAvaliacao && (
+          <AvaliacaoFormModal
+            accentColor={turma.iconColor}
+            onSave={saveAvaliacao}
+            onClose={() => setCreatingAvaliacao(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {testingAvaliacao && avaliacoes.length > 0 && (
+          <TesteAvaliacaoModal
+            avaliacoes={avaliacoes}
+            accentColor={turma.iconColor}
+            onClose={() => setTestingAvaliacao(false)}
           />
         )}
       </AnimatePresence>

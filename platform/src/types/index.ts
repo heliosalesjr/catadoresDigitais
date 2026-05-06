@@ -33,6 +33,16 @@ export interface AulaTeacher {
   name: string
 }
 
+export type AvaliacaoType = 'link' | 'text' | 'quiz'
+
+export interface Avaliacao {
+  id: string
+  type: AvaliacaoType
+  question: string
+  options?: string[]  // quiz only: exactly 5, index 0 is always the correct answer
+  createdAt: string
+}
+
 export interface Aula {
   id: string
   title: string
@@ -43,5 +53,6 @@ export interface Aula {
   startTime: string  // "19:00"
   endTime: string    // "22:00"
   attendance: Record<string, AttendanceStatus> // studentEmail -> status
+  avaliacoes?: Avaliacao[]
   createdAt: string
 }
