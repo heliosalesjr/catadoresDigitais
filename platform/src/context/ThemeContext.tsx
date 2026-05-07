@@ -18,6 +18,9 @@ const DARK = {
   '--c-border-md': 'rgba(255,255,255,0.18)',
   '--c-accent-yellow': '#FFC530',
   '--c-accent-coral': '#FF8055',
+  '--logo-c1': '#FFC530',
+  '--logo-c2': '#FF6B35',
+  '--logo-c3': '#A855F7',
 }
 
 const LIGHT = {
@@ -31,6 +34,9 @@ const LIGHT = {
   '--c-border-md': 'rgba(26,10,60,0.18)',
   '--c-accent-yellow': '#8A6200',
   '--c-accent-coral': '#B83E18',
+  '--logo-c1': '#FF6B35',
+  '--logo-c2': '#7C3AED',
+  '--logo-c3': '#7C3AED',
 }
 
 function applyTheme(dark: boolean) {

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -11,6 +12,16 @@
   --c-border-md:    rgba(255,255,255,0.18);
   --c-accent-yellow: #FFC530;
   --c-accent-coral:  #FF8055;
+  --logo-c1:        #FFC530;
+  --logo-c2:        #FF6B35;
+  --logo-c3:        #A855F7;
+}
+
+.logo-gradient {
+  background: linear-gradient(135deg, var(--logo-c1) 0%, var(--logo-c2) 60%, var(--logo-c3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 body {
