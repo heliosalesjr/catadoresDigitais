@@ -143,13 +143,16 @@ export default function AdminDashboard() {
                         style={{ background: aula.turmaIconColor }}
                       />
 
-                      {/* Title + turma */}
+                      {/* Title + turma + professor */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
                           {aula.title}
                         </p>
                         <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
                           {aula.turmaName}
+                          {aula.teachers?.length > 0 && (
+                            <> · Prof: {aula.teachers.map((t) => t.name).join(', ')}</>
+                          )}
                         </p>
                       </div>
 
