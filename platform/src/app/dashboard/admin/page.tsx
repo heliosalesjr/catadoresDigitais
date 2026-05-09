@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
-import { HiAcademicCap, HiChevronRight } from 'react-icons/hi2'
+import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock } from 'react-icons/hi2'
 import Link from 'next/link'
 import type { UserProfile } from '@/types'
+import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Admin',
@@ -19,10 +20,43 @@ const ROLE_COLORS: Record<string, string> = {
   student: '#06B6D4',
 }
 
+function formatDateLabel(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+
+  if (date.getTime() === today.getTime()) return 'Hoje'
+  if (date.getTime() === tomorrow.getTime()) return 'Amanhã'
+
+  return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+}
+
+function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
+  const map = new Map<string, UpcomingAula[]>()
+  for (const a of aulas) {
+    const existing = map.get(a.date) ?? []
+    existing.push(a)
+    map.set(a.date, existing)
+  }
+  return Array.from(map.entries())
+}
+
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
   const { users, loading: usersLoading, updateRole } = useUsers()
   const [updating, setUpdating] = useState<string | null>(null)
+  const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
+  const [aulasLoading, setAulasLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/upcoming-aulas')
+      .then((r) => r.json())
+      .then((data) => { setUpcomingAulas(data); setAulasLoading(false) })
+      .catch(() => setAulasLoading(false))
+  }, [])
 
   async function handleRoleToggle(u: UserProfile) {
     setUpdating(u.uid)
@@ -46,14 +80,20 @@ export default function AdminDashboard() {
     { label: 'Admins', value: users.filter((u) => u.role === 'admin').length },
   ]
 
+  const grouped = groupByDate(upcomingAulas)
+
   return (
     <main className="p-6 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto flex flex-col gap-8">
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="rounded-2xl p-6 border" style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}>
+            <div
+              key={stat.label}
+              className="rounded-2xl p-6 border"
+              style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+            >
               <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>{stat.label}</p>
               <p className="text-3xl font-bold mt-2" style={{ color: 'var(--c-text)' }}>
                 {usersLoading ? '—' : stat.value}
@@ -62,11 +102,79 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        {/* Próximas aulas */}
+        <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}>
+          <div className="px-6 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--c-border)' }}>
+            <HiCalendarDays className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-subtle)' }} />
+            <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Próximas aulas</h2>
+          </div>
+
+          {aulasLoading ? (
+            <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
+              Carregando...
+            </div>
+          ) : grouped.length === 0 ? (
+            <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
+              Nenhuma aula agendada.
+            </div>
+          ) : (
+            <div className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
+              {grouped.map(([date, aulas]) => (
+                <div key={date}>
+                  {/* Date header */}
+                  <div
+                    className="px-6 py-2 text-xs font-semibold uppercase tracking-wider"
+                    style={{ background: 'var(--c-bg)', color: 'var(--c-subtle)' }}
+                  >
+                    {formatDateLabel(date)}
+                  </div>
+
+                  {/* Aulas for this date */}
+                  {aulas.map((aula) => (
+                    <Link
+                      key={aula.id}
+                      href={`/dashboard/turmas/${aula.turmaId}`}
+                      className="flex items-center gap-4 px-6 py-3.5 transition-opacity hover:opacity-75 border-t"
+                      style={{ borderColor: 'var(--c-border)' }}
+                    >
+                      {/* Color accent */}
+                      <div
+                        className="w-1 h-10 rounded-full flex-shrink-0"
+                        style={{ background: aula.turmaIconColor }}
+                      />
+
+                      {/* Title + turma */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+                          {aula.title}
+                        </p>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
+                          {aula.turmaName}
+                        </p>
+                      </div>
+
+                      {/* Time */}
+                      {aula.startTime && (
+                        <div className="flex items-center gap-1.5 flex-shrink-0 text-xs" style={{ color: 'var(--c-muted)' }}>
+                          <HiClock className="w-3.5 h-3.5" />
+                          <span>{aula.startTime}{aula.endTime ? ` – ${aula.endTime}` : ''}</span>
+                        </div>
+                      )}
+
+                      <HiChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-faint)' }} />
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Quick access */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/dashboard/admin/turmas"
-            className="rounded-2xl border p-5 flex items-center justify-between group transition-colors"
+            className="rounded-2xl border p-5 flex items-center justify-between transition-opacity hover:opacity-75"
             style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
           >
             <div className="flex items-center gap-3">
@@ -144,6 +252,7 @@ export default function AdminDashboard() {
             </ul>
           )}
         </div>
+
       </div>
     </main>
   )
