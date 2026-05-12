@@ -3,27 +3,6 @@ import { useRef } from 'react';
 import { HiOutlineHeart } from 'react-icons/hi';
 import { useTheme } from '../context/ThemeContext';
 
-function PlaceholderLogo({
-  name,
-  subtitle,
-  accentColor = '#FFC530',
-}: {
-  name: string;
-  subtitle?: string;
-  accentColor?: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-1 px-8 py-5 rounded-xl glass-card min-w-[160px]">
-      <div className="font-syne font-extrabold text-2xl tracking-tight" style={{ color: accentColor }}>
-        {name}
-      </div>
-      {subtitle && (
-        <div className="font-dm text-xs text-[var(--c-subtle)] tracking-wide">{subtitle}</div>
-      )}
-    </div>
-  );
-}
-
 export function Sponsors() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
@@ -73,7 +52,7 @@ export function Sponsors() {
             Realização
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <PlaceholderLogo name="Instituto Ipês" subtitle="Realização" accentColor="var(--c-accent-yellow)" />
+            <img src="/ipes-logo.webp" alt="Instituto Ipês" className="h-24 w-auto object-contain" />
           </div>
         </motion.div>
 
@@ -87,7 +66,7 @@ export function Sponsors() {
             Patrocínio
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <PlaceholderLogo name="CAIXA" subtitle="Caixa Econômica Federal" accentColor="var(--c-accent-cyan)" />
+            <img src="/CAIXA_2cores_positiva.png" alt="Caixa Econômica Federal" className="h-24 w-auto object-contain" />
           </div>
         </motion.div>
 
@@ -98,12 +77,7 @@ export function Sponsors() {
           className="rounded-2xl p-7 md:p-10 glass-card border-brand-yellow/10"
         >
           <div className="flex flex-col md:flex-row items-start gap-6">
-            <div
-              className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center font-syne font-extrabold text-dark-950 text-lg"
-              style={{ background: '#FFC530' }}
-            >
-              Iê
-            </div>
+            <img src="/ipes-logo.webp" alt="Instituto Ipês" className="w-16 h-16 object-contain flex-shrink-0" />
             <div>
               <h3 className="font-syne font-bold text-xl text-[var(--c-text)] mb-2">
                 Instituto Ipês
