@@ -41,7 +41,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    fetch(`/api/admin/turmas/${id}`)
+    fetch(`/api/turmas/${id}`)
       .then((r) => r.json())
       .then((data: Turma) => {
         setTurma(data)
@@ -100,7 +100,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
       >
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            href="/dashboard/admin/turmas"
+            href={isAdmin ? '/dashboard/admin/turmas' : '/dashboard'}
             className="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0"
             style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
           >
@@ -156,6 +156,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               aulas={aulas}
               selectedMonth={selectedMonth}
               canEdit={canEdit}
+              currentUser={user}
               onRefresh={fetchAulas}
             />
           )}

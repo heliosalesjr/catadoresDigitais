@@ -55,6 +55,8 @@ export async function POST(
     return Response.json({ error: 'Data fora do período da turma.' }, { status: 400 })
   }
 
+  const attendanceCode = String(Math.floor(1000 + Math.random() * 9000))
+
   const ref = await adminDb
     .collection('turmas').doc(id)
     .collection('aulas')
@@ -67,6 +69,7 @@ export async function POST(
       startTime: body.startTime,
       endTime: body.endTime,
       attendance: {},
+      attendanceCode,
       createdAt: new Date().toISOString(),
     })
 

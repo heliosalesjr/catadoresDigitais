@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
   HiPlus, HiXMark, HiTrash, HiLink, HiPencilSquare, HiListBullet,
+  HiClipboardDocumentCheck, HiCheckCircle,
 } from 'react-icons/hi2'
-import type { Turma, Aula, DriveLink, Avaliacao } from '@/types'
+import type { Turma, Aula, DriveLink, Avaliacao, UserProfile } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -58,6 +59,7 @@ interface Props {
   aulas: Aula[]
   selectedMonth: Date
   canEdit: boolean
+  currentUser: UserProfile | null
   onRefresh: () => void
 }
 
@@ -68,8 +70,11 @@ interface AddState {
   saving: boolean
 }
 
-export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh }: Props) {
+type Tab = 'conteudo' | 'presencas'
+
+export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
+  const [tab, setTab] = useState<Tab>('conteudo')
 
   const monthAulas = aulas
     .filter((a) => {
@@ -96,45 +101,80 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, onRefresh 
 
   return (
     <>
-      {/* Panel header — sticky inside the scroll container */}
+      {/* Panel header */}
       <div
-        className="sticky top-0 z-10 px-5 py-3 border-b flex items-center gap-2"
+        className="sticky top-0 z-10 px-5 border-b flex-shrink-0"
         style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
-        <HiDocumentText className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-subtle)' }} />
-        <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Conteúdo</span>
-        <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
-          — {MONTHS_PT[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
-        </span>
+        <div className="flex items-center gap-2 pt-3 pb-0">
+          <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+            {MONTHS_PT[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
+          </span>
+        </div>
+        <div className="flex gap-1 mt-2">
+          {(['conteudo', 'presencas'] as Tab[]).map((t) => {
+            const active = tab === t
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors"
+                style={{
+                  borderColor: active ? turma.iconColor : 'transparent',
+                  color: active ? turma.iconColor : 'var(--c-subtle)',
+                }}
+              >
+                {t === 'conteudo'
+                  ? <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>
+                  : <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>
+                }
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Aula list — grows naturally; parent handles scroll */}
-      <div className="p-4 flex flex-col gap-3">
-        {monthAulas.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-16 text-center flex-col gap-2">
-            <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
-            <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Nenhuma aula este mês</p>
-            <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
-              Use o calendário para criar aulas neste período.
-            </p>
-          </div>
-        ) : (
-          monthAulas.map((aula) => (
-            <AulaCard
-              key={aula.id}
-              aula={aula}
-              turma={turma}
-              canEdit={canEdit}
-              adding={adding?.aulaId === aula.id ? adding : null}
-              onStart={() => setAdding({ aulaId: aula.id, label: '', url: '', saving: false })}
-              onCancel={() => setAdding(null)}
-              onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
-              onSubmit={() => submitMaterial(aula)}
-              onRefresh={onRefresh}
-            />
-          ))
-        )}
-      </div>
+      {/* Conteúdo tab */}
+      {tab === 'conteudo' && (
+        <div className="p-4 flex flex-col gap-3">
+          {monthAulas.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center py-16 text-center flex-col gap-2">
+              <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+              <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Nenhuma aula este mês</p>
+              <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                Use o calendário para criar aulas neste período.
+              </p>
+            </div>
+          ) : (
+            monthAulas.map((aula) => (
+              <AulaCard
+                key={aula.id}
+                aula={aula}
+                turma={turma}
+                canEdit={canEdit}
+                currentUser={currentUser}
+                adding={adding?.aulaId === aula.id ? adding : null}
+                onStart={() => setAdding({ aulaId: aula.id, label: '', url: '', saving: false })}
+                onCancel={() => setAdding(null)}
+                onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
+                onSubmit={() => submitMaterial(aula)}
+                onRefresh={onRefresh}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Presenças tab */}
+      {tab === 'presencas' && (
+        <PresencasPanel
+          turma={turma}
+          monthAulas={monthAulas}
+          canEdit={canEdit}
+          currentUser={currentUser}
+          onRefresh={onRefresh}
+        />
+      )}
     </>
   )
 }
@@ -145,6 +185,7 @@ interface CardProps {
   aula: Aula
   turma: Turma
   canEdit: boolean
+  currentUser: UserProfile | null
   adding: AddState | null
   onStart: () => void
   onCancel: () => void
@@ -153,18 +194,55 @@ interface CardProps {
   onRefresh: () => void
 }
 
+function isAulaActive(aula: Aula): boolean {
+  const [y, m, d] = aula.date.split('-').map(Number)
+  const [sh, sm] = aula.startTime.split(':').map(Number)
+  const [eh, em] = aula.endTime.split(':').map(Number)
+  const now = new Date()
+  const start = new Date(y, m - 1, d, sh, sm)
+  const end = new Date(y, m - 1, d, eh, em)
+  return now >= start && now <= end
+}
+
 function AulaCard({
-  aula, turma, canEdit, adding,
+  aula, turma, canEdit, currentUser, adding,
   onStart, onCancel, onChange, onSubmit, onRefresh,
 }: CardProps) {
   const [viewingLink, setViewingLink] = useState<DriveLink | null>(null)
   const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
+  const [chamadaCode, setChamadaCode] = useState('')
+  const [chamadaState, setChamadaState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [chamadaError, setChamadaError] = useState<string | null>(null)
 
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
   const detectedType = adding?.url ? detectType(adding.url) : null
   const avaliacoes = aula.avaliacoes ?? []
+
+  const isStudent = !canEdit && currentUser?.role === 'student'
+  const studentEmail = currentUser?.email ?? null
+  const alreadyPresent = studentEmail ? aula.attendance[studentEmail] === 'present' : false
+  const aulaAtiva = isAulaActive(aula)
+
+  async function submitChamada() {
+    if (!chamadaCode.trim() || chamadaState === 'loading') return
+    setChamadaState('loading')
+    setChamadaError(null)
+    const res = await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}/chamada`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: chamadaCode.trim() }),
+    })
+    if (res.ok) {
+      setChamadaState('ok')
+      onRefresh()
+    } else {
+      const d = await res.json()
+      setChamadaError(d.error ?? 'Erro ao registrar presença.')
+      setChamadaState('error')
+    }
+  }
 
   async function saveAvaliacao(data: Omit<Avaliacao, 'id' | 'createdAt'>) {
     const newAv: Avaliacao = { ...data, id: genId(), createdAt: new Date().toISOString() }
@@ -407,6 +485,56 @@ function AulaCard({
         )}
       </div>
 
+      {/* ── Responder chamada (alunos) ── */}
+      {isStudent && (
+        <div
+          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
+          style={{ borderColor: 'var(--c-border)' }}
+        >
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+            Chamada
+          </span>
+
+          {alreadyPresent || chamadaState === 'ok' ? (
+            <div className="flex items-center gap-2 py-1">
+              <HiCheckCircle className="w-4 h-4" style={{ color: '#22c55e' }} />
+              <span className="text-xs font-medium" style={{ color: '#22c55e' }}>Presença registrada</span>
+            </div>
+          ) : !aulaAtiva ? (
+            <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>
+              Campo disponível somente durante o horário da aula.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={chamadaCode}
+                  onChange={(e) => { setChamadaCode(e.target.value.replace(/\D/g, '')); setChamadaState('idle'); setChamadaError(null) }}
+                  onKeyDown={(e) => e.key === 'Enter' && submitChamada()}
+                  placeholder="Código de 4 dígitos"
+                  className="flex-1 rounded-lg px-2.5 py-1.5 text-sm border outline-none font-mono tracking-widest"
+                  style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                />
+                <button
+                  onClick={submitChamada}
+                  disabled={chamadaCode.length !== 4 || chamadaState === 'loading'}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition-opacity disabled:opacity-40"
+                  style={{ background: turma.iconColor, color: '#fff' }}
+                >
+                  {chamadaState === 'loading' ? '...' : 'Confirmar'}
+                </button>
+              </div>
+              {chamadaState === 'error' && chamadaError && (
+                <p className="text-xs" style={{ color: '#ef4444' }}>{chamadaError}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Overlays ── */}
       <AnimatePresence>
         {viewingLink && (
@@ -438,5 +566,126 @@ function AulaCard({
         )}
       </AnimatePresence>
     </motion.div>
+  )
+}
+
+// ─── PresencasPanel ──────────────────────────────────────────────────────────
+
+const STATUS_LABEL: Record<string, string> = {
+  present: 'P',
+  absent: 'F',
+  late: 'A',
+}
+const STATUS_COLOR: Record<string, string> = {
+  present: '#22c55e',
+  absent: '#ef4444',
+  late: '#f59e0b',
+}
+
+interface PresencasPanelProps {
+  turma: Turma
+  monthAulas: Aula[]
+  canEdit: boolean
+  currentUser: UserProfile | null
+  onRefresh: () => void
+}
+
+function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPanelProps) {
+  const studentEmail = currentUser?.email ?? null
+
+  if (monthAulas.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+        <HiClipboardDocumentCheck className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+        <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Nenhuma aula este mês</p>
+        <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+          As listas de presença aparecerão aqui.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 flex flex-col gap-3">
+      {monthAulas.map((aula) => {
+        const date = parseLocalDate(aula.date)
+        const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+
+        // Teacher/admin: show all enrolled students
+        const studentList = canEdit ? turma.students : (studentEmail ? [studentEmail] : [])
+        const totalPresent = Object.values(aula.attendance).filter((s) => s === 'present').length
+        const totalStudents = turma.students.length
+
+        return (
+          <div
+            key={aula.id}
+            className="rounded-2xl overflow-hidden border"
+            style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+          >
+            {/* Aula info */}
+            <div
+              className="px-4 py-3 flex items-center justify-between"
+              style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+                  {aula.title}
+                </p>
+                <p className="text-xs capitalize mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+                  {dateStr} · {aula.startTime} – {aula.endTime}
+                </p>
+              </div>
+              {canEdit && (
+                <span
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-2"
+                  style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
+                >
+                  {totalPresent}/{totalStudents} P
+                </span>
+              )}
+            </div>
+
+            {/* Student list */}
+            <div className="border-t" style={{ borderColor: 'var(--c-border)' }}>
+              {studentList.length === 0 ? (
+                <p className="text-xs px-4 py-2.5" style={{ color: 'var(--c-faint)' }}>
+                  {canEdit ? 'Nenhum aluno matriculado.' : 'Sem dados de presença.'}
+                </p>
+              ) : (
+                studentList.map((email, i) => {
+                  const status = aula.attendance[email] ?? null
+                  return (
+                    <div
+                      key={email}
+                      className="flex items-center gap-3 px-4 py-2"
+                      style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                    >
+                      <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
+                        {email}
+                      </span>
+                      {status ? (
+                        <span
+                          className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                          style={{ background: `${STATUS_COLOR[status]}18`, color: STATUS_COLOR[status] }}
+                        >
+                          {STATUS_LABEL[status]}
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                          style={{ background: 'var(--c-bg)', color: 'var(--c-faint)' }}
+                        >
+                          —
+                        </span>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }

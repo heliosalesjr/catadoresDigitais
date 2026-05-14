@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   HiXMark, HiPencilSquare, HiTrash, HiPlus, HiArrowTopRightOnSquare,
+  HiEye, HiEyeSlash,
 } from 'react-icons/hi2'
 import type { Aula, AulaTeacher, DriveLink, AttendanceStatus } from '@/types'
 
@@ -53,6 +54,31 @@ const inputStyle = {
   borderColor: 'var(--c-border-md)',
   color: 'var(--c-text)',
 } as const
+
+function AttendanceCodeReveal({ code, accentColor }: { code: string; accentColor: string }) {
+  const [revealed, setRevealed] = useState(false)
+  return (
+    <div
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+      style={{ background: 'var(--c-bg)' }}
+    >
+      <span
+        className="text-2xl font-mono font-bold tracking-[0.3em] flex-1"
+        style={{ color: accentColor }}
+      >
+        {revealed ? code : '••••'}
+      </span>
+      <button
+        onClick={() => setRevealed((v) => !v)}
+        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-opacity hover:opacity-80"
+        style={{ borderColor: accentColor, color: accentColor }}
+      >
+        {revealed ? <HiEyeSlash className="w-3.5 h-3.5" /> : <HiEye className="w-3.5 h-3.5" />}
+        {revealed ? 'Ocultar' : 'Revelar'}
+      </button>
+    </div>
+  )
+}
 
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
@@ -471,6 +497,16 @@ export function AulaModal({
               )
             )}
           </div>
+
+          {/* Attendance Code */}
+          {mode === 'view' && aula?.attendanceCode && canEdit && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+                Código de chamada
+              </p>
+              <AttendanceCodeReveal code={aula.attendanceCode} accentColor={turmaIconColor} />
+            </div>
+          )}
 
           {/* Attendance */}
           {mode === 'view' && aula && students.length > 0 && (

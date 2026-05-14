@@ -53,6 +53,7 @@ export interface Aula {
   startTime: string  // "19:00"
   endTime: string    // "22:00"
   attendance: Record<string, AttendanceStatus> // studentEmail -> status
+  attendanceCode?: string // 4-digit code for student check-in
   avaliacoes?: Avaliacao[]
   createdAt: string
 }

@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (!doc.exists) return Response.json({ error: 'Aula não encontrada.' }, { status: 404 })
 
   const allowed = ['title', 'description', 'teachers',
-                   'driveLinks', 'date', 'startTime', 'endTime', 'attendance', 'avaliacoes']
+                   'driveLinks', 'date', 'startTime', 'endTime', 'attendance', 'avaliacoes', 'attendanceCode']
   const update: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) update[key] = body[key]
