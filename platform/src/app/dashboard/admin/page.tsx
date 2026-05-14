@@ -50,6 +50,8 @@ export default function AdminDashboard() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
   const [aulasLoading, setAulasLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
 
   useEffect(() => {
     fetch('/api/admin/upcoming-aulas')
@@ -81,6 +83,13 @@ export default function AdminDashboard() {
   ]
 
   const grouped = groupByDate(upcomingAulas)
+
+  const filteredUsers = users.filter((u) => {
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter
+    const q = search.toLowerCase()
+    const matchesSearch = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+    return matchesRole && matchesSearch
+  })
 
   return (
     <main className="p-6 md:p-8">
@@ -195,20 +204,45 @@ export default function AdminDashboard() {
 
         {/* Users list */}
         <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}>
-          <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--c-border)' }}>
-            <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Usuários cadastrados</h2>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--c-subtle)' }}>
-              Selecione um aluno para promovê-lo a professor.
-            </p>
+          <div className="px-6 py-4 border-b flex flex-col gap-3" style={{ borderColor: 'var(--c-border)' }}>
+            <div>
+              <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Usuários cadastrados</h2>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+                Selecione um aluno para promovê-lo a professor.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por nome ou e-mail..."
+                className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+              />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="rounded-xl px-3 py-2 text-sm border outline-none"
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+              >
+                <option value="all">Todos os perfis</option>
+                <option value="student">Alunos</option>
+                <option value="teacher">Professores</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
           </div>
 
           {usersLoading ? (
             <div className="px-6 py-10 text-center" style={{ color: 'var(--c-subtle)' }}>Carregando usuários...</div>
-          ) : users.length === 0 ? (
-            <div className="px-6 py-10 text-center" style={{ color: 'var(--c-subtle)' }}>Nenhum usuário cadastrado ainda.</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="px-6 py-10 text-center" style={{ color: 'var(--c-subtle)' }}>
+              {users.length === 0 ? 'Nenhum usuário cadastrado ainda.' : 'Nenhum usuário encontrado.'}
+            </div>
           ) : (
             <ul>
-              {users.map((u, i) => (
+              {filteredUsers.map((u, i) => (
                 <li
                   key={u.uid}
                   className="flex items-center gap-4 px-6 py-4"
