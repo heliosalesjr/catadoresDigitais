@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IconPicker } from '@/components/IconPicker'
-import { HiArrowLeft, HiXMark, HiPlus } from 'react-icons/hi2'
+import { HiArrowLeft, HiXMark, HiPlus, HiTrash } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 
 type FormData = Pick<Turma, 'name' | 'icon' | 'iconColor' | 'startDate' | 'endDate' | 'students'> & { calendarId?: string }
@@ -39,6 +39,8 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
   const [studentInput, setStudentInput] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const maxEndDate = startDate ? toInputDate(addMonths(new Date(startDate), 12)) : undefined
   const isEdit = mode === 'edit'
@@ -232,6 +234,55 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
           >
             {submitLabel}
           </button>
+
+          {isEdit && (
+            <div
+              className="rounded-2xl border p-5 flex flex-col gap-3"
+              style={{ borderColor: '#ef444430', background: '#ef444408' }}
+            >
+              <div>
+                <p className="text-sm font-semibold" style={{ color: '#ef4444' }}>Zona de perigo</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+                  Esta ação é irreversível. A turma e todas as suas aulas serão deletadas permanentemente.
+                </p>
+              </div>
+              {confirmDelete ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setDeleting(true)
+                      await fetch(`/api/admin/turmas/${turmaId}`, { method: 'DELETE' })
+                      router.push('/dashboard/admin/turmas')
+                    }}
+                    disabled={deleting}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
+                    style={{ background: '#ef4444', color: '#fff' }}
+                  >
+                    {deleting ? 'Deletando...' : 'Sim, deletar turma'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="flex-1 py-2.5 rounded-xl text-sm border transition-colors"
+                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-muted)' }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 self-start text-sm px-4 py-2 rounded-xl border transition-colors"
+                  style={{ borderColor: '#ef444460', color: '#ef4444' }}
+                >
+                  <HiTrash className="w-4 h-4" />
+                  Deletar turma
+                </button>
+              )}
+            </div>
+          )}
         </form>
       </div>
     </main>
