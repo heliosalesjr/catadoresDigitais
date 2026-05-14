@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
-import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock } from 'react-icons/hi2'
+import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock, HiTrash } from 'react-icons/hi2'
 import Link from 'next/link'
 import type { UserProfile } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
@@ -46,8 +46,10 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
-  const { users, loading: usersLoading, updateRole } = useUsers()
+  const { users, loading: usersLoading, updateRole, deleteUser } = useUsers()
   const [updating, setUpdating] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
   const [aulasLoading, setAulasLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -59,6 +61,13 @@ export default function AdminDashboard() {
       .then((data) => { setUpcomingAulas(data); setAulasLoading(false) })
       .catch(() => setAulasLoading(false))
   }, [])
+
+  async function handleDelete(uid: string) {
+    setDeleting(uid)
+    await deleteUser(uid)
+    setDeleting(null)
+    setConfirmDelete(null)
+  }
 
   async function handleRoleToggle(u: UserProfile) {
     setUpdating(u.uid)
@@ -283,6 +292,37 @@ export default function AdminDashboard() {
                     >
                       {updating === u.uid ? '...' : u.role === 'teacher' ? 'Remover professor' : 'Tornar professor'}
                     </button>
+                  )}
+
+                  {u.role !== 'admin' && (
+                    confirmDelete === u.uid ? (
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => handleDelete(u.uid)}
+                          disabled={deleting === u.uid}
+                          className="text-xs px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
+                          style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                        >
+                          {deleting === u.uid ? '...' : 'Confirmar'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg border transition-colors"
+                          style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(u.uid)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0"
+                        style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
+                        title="Deletar usuário"
+                      >
+                        <HiTrash className="w-3.5 h-3.5" />
+                      </button>
+                    )
                   )}
                 </li>
               ))}

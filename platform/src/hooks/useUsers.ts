@@ -25,5 +25,10 @@ export function useUsers() {
     await fetchUsers()
   }
 
-  return { users, loading, updateRole }
+  async function deleteUser(uid: string) {
+    await fetch(`/api/admin/users/${uid}`, { method: 'DELETE' })
+    setUsers((prev) => prev.filter((u) => u.uid !== uid))
+  }
+
+  return { users, loading, updateRole, deleteUser }
 }

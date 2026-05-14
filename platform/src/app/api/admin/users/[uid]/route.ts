@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/require-admin'
-import { adminDb } from '@/lib/firebase-admin'
+import { adminDb, adminAuth } from '@/lib/firebase-admin'
 import type { Role } from '@/types'
 
 const ALLOWED_ROLES: Role[] = ['teacher', 'student']
@@ -30,5 +30,26 @@ export async function PATCH(
   }
 
   await ref.update({ role })
+  return Response.json({ ok: true })
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ uid: string }> }
+) {
+  const result = await requireAdmin()
+  if (result instanceof Response) return result
+
+  const { uid } = await params
+
+  const snap = await adminDb.collection('users').doc(uid).get()
+  if (!snap.exists) return Response.json({ error: 'User not found' }, { status: 404 })
+  if (snap.data()?.role === 'admin') {
+    return Response.json({ error: 'Cannot delete an admin' }, { status: 403 })
+  }
+
+  await adminDb.collection('users').doc(uid).delete()
+  await adminAuth.deleteUser(uid)
+
   return Response.json({ ok: true })
 }
