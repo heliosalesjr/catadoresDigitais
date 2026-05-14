@@ -61,8 +61,8 @@
 | "Próximas aulas" com turma, professor e horário | ✅ |
 | Acesso rápido às turmas | ✅ |
 | Lista de usuários com gestão de roles (aluno ↔ professor) | ✅ |
-| Busca / filtro na lista de usuários | ❌ |
-| Deletar usuário | ❌ |
+| Busca / filtro na lista de usuários | ✅ |
+| Deletar usuário (com confirmação inline) | ✅ |
 
 ---
 
@@ -72,7 +72,7 @@
 | Listar turmas com ícone e cor | ✅ |
 | Criar turma (nome, ícone, cor, datas, alunos) | ✅ |
 | Editar turma | ✅ |
-| Deletar turma | ❌ |
+| Deletar turma (na lista e na edição, com confirmação) | ✅ |
 | Gerenciar alunos matriculados (adicionar / remover) | ❌ |
 
 ---
@@ -157,6 +157,4 @@
 6. **Gerenciar matrículas** — adicionar / remover alunos de uma turma
 7. **Formulário de inscrição** da landing page
 8. **Remover material** individual de uma aula
-9. **Deletar turma**
-10. **Filtro de usuários** no painel admin
-11. **Deploy** — landing + platform em produção
+9. **Deploy** — landing + platform em produção
