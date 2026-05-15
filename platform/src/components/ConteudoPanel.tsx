@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
   HiPlus, HiXMark, HiTrash, HiLink, HiPencilSquare, HiListBullet,
-  HiClipboardDocumentCheck, HiCheckCircle,
+  HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
 } from 'react-icons/hi2'
-import type { Turma, Aula, DriveLink, Avaliacao, UserProfile } from '@/types'
+import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -61,6 +61,7 @@ interface Props {
   canEdit: boolean
   currentUser: UserProfile | null
   onRefresh: () => void
+  onRefreshTurma: () => void
 }
 
 interface AddState {
@@ -70,9 +71,9 @@ interface AddState {
   saving: boolean
 }
 
-type Tab = 'conteudo' | 'presencas'
+type Tab = 'conteudo' | 'presencas' | 'professores'
 
-export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh }: Props) {
+export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
   const [tab, setTab] = useState<Tab>('conteudo')
 
@@ -112,8 +113,13 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           </span>
         </div>
         <div className="flex gap-1 mt-2">
-          {(['conteudo', 'presencas'] as Tab[]).map((t) => {
+          {(['conteudo', 'presencas', 'professores'] as Tab[]).map((t) => {
             const active = tab === t
+            const tabLabel = {
+              conteudo:    <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>,
+              presencas:   <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
+              professores: <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
+            }[t]
             return (
               <button
                 key={t}
@@ -124,10 +130,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
                   color: active ? turma.iconColor : 'var(--c-subtle)',
                 }}
               >
-                {t === 'conteudo'
-                  ? <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>
-                  : <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>
-                }
+                {tabLabel}
               </button>
             )
           })}
@@ -173,6 +176,15 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           canEdit={canEdit}
           currentUser={currentUser}
           onRefresh={onRefresh}
+        />
+      )}
+
+      {/* Professores tab */}
+      {tab === 'professores' && (
+        <ProfessoresPanel
+          turma={turma}
+          currentUser={currentUser}
+          onRefresh={onRefreshTurma}
         />
       )}
     </>
@@ -686,6 +698,208 @@ function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPa
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ─── ProfessoresPanel ─────────────────────────────────────────────────────────
+
+// Deterministic mock phone from uid so the same teacher always gets the same number
+function mockPhone(uid: string): string {
+  const n = uid.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const p1 = String(10000 + (n % 90000)).slice(0, 5)
+  const p2 = String(1000 + ((n * 13) % 9000)).slice(0, 4)
+  return `(11) 9${p1.slice(0, 4)}-${p2}`
+}
+
+interface ProfessoresPanelProps {
+  turma: Turma
+  currentUser: UserProfile | null
+  onRefresh: () => void
+}
+
+type DbTeacher = { uid: string; name: string; email: string }
+
+function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelProps) {
+  const isAdmin = currentUser?.role === 'admin'
+  const professors: TurmaTeacher[] = turma.professors ?? []
+
+  const [showPicker, setShowPicker] = useState(false)
+  const [dbTeachers, setDbTeachers] = useState<DbTeacher[]>([])
+  const [loadingDb, setLoadingDb] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function openPicker() {
+    setShowPicker(true)
+    if (dbTeachers.length > 0) return
+    setLoadingDb(true)
+    const res = await fetch('/api/users/teachers')
+    if (res.ok) setDbTeachers(await res.json())
+    setLoadingDb(false)
+  }
+
+  async function addProfessor(t: DbTeacher) {
+    if (professors.find((p) => p.uid === t.uid)) return
+    const newProf: TurmaTeacher = {
+      uid: t.uid,
+      name: t.name,
+      email: t.email,
+      phone: mockPhone(t.uid),
+    }
+    setSaving(true)
+    await fetch(`/api/admin/turmas/${turma.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ professors: [...professors, newProf] }),
+    })
+    setSaving(false)
+    setShowPicker(false)
+    onRefresh()
+  }
+
+  async function removeProfessor(uid: string) {
+    if (!confirm('Remover este professor da turma?')) return
+    await fetch(`/api/admin/turmas/${turma.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ professors: professors.filter((p) => p.uid !== uid) }),
+    })
+    onRefresh()
+  }
+
+  const available = dbTeachers.filter((t) => !professors.find((p) => p.uid === t.uid))
+
+  return (
+    <div className="p-4 flex flex-col gap-3">
+      {/* Header row */}
+      {isAdmin && (
+        <div className="flex justify-end">
+          <button
+            onClick={openPicker}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-80"
+            style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+          >
+            <HiPlus className="w-3.5 h-3.5" /> Importar professor
+          </button>
+        </div>
+      )}
+
+      {/* Picker dropdown */}
+      <AnimatePresence>
+        {showPicker && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease }}
+            className="overflow-hidden rounded-xl border"
+            style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+              <span className="text-xs font-medium" style={{ color: 'var(--c-subtle)' }}>
+                Selecionar da base de dados
+              </span>
+              <button onClick={() => setShowPicker(false)} style={{ color: 'var(--c-faint)' }}>
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </div>
+            {loadingDb ? (
+              <p className="text-xs px-3 py-3" style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
+            ) : available.length === 0 ? (
+              <p className="text-xs px-3 py-3" style={{ color: 'var(--c-faint)' }}>
+                {dbTeachers.length === 0 ? 'Nenhum professor cadastrado.' : 'Todos os professores já estão na turma.'}
+              </p>
+            ) : (
+              available.map((t, i) => (
+                <button
+                  key={t.uid}
+                  onClick={() => !saving && addProfessor(t)}
+                  disabled={saving}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:opacity-80 disabled:opacity-50"
+                  style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                    style={{ background: `${turma.iconColor}20`, color: turma.iconColor }}
+                  >
+                    {t.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium truncate" style={{ color: 'var(--c-text)' }}>{t.name}</p>
+                    <p className="text-[10px] truncate" style={{ color: 'var(--c-subtle)' }}>{t.email}</p>
+                  </div>
+                  <HiPlus className="w-3.5 h-3.5 flex-shrink-0 ml-auto" style={{ color: turma.iconColor }} />
+                </button>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Professor list */}
+      {professors.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+          <HiUserGroup className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+          <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Nenhum professor nesta turma</p>
+          {isAdmin && (
+            <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+              Use "Importar professor" para adicionar da base de dados.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {professors.map((prof) => (
+            <div
+              key={prof.uid}
+              className="rounded-2xl border overflow-hidden"
+              style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+            >
+              <div
+                className="px-4 py-3 flex items-center gap-3"
+                style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+              >
+                {/* Avatar */}
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                  style={{ background: `${turma.iconColor}20`, color: turma.iconColor }}
+                >
+                  {prof.name.charAt(0).toUpperCase()}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+                    {prof.name}
+                  </p>
+                  <div className="flex flex-col gap-0.5 mt-0.5">
+                    <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--c-subtle)' }}>
+                      <HiEnvelope className="w-3 h-3 flex-shrink-0" />
+                      {prof.email}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--c-subtle)' }}>
+                      <HiPhone className="w-3 h-3 flex-shrink-0" />
+                      {prof.phone ?? '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Remove (admin only) */}
+                {isAdmin && (
+                  <button
+                    onClick={() => removeProfessor(prof.uid)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
+                    style={{ color: 'var(--c-faint)' }}
+                    title="Remover professor"
+                  >
+                    <HiTrash className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

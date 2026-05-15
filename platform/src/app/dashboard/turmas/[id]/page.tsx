@@ -40,16 +40,19 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null)
   const isMobile = useIsMobile()
 
-  useEffect(() => {
-    fetch(`/api/turmas/${id}`)
-      .then((r) => r.json())
-      .then((data: Turma) => {
-        setTurma(data)
-        setLoading(false)
-        const [y, m] = data.startDate.split('-').map(Number)
-        setSelectedMonth(new Date(y, m - 1, 1))
-      })
+  const fetchTurma = useCallback(async () => {
+    const res = await fetch(`/api/turmas/${id}`)
+    if (!res.ok) return
+    const data: Turma = await res.json()
+    setTurma(data)
+    setLoading(false)
+    setSelectedMonth((prev) => prev ?? (() => {
+      const [y, m] = data.startDate.split('-').map(Number)
+      return new Date(y, m - 1, 1)
+    })())
   }, [id])
+
+  useEffect(() => { fetchTurma() }, [fetchTurma])
 
   const fetchAulas = useCallback(async () => {
     const res = await fetch(`/api/turmas/${id}/aulas`)
@@ -158,6 +161,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               canEdit={canEdit}
               currentUser={user}
               onRefresh={fetchAulas}
+              onRefreshTurma={fetchTurma}
             />
           )}
         </div>

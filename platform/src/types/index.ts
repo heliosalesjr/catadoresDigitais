@@ -9,6 +9,13 @@ export interface UserProfile {
   createdAt: string
 }
 
+export interface TurmaTeacher {
+  uid: string
+  name: string
+  email: string
+  phone?: string
+}
+
 export interface Turma {
   id: string
   name: string
@@ -17,6 +24,7 @@ export interface Turma {
   startDate: string  // ISO date YYYY-MM-DD
   endDate: string    // ISO date YYYY-MM-DD
   students: string[] // emails
+  professors?: TurmaTeacher[]
   createdBy: string
   createdAt: string
 }
