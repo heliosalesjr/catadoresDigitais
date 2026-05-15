@@ -614,6 +614,7 @@ interface PresencasPanelProps {
 
 function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPanelProps) {
   const studentEmail = currentUser?.email ?? null
+  const todayISO = dateToISO(new Date())
 
   if (monthAulas.length === 0) {
     return (
@@ -637,6 +638,9 @@ function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPa
         const studentList = canEdit ? turma.students : (studentEmail ? [studentEmail] : [])
         const totalPresent = Object.values(aula.attendance).filter((s) => s === 'present').length
         const totalStudents = turma.students.length
+        const isFuture = aula.date > todayISO
+        const isToday = aula.date === todayISO
+        const hasAttendance = Object.keys(aula.attendance).length > 0
 
         return (
           <div
@@ -669,7 +673,15 @@ function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPa
 
             {/* Student list */}
             <div className="border-t" style={{ borderColor: 'var(--c-border)' }}>
-              {studentList.length === 0 ? (
+              {isFuture ? (
+                <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
+                  Aula ainda não aconteceu.
+                </p>
+              ) : isToday && !hasAttendance ? (
+                <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
+                  Professor ainda não abriu a chamada.
+                </p>
+              ) : studentList.length === 0 ? (
                 <p className="text-xs px-4 py-2.5" style={{ color: 'var(--c-faint)' }}>
                   {canEdit ? 'Nenhum aluno matriculado.' : 'Sem dados de presença.'}
                 </p>
