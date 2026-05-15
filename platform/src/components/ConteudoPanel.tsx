@@ -6,6 +6,8 @@ import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
   HiPlus, HiXMark, HiTrash, HiLink, HiPencilSquare, HiListBullet,
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
+  HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
+  HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
@@ -71,11 +73,11 @@ interface AddState {
   saving: boolean
 }
 
-type Tab = 'conteudo' | 'presencas' | 'professores'
+type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores'
 
 export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
-  const [tab, setTab] = useState<Tab>('conteudo')
+  const [tab, setTab] = useState<Tab>(canEdit ? 'estatisticas' : 'conteudo')
 
   const monthAulas = aulas
     .filter((a) => {
@@ -112,13 +114,16 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
             {MONTHS_PT[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
           </span>
         </div>
-        <div className="flex gap-1 mt-2">
-          {(['conteudo', 'presencas', 'professores'] as Tab[]).map((t) => {
+        <div className="flex gap-1 mt-2 overflow-x-auto">
+          {((['estatisticas', 'conteudo', 'presencas', 'professores'] as Tab[]).filter(
+            (t) => t !== 'estatisticas' || canEdit
+          )).map((t) => {
             const active = tab === t
             const tabLabel = {
-              conteudo:    <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>,
-              presencas:   <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
-              professores: <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
+              estatisticas: <><HiPresentationChartBar className="w-3.5 h-3.5" /> Visão geral</>,
+              conteudo:     <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>,
+              presencas:    <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
+              professores:  <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
             }[t]
             return (
               <button
@@ -136,6 +141,11 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           })}
         </div>
       </div>
+
+      {/* Estatísticas tab */}
+      {tab === 'estatisticas' && (
+        <EstatisticasPanel turma={turma} aulas={aulas} />
+      )}
 
       {/* Conteúdo tab */}
       {tab === 'conteudo' && (
@@ -898,6 +908,277 @@ function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelPro
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── EstatisticasPanel ────────────────────────────────────────────────────────
+
+function dateToISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function getWeekBounds(): { mon: string; sun: string } {
+  const today = new Date()
+  const dow = today.getDay()
+  const mon = new Date(today)
+  mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+  const sun = new Date(mon)
+  sun.setDate(mon.getDate() + 6)
+  return { mon: dateToISO(mon), sun: dateToISO(sun) }
+}
+
+interface EstatisticasPanelProps {
+  turma: Turma
+  aulas: Aula[]
+}
+
+function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
+  const today = new Date()
+  const start = parseLocalDate(turma.startDate)
+  const end = parseLocalDate(turma.endDate)
+
+  const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000))
+  const elapsedDays = Math.max(0, Math.round((today.getTime() - start.getTime()) / 86400000))
+  const remainingDays = Math.max(0, Math.round((end.getTime() - today.getTime()) / 86400000))
+  const progress = Math.min(100, Math.round((elapsedDays / totalDays) * 100))
+  const hasStarted = today >= start
+  const hasEnded = today > end
+
+  const { mon, sun } = getWeekBounds()
+  const aulasThisWeek = aulas.filter((a) => a.date >= mon && a.date <= sun)
+
+  const totalStudents = turma.students.length
+  const totalProfessors = turma.professors?.length ?? 0
+
+  // Attendance stats across all aulas that have data
+  const aulasWithData = aulas.filter((a) => Object.keys(a.attendance).length > 0)
+  const avgAttendancePct =
+    aulasWithData.length > 0 && totalStudents > 0
+      ? Math.round(
+          (aulasWithData.reduce((sum, a) => {
+            const present = Object.values(a.attendance).filter((s) => s === 'present').length
+            return sum + present / totalStudents
+          }, 0) /
+            aulasWithData.length) *
+            100,
+        )
+      : null
+
+  const attendanceQuality =
+    avgAttendancePct === null
+      ? null
+      : avgAttendancePct >= 80
+      ? { label: 'Ótima', color: '#22c55e' }
+      : avgAttendancePct >= 65
+      ? { label: 'Boa', color: '#10b981' }
+      : avgAttendancePct >= 50
+      ? { label: 'Regular', color: '#f59e0b' }
+      : { label: 'Baixa', color: '#ef4444' }
+
+  // Students who have never been present
+  const neverPresent =
+    aulasWithData.length > 0
+      ? turma.students.filter(
+          (email) =>
+            !aulas.some((a) => a.attendance[email] === 'present'),
+        )
+      : []
+
+  // Generate insights
+  const insights: { icon: React.ReactNode; text: string; color?: string }[] = []
+
+  if (!hasStarted) {
+    insights.push({
+      icon: <HiClock className="w-4 h-4 flex-shrink-0" />,
+      text: `O curso começa em ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}.`,
+    })
+  } else if (hasEnded) {
+    insights.push({
+      icon: <HiClock className="w-4 h-4 flex-shrink-0" />,
+      text: `O curso foi encerrado há ${elapsedDays - totalDays} dia${elapsedDays - totalDays !== 1 ? 's' : ''}.`,
+    })
+  } else if (remainingDays <= 14) {
+    insights.push({
+      icon: <HiClock className="w-4 h-4 flex-shrink-0" />,
+      text: `Atenção: faltam apenas ${remainingDays} dia${remainingDays !== 1 ? 's' : ''} para o término do curso.`,
+      color: '#f59e0b',
+    })
+  }
+
+  if (aulasThisWeek.length === 0 && hasStarted && !hasEnded) {
+    insights.push({
+      icon: <HiCalendarDays className="w-4 h-4 flex-shrink-0" />,
+      text: 'Nenhuma aula programada para esta semana.',
+      color: 'var(--c-subtle)',
+    })
+  } else if (aulasThisWeek.length > 0) {
+    insights.push({
+      icon: <HiCalendarDays className="w-4 h-4 flex-shrink-0" />,
+      text: `${aulasThisWeek.length} aula${aulasThisWeek.length !== 1 ? 's' : ''} programada${aulasThisWeek.length !== 1 ? 's' : ''} esta semana.`,
+    })
+  }
+
+  if (avgAttendancePct !== null && avgAttendancePct >= 80) {
+    insights.push({
+      icon: <HiArrowTrendingUp className="w-4 h-4 flex-shrink-0" />,
+      text: `Frequência média de ${avgAttendancePct}% — excelente engajamento da turma!`,
+      color: '#22c55e',
+    })
+  } else if (avgAttendancePct !== null && avgAttendancePct < 65) {
+    insights.push({
+      icon: <HiArrowTrendingDown className="w-4 h-4 flex-shrink-0" />,
+      text: `Frequência média de ${avgAttendancePct}% — considere estratégias para aumentar o engajamento.`,
+      color: '#ef4444',
+    })
+  }
+
+  if (neverPresent.length > 0) {
+    insights.push({
+      icon: <HiUsers className="w-4 h-4 flex-shrink-0" />,
+      text: `${neverPresent.length} aluno${neverPresent.length !== 1 ? 's' : ''} ainda não registrou${neverPresent.length !== 1 ? 'ram' : ''} presença em nenhuma aula.`,
+      color: '#f59e0b',
+    })
+  }
+
+  if (totalProfessors === 0) {
+    insights.push({
+      icon: <HiAcademicCap className="w-4 h-4 flex-shrink-0" />,
+      text: 'Nenhum professor associado à turma ainda.',
+      color: 'var(--c-subtle)',
+    })
+  }
+
+  const statCards = [
+    { label: 'Alunos', value: totalStudents, icon: <HiUsers className="w-4 h-4" /> },
+    { label: 'Professores', value: totalProfessors, icon: <HiAcademicCap className="w-4 h-4" /> },
+    { label: 'Aulas esta semana', value: aulasThisWeek.length, icon: <HiCalendarDays className="w-4 h-4" /> },
+    { label: 'Total de aulas', value: aulas.length, icon: <HiDocumentText className="w-4 h-4" /> },
+  ]
+
+  return (
+    <div className="p-4 flex flex-col gap-4">
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-2">
+        {statCards.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl border px-4 py-3 flex flex-col gap-1"
+            style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+          >
+            <div className="flex items-center gap-1.5" style={{ color: 'var(--c-subtle)' }}>
+              {s.icon}
+              <span className="text-[11px] font-medium">{s.label}</span>
+            </div>
+            <p className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Course progress */}
+      <div
+        className="rounded-2xl border px-4 py-3 flex flex-col gap-2"
+        style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+            Progresso do curso
+          </span>
+          <span className="text-xs font-bold" style={{ color: turma.iconColor }}>
+            {progress}%
+          </span>
+        </div>
+
+        {/* Bar */}
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--c-border)' }}>
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${progress}%`, background: turma.iconColor }}
+          />
+        </div>
+
+        <div className="flex justify-between text-[11px]" style={{ color: 'var(--c-subtle)' }}>
+          <span>
+            {hasStarted
+              ? hasEnded
+                ? 'Encerrado'
+                : `Iniciou há ${elapsedDays} dia${elapsedDays !== 1 ? 's' : ''}`
+              : `Começa em ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}`}
+          </span>
+          <span>
+            {!hasEnded && `Faltam ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}`}
+          </span>
+        </div>
+      </div>
+
+      {/* Attendance */}
+      <div
+        className="rounded-2xl border px-4 py-3 flex flex-col gap-2"
+        style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+            Frequência média
+          </span>
+          {attendanceQuality && (
+            <span
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: `${attendanceQuality.color}18`, color: attendanceQuality.color }}
+            >
+              {attendanceQuality.label}
+            </span>
+          )}
+        </div>
+
+        {avgAttendancePct !== null ? (
+          <>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--c-border)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${avgAttendancePct}%`, background: attendanceQuality?.color ?? turma.iconColor }}
+              />
+            </div>
+            <p className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>
+              {avgAttendancePct}%
+              <span className="text-xs font-normal ml-1.5" style={{ color: 'var(--c-subtle)' }}>
+                em {aulasWithData.length} aula{aulasWithData.length !== 1 ? 's' : ''} com dados
+              </span>
+            </p>
+          </>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--c-faint)' }}>
+            Nenhuma presença registrada ainda.
+          </p>
+        )}
+      </div>
+
+      {/* Insights */}
+      {insights.length > 0 && (
+        <div
+          className="rounded-2xl border px-4 py-3 flex flex-col gap-2"
+          style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+        >
+          <div className="flex items-center gap-1.5">
+            <HiLightBulb className="w-3.5 h-3.5" style={{ color: turma.iconColor }} />
+            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+              Insights
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {insights.map((ins, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span style={{ color: ins.color ?? turma.iconColor, marginTop: 1 }}>{ins.icon}</span>
+                <p className="text-xs leading-relaxed" style={{ color: ins.color ?? 'var(--c-text)' }}>
+                  {ins.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
