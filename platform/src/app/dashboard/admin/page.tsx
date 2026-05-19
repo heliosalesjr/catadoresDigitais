@@ -111,7 +111,9 @@ export default function AdminDashboard() {
     { label: 'Admins', value: users.filter((u) => u.role === 'admin').length, filter: 'admin' },
   ]
 
-  const grouped = groupByDate(upcomingAulas)
+  const pendingAulas = upcomingAulas.filter((a) => a.status === 'pending')
+  const publishedAulas = upcomingAulas.filter((a) => a.status !== 'pending')
+  const grouped = groupByDate(publishedAulas)
 
   const filteredUsers = users.filter((u) => {
     const matchesRole = roleFilter === 'all' || u.role === roleFilter
@@ -158,12 +160,65 @@ export default function AdminDashboard() {
             <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
               Carregando...
             </div>
-          ) : grouped.length === 0 ? (
+          ) : pendingAulas.length === 0 && grouped.length === 0 ? (
             <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
               Nenhuma aula agendada.
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
+
+              {/* Pending aulas — always first */}
+              {pendingAulas.length > 0 && (
+                <div>
+                  <div
+                    className="px-6 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
+                    style={{ background: '#f59e0b12', color: '#f59e0b' }}
+                  >
+                    Aguardando aprovação · {pendingAulas.length}
+                  </div>
+                  {pendingAulas.map((aula) => (
+                    <Link
+                      key={aula.id}
+                      href={`/dashboard/turmas/${aula.turmaId}`}
+                      className="flex items-center gap-4 px-6 py-3.5 transition-opacity hover:opacity-75 border-t"
+                      style={{ borderColor: '#f59e0b22' }}
+                    >
+                      <div
+                        className="w-1 h-10 rounded-full flex-shrink-0"
+                        style={{ background: aula.turmaIconColor, opacity: 0.5 }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+                            {aula.title}
+                          </p>
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                          >
+                            Pendente
+                          </span>
+                        </div>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
+                          {aula.turmaName} · {formatDateLabel(aula.date)}
+                          {aula.teachers?.length > 0 && (
+                            <> · Prof: {aula.teachers.map((t) => t.name).join(', ')}</>
+                          )}
+                        </p>
+                      </div>
+                      {aula.startTime && (
+                        <div className="flex items-center gap-1.5 flex-shrink-0 text-xs" style={{ color: 'var(--c-muted)' }}>
+                          <HiClock className="w-3.5 h-3.5" />
+                          {aula.startTime}{aula.endTime ? ` – ${aula.endTime}` : ''}
+                        </div>
+                      )}
+                      <HiChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#f59e0b88' }} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Published aulas grouped by date */}
               {grouped.map(([date, aulas]) => (
                 <div key={date}>
                   {/* Date header */}
