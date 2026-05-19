@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
+import { AnimatePresence } from 'framer-motion'
 import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock, HiTrash } from 'react-icons/hi2'
 import Link from 'next/link'
-import type { UserProfile } from '@/types'
+import type { UserProfile, Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
+import { UserListModal, type CardFilter } from '@/components/UserListModal'
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Admin',
@@ -54,6 +56,24 @@ export default function AdminDashboard() {
   const [aulasLoading, setAulasLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [activeCard, setActiveCard] = useState<CardFilter | null>(null)
+  const [turmas, setTurmas] = useState<Turma[]>([])
+  const [turmasLoading, setTurmasLoading] = useState(false)
+  const [turmasFetched, setTurmasFetched] = useState(false)
+
+  const fetchTurmas = useCallback(async () => {
+    if (turmasFetched) return
+    setTurmasLoading(true)
+    const res = await fetch('/api/admin/turmas')
+    if (res.ok) setTurmas(await res.json())
+    setTurmasLoading(false)
+    setTurmasFetched(true)
+  }, [turmasFetched])
+
+  function openCard(filter: CardFilter) {
+    setActiveCard(filter)
+    fetchTurmas()
+  }
 
   useEffect(() => {
     fetch('/api/admin/upcoming-aulas')
@@ -84,11 +104,11 @@ export default function AdminDashboard() {
     )
   }
 
-  const stats = [
-    { label: 'Alunos', value: users.filter((u) => u.role === 'student').length },
-    { label: 'Professores', value: users.filter((u) => u.role === 'teacher').length },
-    { label: 'Total de usuários', value: users.length },
-    { label: 'Admins', value: users.filter((u) => u.role === 'admin').length },
+  const stats: { label: string; value: number; filter: CardFilter }[] = [
+    { label: 'Alunos', value: users.filter((u) => u.role === 'student').length, filter: 'student' },
+    { label: 'Professores', value: users.filter((u) => u.role === 'teacher').length, filter: 'teacher' },
+    { label: 'Total de usuários', value: users.length, filter: 'all' },
+    { label: 'Admins', value: users.filter((u) => u.role === 'admin').length, filter: 'admin' },
   ]
 
   const grouped = groupByDate(upcomingAulas)
@@ -107,16 +127,23 @@ export default function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
-            <div
+            <button
               key={stat.label}
-              className="rounded-2xl p-6 border"
+              onClick={() => !usersLoading && openCard(stat.filter)}
+              disabled={usersLoading}
+              className="rounded-2xl p-6 border text-left transition-opacity hover:opacity-75 disabled:cursor-default group"
               style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
             >
               <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>{stat.label}</p>
               <p className="text-3xl font-bold mt-2" style={{ color: 'var(--c-text)' }}>
                 {usersLoading ? '—' : stat.value}
               </p>
-            </div>
+              {!usersLoading && (
+                <p className="text-[11px] mt-2" style={{ color: 'var(--c-faint)' }}>
+                  Ver lista →
+                </p>
+              )}
+            </button>
           ))}
         </div>
 
@@ -331,6 +358,18 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      <AnimatePresence>
+        {activeCard && (
+          <UserListModal
+            filter={activeCard}
+            users={users}
+            turmas={turmas}
+            turmasLoading={turmasLoading}
+            onClose={() => setActiveCard(null)}
+          />
+        )}
+      </AnimatePresence>
     </main>
   )
 }
