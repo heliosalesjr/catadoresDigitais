@@ -8,6 +8,7 @@ import {
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
+  HiEye, HiEyeSlash,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
@@ -622,6 +623,162 @@ interface PresencasPanelProps {
   onRefresh: () => void
 }
 
+interface PresencaAulaRowProps {
+  aula: Aula
+  turma: Turma
+  canEdit: boolean
+  studentList: string[]
+  todayISO: string
+}
+
+function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: PresencaAulaRowProps) {
+  const [showCode, setShowCode] = useState(false)
+
+  const date = parseLocalDate(aula.date)
+  const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+  const totalPresent = Object.values(aula.attendance).filter((s) => s === 'present').length
+  const totalStudents = turma.students.length
+  const isFuture = aula.date > todayISO
+  const isToday = aula.date === todayISO
+  const hasAttendance = Object.keys(aula.attendance).length > 0
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden border"
+      style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
+    >
+      {/* Aula info */}
+      <div
+        className="px-4 py-3 flex items-center justify-between"
+        style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+      >
+        <div className="min-w-0">
+          <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+            {aula.title}
+          </p>
+          <p className="text-xs capitalize mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+            {dateStr} · {aula.startTime} – {aula.endTime}
+          </p>
+        </div>
+        {canEdit && (
+          <span
+            className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-2"
+            style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
+          >
+            {totalPresent}/{totalStudents} P
+          </span>
+        )}
+      </div>
+
+      {/* Student list */}
+      <div className="border-t" style={{ borderColor: 'var(--c-border)' }}>
+        {isFuture ? (
+          <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
+            Aula ainda não aconteceu.
+          </p>
+        ) : isToday && !hasAttendance ? (
+          <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
+            Professor ainda não abriu a chamada.
+          </p>
+        ) : studentList.length === 0 ? (
+          <p className="text-xs px-4 py-2.5" style={{ color: 'var(--c-faint)' }}>
+            {canEdit ? 'Nenhum aluno matriculado.' : 'Sem dados de presença.'}
+          </p>
+        ) : (
+          studentList.map((email, i) => {
+            const status = aula.attendance[email] ?? null
+            return (
+              <div
+                key={email}
+                className="flex items-center gap-3 px-4 py-2"
+                style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+              >
+                <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
+                  {email}
+                </span>
+                {status ? (
+                  <span
+                    className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                    style={{ background: `${STATUS_COLOR[status]}18`, color: STATUS_COLOR[status] }}
+                  >
+                    {STATUS_LABEL[status]}
+                  </span>
+                ) : (
+                  <span
+                    className="text-xs w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                    style={{ background: 'var(--c-bg)', color: 'var(--c-faint)' }}
+                  >
+                    —
+                  </span>
+                )}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* ── Attendance code reveal (teacher/admin only) ── */}
+      {canEdit && (
+        <>
+          <AnimatePresence>
+            {showCode && aula.attendanceCode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="border-t px-4 py-3 flex flex-col gap-1.5"
+                  style={{ borderColor: 'var(--c-border)', background: `${turma.iconColor}08` }}
+                >
+                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+                    Código de chamada
+                  </span>
+                  <p
+                    className="text-4xl font-black font-mono tracking-[0.3em] leading-none"
+                    style={{ color: turma.iconColor }}
+                  >
+                    {aula.attendanceCode}
+                  </p>
+                  <p className="text-xs leading-snug mt-1" style={{ color: 'var(--c-subtle)' }}>
+                    Passe este código para os alunos. Ele expira ao final da aula ({aula.endTime}).
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div
+            className="border-t px-4 py-2.5 flex flex-wrap gap-2"
+            style={{ borderColor: 'var(--c-border)' }}
+          >
+            <button
+              onClick={() => setShowCode((v) => !v)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-80"
+              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+            >
+              {showCode
+                ? <><HiEyeSlash className="w-3.5 h-3.5" /> Ocultar código</>
+                : <><HiEye className="w-3.5 h-3.5" /> Começar a chamada</>
+              }
+            </button>
+            <button
+              disabled
+              title="Em breve"
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border opacity-40 cursor-not-allowed"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              <HiPencilSquare className="w-3.5 h-3.5" /> Editar lista de chamada
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPanelProps) {
   const studentEmail = currentUser?.email ?? null
   const todayISO = dateToISO(new Date())
@@ -641,93 +798,16 @@ function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPa
   return (
     <div className="p-4 flex flex-col gap-3">
       {monthAulas.map((aula) => {
-        const date = parseLocalDate(aula.date)
-        const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-
-        // Teacher/admin: show all enrolled students
         const studentList = canEdit ? turma.students : (studentEmail ? [studentEmail] : [])
-        const totalPresent = Object.values(aula.attendance).filter((s) => s === 'present').length
-        const totalStudents = turma.students.length
-        const isFuture = aula.date > todayISO
-        const isToday = aula.date === todayISO
-        const hasAttendance = Object.keys(aula.attendance).length > 0
-
         return (
-          <div
+          <PresencaAulaRow
             key={aula.id}
-            className="rounded-2xl overflow-hidden border"
-            style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
-          >
-            {/* Aula info */}
-            <div
-              className="px-4 py-3 flex items-center justify-between"
-              style={{ borderLeft: `3px solid ${turma.iconColor}` }}
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
-                  {aula.title}
-                </p>
-                <p className="text-xs capitalize mt-0.5" style={{ color: 'var(--c-subtle)' }}>
-                  {dateStr} · {aula.startTime} – {aula.endTime}
-                </p>
-              </div>
-              {canEdit && (
-                <span
-                  className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-2"
-                  style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
-                >
-                  {totalPresent}/{totalStudents} P
-                </span>
-              )}
-            </div>
-
-            {/* Student list */}
-            <div className="border-t" style={{ borderColor: 'var(--c-border)' }}>
-              {isFuture ? (
-                <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
-                  Aula ainda não aconteceu.
-                </p>
-              ) : isToday && !hasAttendance ? (
-                <p className="text-xs px-4 py-2.5 italic" style={{ color: 'var(--c-faint)' }}>
-                  Professor ainda não abriu a chamada.
-                </p>
-              ) : studentList.length === 0 ? (
-                <p className="text-xs px-4 py-2.5" style={{ color: 'var(--c-faint)' }}>
-                  {canEdit ? 'Nenhum aluno matriculado.' : 'Sem dados de presença.'}
-                </p>
-              ) : (
-                studentList.map((email, i) => {
-                  const status = aula.attendance[email] ?? null
-                  return (
-                    <div
-                      key={email}
-                      className="flex items-center gap-3 px-4 py-2"
-                      style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
-                    >
-                      <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
-                        {email}
-                      </span>
-                      {status ? (
-                        <span
-                          className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
-                          style={{ background: `${STATUS_COLOR[status]}18`, color: STATUS_COLOR[status] }}
-                        >
-                          {STATUS_LABEL[status]}
-                        </span>
-                      ) : (
-                        <span
-                          className="text-xs w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
-                          style={{ background: 'var(--c-bg)', color: 'var(--c-faint)' }}
-                        >
-                          —
-                        </span>
-                      )}
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
+            aula={aula}
+            turma={turma}
+            canEdit={canEdit}
+            studentList={studentList}
+            todayISO={todayISO}
+          />
         )
       })}
     </div>
