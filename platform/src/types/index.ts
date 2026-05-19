@@ -62,6 +62,7 @@ export interface Aula {
   endTime: string    // "22:00"
   attendance: Record<string, AttendanceStatus> // studentEmail -> status
   attendanceCode?: string // 4-digit code for student check-in
+  status?: 'published' | 'pending' // undefined treated as published (legacy)
   avaliacoes?: Avaliacao[]
   createdAt: string
 }

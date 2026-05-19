@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
+import { requireAdmin } from '@/lib/require-admin'
 import { requireAuthAny } from '@/lib/require-auth-any'
 
 type Ctx = { params: Promise<{ id: string; aulaId: string }> }
@@ -33,13 +34,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   for (const key of allowed) {
     if (key in body) update[key] = body[key]
   }
+  // Only admins can change status
+  if (auth.role === 'admin' && 'status' in body) {
+    update.status = body.status
+  }
 
   await ref.update(update)
   return Response.json({ ok: true })
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
-  const auth = await requireEditor()
+  const auth = await requireAdmin()
   if (auth instanceof Response) return auth
 
   const { id, aulaId } = await params

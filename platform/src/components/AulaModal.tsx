@@ -34,6 +34,7 @@ interface Props {
   aula: Aula | null
   students: string[]
   canEdit: boolean
+  isAdmin: boolean
   currentUserUid: string
   onClose: () => void
   onSaved: () => void
@@ -82,7 +83,7 @@ function AttendanceCodeReveal({ code, accentColor }: { code: string; accentColor
 
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
-  aula, students, canEdit, currentUserUid,
+  aula, students, canEdit, isAdmin, currentUserUid,
   onClose, onSaved,
 }: Props) {
   const isCreate = !aula
@@ -186,6 +187,20 @@ export function AulaModal({
     onSaved()
   }
 
+  async function handleApprove() {
+    if (!aula) return
+    setSaving(true)
+    await fetch(`/api/turmas/${turmaId}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'published' }),
+    })
+    setSaving(false)
+    onSaved()
+  }
+
+  const isPending = aula?.status === 'pending'
+
   async function handleAttendance(email: string, status: AttendanceStatus) {
     const next = attendance[email] === status ? null : status
     const updated = { ...attendance, [email]: next }
@@ -238,9 +253,19 @@ export function AulaModal({
                 autoFocus
               />
             ) : (
-              <h2 className="text-lg font-bold leading-snug" style={{ color: 'var(--c-text)' }}>
-                {aula?.title ?? 'Nova aula'}
-              </h2>
+              <div className="flex items-start gap-2 flex-wrap">
+                <h2 className="text-lg font-bold leading-snug" style={{ color: 'var(--c-text)' }}>
+                  {aula?.title ?? 'Nova aula'}
+                </h2>
+                {isPending && (
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 flex-shrink-0"
+                    style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                  >
+                    Pendente
+                  </span>
+                )}
+              </div>
             )}
             {mode === 'edit' ? (
               <input
@@ -270,15 +295,17 @@ export function AulaModal({
                 >
                   <HiPencilSquare className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-                  style={{ borderColor: 'var(--c-border-md)', color: '#ef444480' }}
-                  title="Excluir"
-                >
-                  <HiTrash className="w-4 h-4" />
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+                    style={{ borderColor: 'var(--c-border-md)', color: '#ef444480' }}
+                    title="Excluir"
+                  >
+                    <HiTrash className="w-4 h-4" />
+                  </button>
+                )}
               </>
             )}
             <button
@@ -497,6 +524,38 @@ export function AulaModal({
               )
             )}
           </div>
+
+          {/* Approve banner */}
+          {mode === 'view' && isPending && isAdmin && (
+            <div
+              className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+            >
+              <p className="text-xs leading-snug" style={{ color: '#f59e0b' }}>
+                Esta aula foi criada por um professor e aguarda sua aprovação.
+              </p>
+              <button
+                onClick={handleApprove}
+                disabled={saving}
+                className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity disabled:opacity-50"
+                style={{ background: '#f59e0b', color: '#fff' }}
+              >
+                {saving ? '...' : 'Aprovar'}
+              </button>
+            </div>
+          )}
+
+          {/* Pending notice for teacher */}
+          {mode === 'view' && isPending && !isAdmin && (
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+            >
+              <p className="text-xs" style={{ color: '#f59e0b' }}>
+                Aula aguardando aprovação do administrador.
+              </p>
+            </div>
+          )}
 
           {/* Attendance Code */}
           {mode === 'view' && aula?.attendanceCode && canEdit && (

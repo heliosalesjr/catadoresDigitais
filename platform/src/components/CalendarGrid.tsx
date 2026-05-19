@@ -51,6 +51,7 @@ interface Props {
   turma: Turma
   aulas: Aula[]
   canEdit: boolean
+  isAdmin: boolean
   currentUserUid: string
   isMobile: boolean
   onCollapse: () => void
@@ -58,7 +59,7 @@ interface Props {
   onMonthChange: (month: Date) => void
 }
 
-export function CalendarGrid({ turma, aulas, canEdit, currentUserUid, isMobile, onCollapse, onRefresh, onMonthChange }: Props) {
+export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, isMobile, onCollapse, onRefresh, onMonthChange }: Props) {
   const startMonth = startOfMonth(parseLocalDate(turma.startDate))
   const endMonth = startOfMonth(parseLocalDate(turma.endDate))
   const totalMonths =
@@ -259,18 +260,25 @@ export function CalendarGrid({ turma, aulas, canEdit, currentUserUid, isMobile, 
                     {day.getDate()}
                   </span>
 
-                  {dayAulas.slice(0, 2).map((a, j) => (
-                    <div
-                      key={j}
-                      className="w-full text-[10px] font-black leading-tight px-1 py-0.5 rounded truncate text-center"
-                      style={{
-                        background: `${turma.iconColor}22`,
-                        color: turma.iconColor,
-                      }}
-                    >
-                      {a.title}
-                    </div>
-                  ))}
+                  {dayAulas.slice(0, 2).map((a, j) => {
+                    const pending = a.status === 'pending'
+                    return (
+                      <div
+                        key={j}
+                        className="w-full text-[10px] font-black leading-tight px-1 py-0.5 rounded truncate text-center"
+                        style={pending ? {
+                          background: 'transparent',
+                          color: `${turma.iconColor}99`,
+                          border: `1px dashed ${turma.iconColor}88`,
+                        } : {
+                          background: `${turma.iconColor}22`,
+                          color: turma.iconColor,
+                        }}
+                      >
+                        {a.title}
+                      </div>
+                    )
+                  })}
                   {dayAulas.length > 2 && (
                     <span className="text-[9px]" style={{ color: 'var(--c-subtle)' }}>
                       +{dayAulas.length - 2}
@@ -301,6 +309,7 @@ export function CalendarGrid({ turma, aulas, canEdit, currentUserUid, isMobile, 
             aula={selectedAula}
             students={turma.students}
             canEdit={canEdit}
+            isAdmin={isAdmin}
             currentUserUid={currentUserUid}
             onClose={() => setModalOpen(false)}
             onSaved={() => { onRefresh(); setModalOpen(false) }}

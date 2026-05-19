@@ -183,6 +183,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               turma={turma}
               aulas={aulas}
               canEdit={canEdit}
+              isAdmin={isAdmin}
               currentUserUid={user.uid}
               isMobile={isMobile}
               onCollapse={() => setCalendarOpen(false)}

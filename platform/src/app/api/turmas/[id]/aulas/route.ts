@@ -56,6 +56,7 @@ export async function POST(
   }
 
   const attendanceCode = String(Math.floor(1000 + Math.random() * 9000))
+  const status = auth.role === 'admin' ? 'published' : 'pending'
 
   const ref = await adminDb
     .collection('turmas').doc(id)
@@ -70,6 +71,7 @@ export async function POST(
       endTime: body.endTime,
       attendance: {},
       attendanceCode,
+      status,
       createdAt: new Date().toISOString(),
     })
 

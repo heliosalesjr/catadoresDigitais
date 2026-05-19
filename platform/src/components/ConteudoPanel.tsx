@@ -299,9 +299,19 @@ function AulaCard({
         className="px-4 pt-3.5 pb-3"
         style={{ borderLeft: `3px solid ${turma.iconColor}` }}
       >
-        <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
-          {aula.title}
-        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
+            {aula.title}
+          </p>
+          {aula.status === 'pending' && (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: '#f59e0b18', color: '#f59e0b' }}
+            >
+              Pendente
+            </span>
+          )}
+        </div>
         <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
           {dateStr} · {aula.startTime} – {aula.endTime}
         </p>
