@@ -48,8 +48,7 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
-  const { users, loading: usersLoading, updateRole, deleteUser } = useUsers()
-  const [updating, setUpdating] = useState<string | null>(null)
+  const { users, loading: usersLoading, deleteUser } = useUsers()
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
@@ -60,6 +59,8 @@ export default function AdminDashboard() {
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [turmasLoading, setTurmasLoading] = useState(false)
   const [turmasFetched, setTurmasFetched] = useState(false)
+  const [turmaPickerUser, setTurmaPickerUser] = useState<UserProfile | null>(null)
+  const [addingToTurma, setAddingToTurma] = useState<string | null>(null)
   const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([])
   const [allowlistLoading, setAllowlistLoading] = useState(true)
   const [newEmail, setNewEmail] = useState('')
@@ -126,11 +127,20 @@ export default function AdminDashboard() {
     setConfirmDelete(null)
   }
 
-  async function handleRoleToggle(u: UserProfile) {
-    setUpdating(u.uid)
-    const next = u.role === 'teacher' ? 'student' : 'teacher'
-    await updateRole(u.uid, next)
-    setUpdating(null)
+  async function handleAddToTurma(turmaId: string, studentEmail: string) {
+    const turma = turmas.find((t) => t.id === turmaId)
+    if (!turma || turma.students?.includes(studentEmail)) return
+    setAddingToTurma(turmaId)
+    const updatedStudents = [...(turma.students ?? []), studentEmail]
+    const res = await fetch(`/api/admin/turmas/${turmaId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ students: updatedStudents }),
+    })
+    if (res.ok) {
+      setTurmas((prev) => prev.map((t) => t.id === turmaId ? { ...t, students: updatedStudents } : t))
+    }
+    setAddingToTurma(null)
   }
 
   if (authLoading) {
@@ -421,7 +431,7 @@ export default function AdminDashboard() {
             <div>
               <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Usuários cadastrados</h2>
               <p className="text-sm mt-0.5" style={{ color: 'var(--c-subtle)' }}>
-                Selecione um aluno para promovê-lo a professor.
+                Adicione alunos a turmas existentes.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -484,17 +494,13 @@ export default function AdminDashboard() {
                     {ROLE_LABEL[u.role]}
                   </span>
 
-                  {u.role !== 'admin' && (
+                  {u.role === 'student' && (
                     <button
-                      onClick={() => handleRoleToggle(u)}
-                      disabled={updating === u.uid}
-                      className="text-xs px-3 py-1.5 rounded-lg border transition-colors flex-shrink-0 disabled:opacity-50"
-                      style={{
-                        borderColor: u.role === 'teacher' ? 'var(--c-border-md)' : '#A855F7',
-                        color: u.role === 'teacher' ? 'var(--c-muted)' : '#A855F7',
-                      }}
+                      onClick={() => { setTurmaPickerUser(u); fetchTurmas() }}
+                      className="text-xs px-3 py-1.5 rounded-lg border transition-colors flex-shrink-0"
+                      style={{ borderColor: '#FFC530', color: '#FFC530' }}
                     >
-                      {updating === u.uid ? '...' : u.role === 'teacher' ? 'Remover professor' : 'Tornar professor'}
+                      + Turma
                     </button>
                   )}
 
@@ -535,6 +541,68 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {turmaPickerUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setTurmaPickerUser(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border overflow-hidden"
+            style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--c-border)' }}>
+              <p className="font-semibold text-sm" style={{ color: 'var(--c-text)' }}>Adicionar a uma turma</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>{turmaPickerUser.name} · {turmaPickerUser.email}</p>
+            </div>
+
+            {turmasLoading ? (
+              <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Carregando turmas...</div>
+            ) : turmas.length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Nenhuma turma criada ainda.</div>
+            ) : (
+              <ul>
+                {turmas.map((turma, i) => {
+                  const enrolled = turma.students?.includes(turmaPickerUser.email)
+                  return (
+                    <li
+                      key={turma.id}
+                      style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                    >
+                      <button
+                        disabled={enrolled || addingToTurma === turma.id}
+                        onClick={() => handleAddToTurma(turma.id, turmaPickerUser.email)}
+                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-opacity hover:opacity-75 disabled:opacity-40"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: turma.iconColor }} />
+                        <span className="flex-1 text-sm truncate" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
+                        {enrolled && (
+                          <span className="text-xs flex-shrink-0" style={{ color: 'var(--c-subtle)' }}>Matriculado</span>
+                        )}
+                        {addingToTurma === turma.id && (
+                          <span className="text-xs flex-shrink-0" style={{ color: 'var(--c-subtle)' }}>...</span>
+                        )}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+
+            <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
+              <button
+                onClick={() => setTurmaPickerUser(null)}
+                className="text-sm w-full text-center"
+                style={{ color: 'var(--c-subtle)' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AnimatePresence>
         {activeCard && (
