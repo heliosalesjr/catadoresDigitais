@@ -1,5 +1,11 @@
 export type Role = 'admin' | 'teacher' | 'student'
 
+export interface AllowlistEntry {
+  email: string
+  role: 'student' | 'teacher'
+  createdAt: string
+}
+
 export interface UserProfile {
   uid: string
   email: string

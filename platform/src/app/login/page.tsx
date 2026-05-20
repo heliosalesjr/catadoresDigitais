@@ -28,7 +28,11 @@ export default function LoginPage() {
       const routes = { admin: '/dashboard/admin', teacher: '/dashboard/teacher', student: '/dashboard/student' }
       router.push(routes[profile.role])
     } catch (e) {
-      setError('Erro ao fazer login. Tente novamente.')
+      if (e instanceof Error && e.message === 'EMAIL_NOT_ALLOWED') {
+        setError('Acesso restrito. Entre em contato com a coordenação para solicitar acesso.')
+      } else {
+        setError('Erro ao fazer login. Tente novamente.')
+      }
       console.error(e)
     } finally {
       setLoading(false)

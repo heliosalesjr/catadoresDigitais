@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
 import { AnimatePresence } from 'framer-motion'
-import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock, HiTrash } from 'react-icons/hi2'
+import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock, HiTrash, HiShieldCheck, HiPlus } from 'react-icons/hi2'
 import Link from 'next/link'
-import type { UserProfile, Turma } from '@/types'
+import type { UserProfile, Turma, AllowlistEntry } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { UserListModal, type CardFilter } from '@/components/UserListModal'
 
@@ -60,6 +60,12 @@ export default function AdminDashboard() {
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [turmasLoading, setTurmasLoading] = useState(false)
   const [turmasFetched, setTurmasFetched] = useState(false)
+  const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([])
+  const [allowlistLoading, setAllowlistLoading] = useState(true)
+  const [newEmail, setNewEmail] = useState('')
+  const [newRole, setNewRole] = useState<'student' | 'teacher'>('student')
+  const [addingToAllowlist, setAddingToAllowlist] = useState(false)
+  const [removingFromAllowlist, setRemovingFromAllowlist] = useState<string | null>(null)
 
   const fetchTurmas = useCallback(async () => {
     if (turmasFetched) return
@@ -81,6 +87,37 @@ export default function AdminDashboard() {
       .then((data) => { setUpcomingAulas(data); setAulasLoading(false) })
       .catch(() => setAulasLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetch('/api/admin/allowlist')
+      .then((r) => r.json())
+      .then((data) => { setAllowlist(data); setAllowlistLoading(false) })
+      .catch(() => setAllowlistLoading(false))
+  }, [])
+
+  async function handleAddToAllowlist(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newEmail.trim()) return
+    setAddingToAllowlist(true)
+    const res = await fetch('/api/admin/allowlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newEmail.trim().toLowerCase(), role: newRole }),
+    })
+    if (res.ok) {
+      const entry: AllowlistEntry = { email: newEmail.trim().toLowerCase(), role: newRole, createdAt: new Date().toISOString() }
+      setAllowlist((prev) => [entry, ...prev.filter((e) => e.email !== entry.email)])
+      setNewEmail('')
+    }
+    setAddingToAllowlist(false)
+  }
+
+  async function handleRemoveFromAllowlist(email: string) {
+    setRemovingFromAllowlist(email)
+    const res = await fetch(`/api/admin/allowlist/${encodeURIComponent(email)}`, { method: 'DELETE' })
+    if (res.ok) setAllowlist((prev) => prev.filter((e) => e.email !== email))
+    setRemovingFromAllowlist(null)
+  }
 
   async function handleDelete(uid: string) {
     setDeleting(uid)
@@ -291,6 +328,91 @@ export default function AdminDashboard() {
             </div>
             <HiChevronRight className="w-4 h-4" style={{ color: 'var(--c-faint)' }} />
           </Link>
+        </div>
+
+        {/* Allowlist */}
+        <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}>
+          <div className="px-6 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--c-border)' }}>
+            <HiShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-subtle)' }} />
+            <div className="flex-1">
+              <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Lista de acesso</h2>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+                Emails pré-autorizados. Quando o signup estiver fechado, apenas estes emails poderão entrar.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleAddToAllowlist} className="px-6 py-4 flex gap-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="email@exemplo.com"
+              required
+              className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
+              style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+            />
+            <select
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value as 'student' | 'teacher')}
+              className="rounded-xl px-3 py-2 text-sm border outline-none"
+              style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+            >
+              <option value="student">Aluno</option>
+              <option value="teacher">Professor</option>
+            </select>
+            <button
+              type="submit"
+              disabled={addingToAllowlist}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
+              style={{ background: '#FFC530', color: '#06030F' }}
+            >
+              <HiPlus className="w-4 h-4" />
+              {addingToAllowlist ? '...' : 'Adicionar'}
+            </button>
+          </form>
+
+          {allowlistLoading ? (
+            <div className="px-6 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Carregando...</div>
+          ) : allowlist.length === 0 ? (
+            <div className="px-6 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Nenhum email na lista ainda.</div>
+          ) : (
+            <ul>
+              {allowlist.map((entry, i) => (
+                <li
+                  key={entry.email}
+                  className="flex items-center gap-4 px-6 py-3.5"
+                  style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate" style={{ color: 'var(--c-text)' }}>{entry.email}</p>
+                  </div>
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{
+                      color: entry.role === 'teacher' ? '#A855F7' : '#06B6D4',
+                      background: entry.role === 'teacher' ? '#A855F718' : '#06B6D418',
+                    }}
+                  >
+                    {entry.role === 'teacher' ? 'Professor' : 'Aluno'}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveFromAllowlist(entry.email)}
+                    disabled={removingFromAllowlist === entry.email}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0 disabled:opacity-50"
+                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
+                    title="Remover da lista"
+                  >
+                    {removingFromAllowlist === entry.email ? (
+                      <span className="text-xs">...</span>
+                    ) : (
+                      <HiTrash className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Users list */}
