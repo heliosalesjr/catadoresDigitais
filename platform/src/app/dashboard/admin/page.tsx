@@ -9,6 +9,7 @@ import Link from 'next/link'
 import type { UserProfile, Turma, AllowlistEntry } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { UserListModal, type CardFilter } from '@/components/UserListModal'
+import { UserDetailPanel } from '@/components/UserDetailPanel'
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Admin',
@@ -48,9 +49,8 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
-  const { users, loading: usersLoading, deleteUser } = useUsers()
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState<string | null>(null)
+  const { users, loading: usersLoading, updateRole, deleteUser } = useUsers()
+  const [detailUser, setDetailUser] = useState<UserProfile | null>(null)
   const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
   const [aulasLoading, setAulasLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -60,8 +60,6 @@ export default function AdminDashboard() {
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [turmasLoading, setTurmasLoading] = useState(false)
   const [turmasFetched, setTurmasFetched] = useState(false)
-  const [turmaPickerUser, setTurmaPickerUser] = useState<UserProfile | null>(null)
-  const [addingToTurma, setAddingToTurma] = useState<string | null>(null)
   const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([])
   const [allowlistLoading, setAllowlistLoading] = useState(true)
   const [newEmail, setNewEmail] = useState('')
@@ -123,17 +121,9 @@ export default function AdminDashboard() {
     setRemovingFromAllowlist(null)
   }
 
-  async function handleDelete(uid: string) {
-    setDeleting(uid)
-    await deleteUser(uid)
-    setDeleting(null)
-    setConfirmDelete(null)
-  }
-
   async function handleAddToTurma(turmaId: string, studentEmail: string) {
     const turma = turmas.find((t) => t.id === turmaId)
     if (!turma || turma.students?.includes(studentEmail)) return
-    setAddingToTurma(turmaId)
     const updatedStudents = [...(turma.students ?? []), studentEmail]
     const res = await fetch(`/api/admin/turmas/${turmaId}`, {
       method: 'PATCH',
@@ -143,7 +133,6 @@ export default function AdminDashboard() {
     if (res.ok) {
       setTurmas((prev) => prev.map((t) => t.id === turmaId ? { ...t, students: updatedStudents } : t))
     }
-    setAddingToTurma(null)
   }
 
   if (authLoading) {
@@ -481,7 +470,8 @@ export default function AdminDashboard() {
               {paginatedUsers.map((u, i) => (
                 <li
                   key={u.uid}
-                  className="flex items-center gap-4 px-6 py-4"
+                  onClick={() => { setDetailUser(u); fetchTurmas() }}
+                  className="flex items-center gap-4 px-6 py-4 cursor-pointer transition-opacity hover:opacity-75"
                   style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
                 >
                   {u.photoURL ? (
@@ -506,47 +496,6 @@ export default function AdminDashboard() {
                   >
                     {ROLE_LABEL[u.role]}
                   </span>
-
-                  {u.role === 'student' && (
-                    <button
-                      onClick={() => { setTurmaPickerUser(u); fetchTurmas() }}
-                      className="text-xs px-3 py-1.5 rounded-lg border transition-colors flex-shrink-0"
-                      style={{ borderColor: '#FFC530', color: '#FFC530' }}
-                    >
-                      + Turma
-                    </button>
-                  )}
-
-                  {u.role !== 'admin' && (
-                    confirmDelete === u.uid ? (
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => handleDelete(u.uid)}
-                          disabled={deleting === u.uid}
-                          className="text-xs px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
-                          style={{ borderColor: '#ef4444', color: '#ef4444' }}
-                        >
-                          {deleting === u.uid ? '...' : 'Confirmar'}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(null)}
-                          className="text-xs px-2.5 py-1.5 rounded-lg border transition-colors"
-                          style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmDelete(u.uid)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0"
-                        style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
-                        title="Deletar usuário"
-                      >
-                        <HiTrash className="w-3.5 h-3.5" />
-                      </button>
-                    )
-                  )}
                 </li>
               ))}
             </ul>
@@ -579,68 +528,6 @@ export default function AdminDashboard() {
 
       </div>
 
-      {turmaPickerUser && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.6)' }}
-          onClick={() => setTurmaPickerUser(null)}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl border overflow-hidden"
-            style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--c-border)' }}>
-              <p className="font-semibold text-sm" style={{ color: 'var(--c-text)' }}>Adicionar a uma turma</p>
-              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>{turmaPickerUser.name} · {turmaPickerUser.email}</p>
-            </div>
-
-            {turmasLoading ? (
-              <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Carregando turmas...</div>
-            ) : turmas.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Nenhuma turma criada ainda.</div>
-            ) : (
-              <ul>
-                {turmas.map((turma, i) => {
-                  const enrolled = turma.students?.includes(turmaPickerUser.email)
-                  return (
-                    <li
-                      key={turma.id}
-                      style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
-                    >
-                      <button
-                        disabled={enrolled || addingToTurma === turma.id}
-                        onClick={() => handleAddToTurma(turma.id, turmaPickerUser.email)}
-                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-opacity hover:opacity-75 disabled:opacity-40"
-                      >
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: turma.iconColor }} />
-                        <span className="flex-1 text-sm truncate" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
-                        {enrolled && (
-                          <span className="text-xs flex-shrink-0" style={{ color: 'var(--c-subtle)' }}>Matriculado</span>
-                        )}
-                        {addingToTurma === turma.id && (
-                          <span className="text-xs flex-shrink-0" style={{ color: 'var(--c-subtle)' }}>...</span>
-                        )}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-
-            <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
-              <button
-                onClick={() => setTurmaPickerUser(null)}
-                className="text-sm w-full text-center"
-                style={{ color: 'var(--c-subtle)' }}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <AnimatePresence>
         {activeCard && (
           <UserListModal
@@ -649,6 +536,18 @@ export default function AdminDashboard() {
             turmas={turmas}
             turmasLoading={turmasLoading}
             onClose={() => setActiveCard(null)}
+          />
+        )}
+        {detailUser && (
+          <UserDetailPanel
+            key={detailUser.uid}
+            user={detailUser}
+            turmas={turmas}
+            turmasLoading={turmasLoading}
+            onClose={() => setDetailUser(null)}
+            onRoleUpdate={updateRole}
+            onDelete={deleteUser}
+            onAddToTurma={handleAddToTurma}
           />
         )}
       </AnimatePresence>
