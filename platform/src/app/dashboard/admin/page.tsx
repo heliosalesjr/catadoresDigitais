@@ -55,6 +55,7 @@ export default function AdminDashboard() {
   const [aulasLoading, setAulasLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [page, setPage] = useState(1)
   const [activeCard, setActiveCard] = useState<CardFilter | null>(null)
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [turmasLoading, setTurmasLoading] = useState(false)
@@ -95,6 +96,8 @@ export default function AdminDashboard() {
       .then((data) => { setAllowlist(data); setAllowlistLoading(false) })
       .catch(() => setAllowlistLoading(false))
   }, [])
+
+  useEffect(() => { setPage(1) }, [search, roleFilter])
 
   async function handleAddToAllowlist(e: React.FormEvent) {
     e.preventDefault()
@@ -168,6 +171,11 @@ export default function AdminDashboard() {
     const matchesSearch = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
     return matchesRole && matchesSearch
   })
+
+  const hasFilter = search.trim() !== '' || roleFilter !== 'all'
+  const PAGE_SIZE = 10
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE)
+  const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <main className="p-6 md:p-8">
@@ -459,13 +467,18 @@ export default function AdminDashboard() {
 
           {usersLoading ? (
             <div className="px-6 py-10 text-center" style={{ color: 'var(--c-subtle)' }}>Carregando usuários...</div>
+          ) : !hasFilter ? (
+            <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
+              Use a busca ou selecione um perfil para ver usuários.
+            </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="px-6 py-10 text-center" style={{ color: 'var(--c-subtle)' }}>
-              {users.length === 0 ? 'Nenhum usuário cadastrado ainda.' : 'Nenhum usuário encontrado.'}
+            <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
+              Nenhum usuário encontrado.
             </div>
           ) : (
+            <>
             <ul>
-              {filteredUsers.map((u, i) => (
+              {paginatedUsers.map((u, i) => (
                 <li
                   key={u.uid}
                   className="flex items-center gap-4 px-6 py-4"
@@ -537,6 +550,30 @@ export default function AdminDashboard() {
                 </li>
               ))}
             </ul>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-30"
+                  style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                >
+                  Anterior
+                </button>
+                <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-30"
+                  style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                >
+                  Próxima
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
 
