@@ -238,13 +238,19 @@ export default function AdminDashboard() {
                           </p>
                           <span
                             className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            style={{ background: `${aula.turmaIconColor}22`, color: aula.turmaIconColor }}
+                          >
+                            {aula.turmaName}
+                          </span>
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
                             style={{ background: '#f59e0b18', color: '#f59e0b' }}
                           >
                             Pendente
                           </span>
                         </div>
                         <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
-                          {aula.turmaName} · {formatDateLabel(aula.date)}
+                          {formatDateLabel(aula.date)}
                           {aula.teachers?.length > 0 && (
                             <> · Prof: {aula.teachers.map((t) => t.name).join(', ')}</>
                           )}
@@ -289,15 +295,22 @@ export default function AdminDashboard() {
 
                       {/* Title + turma + professor */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
-                          {aula.title}
-                        </p>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
-                          {aula.turmaName}
-                          {aula.teachers?.length > 0 && (
-                            <> · Prof: {aula.teachers.map((t) => t.name).join(', ')}</>
-                          )}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+                            {aula.title}
+                          </p>
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            style={{ background: `${aula.turmaIconColor}22`, color: aula.turmaIconColor }}
+                          >
+                            {aula.turmaName}
+                          </span>
+                        </div>
+                        {aula.teachers?.length > 0 && (
+                          <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
+                            Prof: {aula.teachers.map((t) => t.name).join(', ')}
+                          </p>
+                        )}
                       </div>
 
                       {/* Time */}
