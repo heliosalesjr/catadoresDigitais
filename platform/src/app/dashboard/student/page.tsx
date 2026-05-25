@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { TECH_ICONS } from '@/lib/icons'
 import {
-  HiAcademicCap, HiCalendarDays, HiClock,
+  HiCalendarDays, HiClock,
   HiChevronRight, HiArrowTopRightOnSquare,
 } from 'react-icons/hi2'
 import type { Turma } from '@/types'
@@ -69,7 +69,6 @@ export default function StudentDashboard() {
   const grouped = groupByDate(upcomingAulas)
 
   const stats = [
-    { label: 'Minhas turmas', value: turmas.length, icon: <HiAcademicCap className="w-5 h-5" />, loading: turmasLoading },
     { label: 'Aulas esta semana', value: aulasThisWeek, icon: <HiCalendarDays className="w-5 h-5" />, loading: aulasLoading },
     { label: 'Próximas aulas', value: upcomingAulas.length, icon: <HiClock className="w-5 h-5" />, loading: aulasLoading },
   ]
@@ -97,7 +96,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {stats.map((s) => (
             <div
               key={s.label}
@@ -120,9 +119,9 @@ export default function StudentDashboard() {
           ))}
         </div>
 
-        {/* Minhas turmas */}
+        {/* Minha turma */}
         <section>
-          <h2 className="font-semibold mb-3" style={{ color: 'var(--c-text)' }}>Minhas turmas</h2>
+          <h2 className="font-semibold mb-3" style={{ color: 'var(--c-text)' }}>Minha turma</h2>
 
           {turmasLoading ? (
             <div
@@ -144,7 +143,7 @@ export default function StudentDashboard() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
               {turmas.map((turma) => {
                 const iconEntry = TECH_ICONS[turma.icon]
                 const Icon = iconEntry?.icon
@@ -154,6 +153,9 @@ export default function StudentDashboard() {
                 const hasEnded = today > end
                 const hasStarted = today >= start
                 const daysLeft = Math.max(0, Math.round((end.getTime() - today.getTime()) / 86400000))
+                const totalMs = end.getTime() - start.getTime()
+                const elapsedMs = Math.min(Math.max(today.getTime() - start.getTime(), 0), totalMs)
+                const progress = totalMs > 0 ? Math.round((elapsedMs / totalMs) * 100) : 0
 
                 return (
                   <Link
@@ -162,6 +164,7 @@ export default function StudentDashboard() {
                     className="rounded-2xl border p-5 flex flex-col gap-4 transition-opacity hover:opacity-75"
                     style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
                   >
+                    {/* Header */}
                     <div className="flex items-start gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -183,29 +186,44 @@ export default function StudentDashboard() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-end">
-                      {hasEnded ? (
-                        <span
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ background: 'var(--c-border)', color: 'var(--c-subtle)' }}
-                        >
-                          Encerrada
+                    {/* Progress */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+                          {hasEnded ? 'Curso concluído' : !hasStarted ? 'Ainda não iniciado' : `${progress}% concluído`}
                         </span>
-                      ) : !hasStarted ? (
-                        <span
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
-                        >
-                          Em breve
-                        </span>
-                      ) : (
-                        <span
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
-                        >
-                          {daysLeft === 0 ? 'Último dia' : `${daysLeft} dia${daysLeft !== 1 ? 's' : ''} restantes`}
-                        </span>
-                      )}
+                        {hasEnded ? (
+                          <span
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: 'var(--c-border)', color: 'var(--c-subtle)' }}
+                          >
+                            Encerrada
+                          </span>
+                        ) : !hasStarted ? (
+                          <span
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
+                          >
+                            Em breve
+                          </span>
+                        ) : (
+                          <span
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
+                          >
+                            {daysLeft === 0 ? 'Último dia' : `${daysLeft} dia${daysLeft !== 1 ? 's' : ''} restantes`}
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="w-full h-1.5 rounded-full overflow-hidden"
+                        style={{ background: 'var(--c-border)' }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${progress}%`, background: hasEnded ? 'var(--c-subtle)' : turma.iconColor }}
+                        />
+                      </div>
                     </div>
                   </Link>
                 )
