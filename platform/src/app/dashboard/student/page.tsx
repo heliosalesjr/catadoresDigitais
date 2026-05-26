@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { TECH_ICONS } from '@/lib/icons'
 import {
-  HiCalendarDays, HiClock,
-  HiChevronRight, HiArrowTopRightOnSquare,
+  HiCalendarDays, HiClock, HiChartBar,
+  HiChevronRight, HiArrowTopRightOnSquare, HiExclamationTriangle,
 } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
+import type { FrequenciaResult } from '@/app/api/student/frequencia/route'
 
 function parseLocalDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -50,16 +51,21 @@ export default function StudentDashboard() {
   const [turmasLoading, setTurmasLoading] = useState(true)
   const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
   const [aulasLoading, setAulasLoading] = useState(true)
+  const [frequencia, setFrequencia] = useState<FrequenciaResult | null>(null)
+  const [frequenciaLoading, setFrequenciaLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
-    const [turmasRes, aulasRes] = await Promise.all([
+    const [turmasRes, aulasRes, freqRes] = await Promise.all([
       fetch('/api/student/turmas'),
       fetch('/api/student/upcoming-aulas'),
+      fetch('/api/student/frequencia'),
     ])
     if (turmasRes.ok) setTurmas(await turmasRes.json())
     if (aulasRes.ok) setUpcomingAulas(await aulasRes.json())
+    if (freqRes.ok) setFrequencia(await freqRes.json())
     setTurmasLoading(false)
     setAulasLoading(false)
+    setFrequenciaLoading(false)
   }, [])
 
   useEffect(() => { if (!authLoading) fetchData() }, [authLoading, fetchData])
@@ -69,6 +75,9 @@ export default function StudentDashboard() {
   const aulasThisWeek = upcomingAulas.filter((a) => a.date >= mon && a.date <= sun).length
   const upcoming = upcomingAulas.filter((a) => a.date >= todayISO)
   const grouped = groupByDate(upcoming)
+
+  const freqPct = frequencia?.percentage ?? null
+  const freqLow = freqPct !== null && freqPct < 85
 
   const stats = [
     { label: 'Aulas esta semana', value: aulasThisWeek, icon: <HiCalendarDays className="w-5 h-5" />, loading: aulasLoading },
@@ -98,27 +107,67 @@ export default function StudentDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          {stats.map((s) => (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="rounded-2xl p-5 border flex flex-col gap-3"
+                style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: 'var(--c-border)', color: 'var(--c-subtle)' }}
+                >
+                  {s.icon}
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>{s.label}</p>
+                  <p className="text-3xl font-bold mt-0.5" style={{ color: 'var(--c-text)' }}>
+                    {s.loading ? '—' : s.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {/* Frequência */}
             <div
-              key={s.label}
               className="rounded-2xl p-5 border flex flex-col gap-3"
-              style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+              style={{ background: 'var(--c-bg-alt)', borderColor: freqLow ? '#f59e0b66' : 'var(--c-border)' }}
             >
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center"
                 style={{ background: 'var(--c-border)', color: 'var(--c-subtle)' }}
               >
-                {s.icon}
+                <HiChartBar className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>{s.label}</p>
-                <p className="text-3xl font-bold mt-0.5" style={{ color: 'var(--c-text)' }}>
-                  {s.loading ? '—' : s.value}
+                <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>Frequência</p>
+                <p
+                  className="text-3xl font-bold mt-0.5"
+                  style={{ color: frequenciaLoading || freqPct === null ? 'var(--c-text)' : freqLow ? '#f59e0b' : '#22c55e' }}
+                >
+                  {frequenciaLoading ? '—' : freqPct === null ? '—' : `${freqPct}%`}
                 </p>
+                {!frequenciaLoading && freqPct === null && (
+                  <p className="text-xs mt-1" style={{ color: 'var(--c-faint)' }}>Nenhuma aula realizada.</p>
+                )}
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Aviso de frequência baixa */}
+          {freqLow && (
+            <div
+              className="flex items-start gap-3 rounded-2xl px-4 py-3.5"
+              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+            >
+              <HiExclamationTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
+              <p className="text-sm leading-snug" style={{ color: '#f59e0b' }}>
+                Sua frequência está abaixo de 85%. Entre em contato com seu professor ou com a coordenação.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Minha turma */}
