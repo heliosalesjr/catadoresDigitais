@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Catadores Digitais — Plataforma
 
-## Getting Started
+Plataforma de gestão de turmas e aulas para o programa de formações gratuitas em tecnologia do Instituto Ipês, com patrocínio da CAIXA.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js** (App Router) + **TypeScript**
+- **Firebase**: Auth (Google Sign-In), Firestore, Admin SDK
+- **Tailwind CSS** + CSS variables para tema
+- **Framer Motion** para animações
+- **React Icons** (`hi2`)
+
+## Roles
+
+| Role | Acesso |
+|------|--------|
+| `admin` | Tudo — aprova aulas, gerencia usuários e allowlist |
+| `teacher` | Cria aulas (ficam pendentes até aprovação), faz chamada |
+| `student` | Vê turmas/aulas, responde chamada via código |
+
+`canEdit = role === 'admin' || role === 'teacher'`
+
+## Variáveis de ambiente
+
+```env
+NEXT_PUBLIC_ADMIN_EMAIL=          # email do admin hardcoded
+NEXT_PUBLIC_OPEN_SIGNUP=true      # true = qualquer Google login aceito (dev); false = usa allowlist
+NEXT_PUBLIC_FIREBASE_*            # config do Firebase client
+FIREBASE_ADMIN_*                  # credenciais do Firebase Admin SDK
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Controle de acesso
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Em produção (`OPEN_SIGNUP=false`), somente emails na coleção Firestore `allowlist/{email}` conseguem criar conta. A allowlist é gerenciada pelo admin no dashboard.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sessão autenticada via cookie `cd_session` (server-side, `adminAuth.createSessionCookie`).
 
-## Learn More
+## Estrutura de dados (Firestore)
 
-To learn more about Next.js, take a look at the following resources:
+```
+users/{uid}
+  uid, email, name, photoURL, role, createdAt
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+allowlist/{email}
+  email, role, createdAt
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+turmas/{id}
+  name, icon, iconColor, startDate, endDate
+  students: string[]   // emails matriculados
 
-## Deploy on Vercel
+turmas/{id}/aulas/{id}
+  title, description, date, startTime, endTime
+  status: 'pending' | 'published'
+  teachers: { uid, name }[]
+  driveLinks: { label, url }[]
+  attendance: { [email]: 'present' | 'absent' | 'late' }
+  attendanceCode: string
+  avaliacoes: Avaliacao[]
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Rotas API
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Rota | Método | Auth | Descrição |
+|------|--------|------|-----------|
+| `/api/admin/allowlist` | GET, POST | admin | Lista e adiciona emails |
+| `/api/admin/allowlist/[email]` | DELETE | admin | Remove email |
+| `/api/admin/upcoming-aulas` | GET | editor | Próximas aulas (todas as turmas) |
+| `/api/student/turmas` | GET | any | Turmas do aluno logado |
+| `/api/student/upcoming-aulas` | GET | any | Aulas da semana atual + futuras |
+| `/api/turmas/[id]/aulas` | GET, POST | any/editor | Lista e cria aulas |
+| `/api/turmas/[id]/aulas/[aulaId]` | PATCH, DELETE | editor | Edita ou remove aula |
+| `/api/turmas/[id]/aulas/[aulaId]/chamada` | POST | any | Aluno responde chamada com código |
+
+## Permissões do aluno
+
+- Tab **Presenças** oculta
+- **Materiais** de aulas futuras bloqueados até 7 dias antes da data
+- Aba **Professores**: somente nome e email visíveis (telefone oculto)
+- **Modal de aula**: exibe input de código de chamada (não botões P/F/A)
+
+## Padrões importantes
+
+### Firestore — inequality filters
+Nunca combinar dois filtros de desigualdade em campos diferentes na mesma query. Firestore só permite inequality (`>=`, `!=`, etc.) em um único campo por query. Filtros adicionais devem ser feitos em JavaScript após o `.get()`:
+
+```ts
+// ERRADO — falha silenciosamente
+.where('date', '>=', x).where('status', '!=', 'pending')
+
+// CERTO
+.where('date', '>=', x)
+.orderBy('date')
+.get()
+.then(snap => snap.docs.filter(d => d.data().status !== 'pending'))
+```
+
+### CSS variables
+```css
+var(--c-bg)        /* fundo principal */
+var(--c-bg-alt)    /* cards e painéis */
+var(--c-text)      /* texto principal */
+var(--c-subtle)    /* texto secundário */
+var(--c-faint)     /* texto terciário */
+var(--c-border)    /* bordas sutis */
+var(--c-border-md) /* bordas de inputs */
+```
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npx tsc --noEmit # checar tipos
+```
