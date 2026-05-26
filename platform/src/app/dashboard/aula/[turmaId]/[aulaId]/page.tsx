@@ -1,11 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { HiArrowLeft, HiArrowTopRightOnSquare, HiCheckCircle } from 'react-icons/hi2'
-import type { Aula, DriveLink, Turma } from '@/types'
+import type { Aula, Avaliacao, DriveLink, Turma } from '@/types'
+
+const TEXT_LIMIT = 404
+
+function isValidUrl(s: string) {
+  try { return Boolean(new URL(s)) } catch { return false }
+}
+
+function useShuffledOptions(avaliacoes: Avaliacao[]) {
+  return useMemo(() => {
+    const out: Record<string, string[]> = {}
+    for (const av of avaliacoes) {
+      if (av.type === 'quiz' && av.options?.length === 5) {
+        const shuffled = [...av.options]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        out[av.id] = shuffled
+      }
+    }
+    return out
+  }, [avaliacoes])
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -149,18 +172,53 @@ export default function ModoAulaPage({
   const [chamadaState, setChamadaState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [chamadaError, setChamadaError] = useState<string | null>(null)
 
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [avalSubmitting, setAvalSubmitting] = useState(false)
+  const [avalSubmitted, setAvalSubmitted] = useState(false)
+  const [avalError, setAvalError] = useState<string | null>(null)
+
+  const avaliacoes = aula?.avaliacoes ?? []
+  const shuffledOptions = useShuffledOptions(avaliacoes)
+
   useEffect(() => {
     async function load() {
-      const [tr, ar] = await Promise.all([
+      const [tr, ar, rr] = await Promise.all([
         fetch(`/api/turmas/${turmaId}`),
         fetch(`/api/turmas/${turmaId}/aulas/${aulaId}`),
+        fetch(`/api/turmas/${turmaId}/aulas/${aulaId}/respostas`),
       ])
       if (tr.ok) setTurma(await tr.json())
       if (ar.ok) setAula(await ar.json())
+      if (rr.ok) {
+        const resposta = await rr.json()
+        if (resposta?.answers) {
+          setAnswers(resposta.answers)
+          setAvalSubmitted(true)
+        }
+      }
       setLoading(false)
     }
     load()
   }, [turmaId, aulaId])
+
+  if (loading) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <p style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
+      </main>
+    )
+  }
+
+  if (!aula || !turma) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <p style={{ color: 'var(--c-subtle)' }}>Aula não encontrada.</p>
+      </main>
+    )
+  }
+
+  const canEdit = user?.role === 'admin' || user?.role === 'teacher'
+  const userEmail = user?.email
 
   async function submitChamada() {
     if (chamadaCode.length !== 4 || chamadaState === 'loading') return
@@ -182,24 +240,27 @@ export default function ModoAulaPage({
     }
   }
 
-  if (loading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen">
-        <p style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
-      </main>
-    )
+  async function submitAvaliacoes() {
+    setAvalSubmitting(true)
+    setAvalError(null)
+    const res = await fetch(`/api/turmas/${turmaId}/aulas/${aulaId}/respostas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    })
+    setAvalSubmitting(false)
+    if (res.ok) {
+      setAvalSubmitted(true)
+    } else {
+      setAvalError('Erro ao enviar respostas. Tente novamente.')
+    }
   }
 
-  if (!aula || !turma) {
-    return (
-      <main className="flex items-center justify-center min-h-screen">
-        <p style={{ color: 'var(--c-subtle)' }}>Aula não encontrada.</p>
-      </main>
-    )
-  }
-
-  const canEdit = user?.role === 'admin' || user?.role === 'teacher'
-  const userEmail = user?.email
+  const allAnswered = avaliacoes.length > 0 && avaliacoes.every((av) => {
+    const ans = answers[av.id] ?? ''
+    if (av.type === 'link') return isValidUrl(ans)
+    return ans.trim().length > 0
+  })
 
   const aulaDate = parseLocalDate(aula.date)
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -301,6 +362,129 @@ export default function ModoAulaPage({
         <p className="text-sm" style={{ color: 'var(--c-faint)' }}>
           Nenhum material adicionado para esta aula.
         </p>
+      )}
+
+      {/* Avaliações */}
+      {!canEdit && avaliacoes.length > 0 && (
+        <>
+          <div className="w-full h-px" style={{ background: 'var(--c-border)' }} />
+          <div className="flex flex-col gap-6">
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--c-subtle)' }}>
+              Avaliações
+            </p>
+
+            {avaliacoes.map((av, i) => {
+              const ans = answers[av.id] ?? ''
+              const opts = shuffledOptions[av.id]
+              const nearLimit = av.type === 'text' && ans.length > TEXT_LIMIT * 0.85
+
+              return (
+                <div key={av.id} className="flex flex-col gap-3">
+                  {/* Question header */}
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                      style={{ background: `${accentColor}20`, color: accentColor }}
+                    >
+                      {i + 1}
+                    </span>
+                    <p className="text-sm font-semibold leading-snug pt-0.5" style={{ color: 'var(--c-text)' }}>
+                      {av.question}
+                    </p>
+                  </div>
+
+                  {/* Link */}
+                  {av.type === 'link' && (
+                    <input
+                      type="url"
+                      value={ans}
+                      onChange={(e) => !avalSubmitted && setAnswers((p) => ({ ...p, [av.id]: e.target.value }))}
+                      placeholder="https://..."
+                      disabled={avalSubmitted}
+                      className="rounded-xl px-3 py-2.5 text-sm border outline-none disabled:opacity-60"
+                      style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
+                    />
+                  )}
+
+                  {/* Text */}
+                  {av.type === 'text' && (
+                    <div className="flex flex-col gap-1">
+                      <textarea
+                        value={ans}
+                        onChange={(e) => {
+                          if (avalSubmitted || e.target.value.length > TEXT_LIMIT) return
+                          setAnswers((p) => ({ ...p, [av.id]: e.target.value }))
+                        }}
+                        placeholder="Digite sua resposta..."
+                        rows={4}
+                        disabled={avalSubmitted}
+                        className="rounded-xl px-3 py-2.5 text-sm border outline-none resize-none disabled:opacity-60"
+                        style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
+                      />
+                      <div className="flex justify-between px-1">
+                        <span className="text-xs" style={{ color: 'var(--c-faint)' }}>Máximo {TEXT_LIMIT} caracteres</span>
+                        <span className="text-xs font-semibold tabular-nums" style={{ color: nearLimit ? '#ef4444' : 'var(--c-faint)' }}>
+                          {TEXT_LIMIT - ans.length}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quiz */}
+                  {av.type === 'quiz' && opts && (
+                    <div className="flex flex-col gap-2">
+                      {opts.map((opt, j) => {
+                        const selected = ans === opt
+                        return (
+                          <button
+                            key={j}
+                            onClick={() => !avalSubmitted && setAnswers((p) => ({ ...p, [av.id]: opt }))}
+                            disabled={avalSubmitted}
+                            className="text-left px-3.5 py-2.5 rounded-xl border text-sm transition-colors disabled:cursor-default"
+                            style={{
+                              borderColor: selected ? accentColor : 'var(--c-border)',
+                              background: selected ? `${accentColor}12` : 'transparent',
+                              color: selected ? accentColor : 'var(--c-text)',
+                            }}
+                          >
+                            {opt}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Submit */}
+            {avalSubmitted ? (
+              <div className="flex items-center gap-2">
+                <HiCheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#22c55e' }} />
+                <span className="text-sm font-medium" style={{ color: '#22c55e' }}>
+                  Respostas enviadas
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={submitAvaliacoes}
+                  disabled={!allAnswered || avalSubmitting}
+                  className="self-start px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
+                  style={{ background: accentColor, color: '#fff' }}
+                >
+                  {avalSubmitting ? 'Enviando...' : 'Enviar respostas'}
+                </button>
+                {avalError && <p className="text-xs" style={{ color: '#ef4444' }}>{avalError}</p>}
+                {!allAnswered && (
+                  <p className="text-xs" style={{ color: 'var(--c-faint)' }}>
+                    Responda todas as questões para enviar.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Chamada — students only */}
