@@ -65,12 +65,14 @@ export default function StudentDashboard() {
   useEffect(() => { if (!authLoading) fetchData() }, [authLoading, fetchData])
 
   const { mon, sun } = getWeekISO()
+  const todayISO = new Date().toISOString().split('T')[0]
   const aulasThisWeek = upcomingAulas.filter((a) => a.date >= mon && a.date <= sun).length
-  const grouped = groupByDate(upcomingAulas)
+  const upcoming = upcomingAulas.filter((a) => a.date >= todayISO)
+  const grouped = groupByDate(upcoming)
 
   const stats = [
     { label: 'Aulas esta semana', value: aulasThisWeek, icon: <HiCalendarDays className="w-5 h-5" />, loading: aulasLoading },
-    { label: 'Próximas aulas', value: upcomingAulas.length, icon: <HiClock className="w-5 h-5" />, loading: aulasLoading },
+    { label: 'Próximas aulas', value: upcoming.length, icon: <HiClock className="w-5 h-5" />, loading: aulasLoading },
   ]
 
   if (authLoading) {

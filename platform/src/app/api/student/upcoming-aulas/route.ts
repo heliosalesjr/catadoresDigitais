@@ -11,7 +11,11 @@ export async function GET() {
   const email = userSnap.data()?.email as string | undefined
   if (!email) return Response.json({ error: 'User not found' }, { status: 404 })
 
-  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const dow = now.getDay()
+  const mon = new Date(now)
+  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
+  const weekStart = `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`
 
   const turmasSnap = await adminDb.collection('turmas').get()
   const turmas = turmasSnap.docs
@@ -23,20 +27,20 @@ export async function GET() {
       const snap = await adminDb
         .collection('turmas').doc(turma.id)
         .collection('aulas')
-        .where('date', '>=', today)
-        .where('status', '!=', 'pending')
-        .orderBy('status')
+        .where('date', '>=', weekStart)
         .orderBy('date')
-        .limit(10)
+        .limit(20)
         .get()
 
-      return snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<Aula, 'id'>),
-        turmaId: turma.id,
-        turmaName: turma.name,
-        turmaIconColor: turma.iconColor,
-      } as UpcomingAula))
+      return snap.docs
+        .filter((d) => d.data().status !== 'pending')
+        .map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Aula, 'id'>),
+          turmaId: turma.id,
+          turmaName: turma.name,
+          turmaIconColor: turma.iconColor,
+        } as UpcomingAula))
     })
   )
 

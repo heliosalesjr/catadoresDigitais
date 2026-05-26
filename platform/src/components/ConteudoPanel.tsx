@@ -117,7 +117,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
         </div>
         <div className="flex gap-1 mt-2 overflow-x-auto">
           {((['estatisticas', 'conteudo', 'presencas', 'professores'] as Tab[]).filter(
-            (t) => t !== 'estatisticas' || canEdit
+            (t) => (t !== 'estatisticas' || canEdit) && (t !== 'presencas' || canEdit)
           )).map((t) => {
             const active = tab === t
             const tabLabel = {
@@ -248,6 +248,12 @@ function AulaCard({
   const alreadyPresent = studentEmail ? aula.attendance[studentEmail] === 'present' : false
   const aulaAtiva = isAulaActive(aula)
 
+  const aulaDate = parseLocalDate(aula.date)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const unlockDate = new Date(aulaDate); unlockDate.setDate(aulaDate.getDate() - 7)
+  const materialsLocked = isStudent && aulaDate > today && unlockDate > today
+  const unlockDateStr = unlockDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+
   async function submitChamada() {
     if (!chamadaCode.trim() || chamadaState === 'loading') return
     setChamadaState('loading')
@@ -358,11 +364,15 @@ function AulaCard({
           )}
         </div>
 
-        {aula.driveLinks.length === 0 && !adding && (
+        {materialsLocked ? (
+          <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>
+            Disponível a partir de {unlockDateStr}.
+          </p>
+        ) : aula.driveLinks.length === 0 && !adding ? (
           <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhum material.</p>
-        )}
+        ) : null}
 
-        {aula.driveLinks.map((link, i) => {
+        {!materialsLocked && aula.driveLinks.map((link, i) => {
           const type = detectType(link.url)
           return (
             <button
@@ -834,6 +844,7 @@ type DbTeacher = { uid: string; name: string; email: string }
 
 function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelProps) {
   const isAdmin = currentUser?.role === 'admin'
+  const canViewPhone = currentUser?.role === 'admin' || currentUser?.role === 'teacher'
   const professors: TurmaTeacher[] = turma.professors ?? []
 
   const [showPicker, setShowPicker] = useState(false)
@@ -989,10 +1000,12 @@ function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelPro
                       <HiEnvelope className="w-3 h-3 flex-shrink-0" />
                       {prof.email}
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--c-subtle)' }}>
-                      <HiPhone className="w-3 h-3 flex-shrink-0" />
-                      {prof.phone ?? '—'}
-                    </span>
+                    {canViewPhone && (
+                      <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--c-subtle)' }}>
+                        <HiPhone className="w-3 h-3 flex-shrink-0" />
+                        {prof.phone ?? '—'}
+                      </span>
+                    )}
                   </div>
                 </div>
 

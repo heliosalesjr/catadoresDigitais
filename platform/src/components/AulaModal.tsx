@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   HiXMark, HiPencilSquare, HiTrash, HiPlus, HiArrowTopRightOnSquare,
-  HiEye, HiEyeSlash,
+  HiEye, HiEyeSlash, HiCheckCircle,
 } from 'react-icons/hi2'
 import type { Aula, AulaTeacher, DriveLink, AttendanceStatus } from '@/types'
 
@@ -17,6 +17,17 @@ const STATUS_CONFIG: Record<
   present: { label: 'P', color: '#22c55e', bg: '#22c55e18' },
   absent:  { label: 'F', color: '#ef4444', bg: '#ef444418' },
   late:    { label: 'A', color: '#f59e0b', bg: '#f59e0b18' },
+}
+
+function isAulaActive(aula: Aula): boolean {
+  if (!aula.startTime || !aula.endTime) return false
+  const [y, m, d] = aula.date.split('-').map(Number)
+  const [sh, sm] = aula.startTime.split(':').map(Number)
+  const [eh, em] = aula.endTime.split(':').map(Number)
+  const now = new Date()
+  const start = new Date(y, m - 1, d, sh, sm)
+  const end = new Date(y, m - 1, d, eh, em)
+  return now >= start && now <= end
 }
 
 function fmtDate(iso: string) {
@@ -36,6 +47,7 @@ interface Props {
   canEdit: boolean
   isAdmin: boolean
   currentUserUid: string
+  currentUserEmail?: string
   onClose: () => void
   onSaved: () => void
 }
@@ -83,7 +95,7 @@ function AttendanceCodeReveal({ code, accentColor }: { code: string; accentColor
 
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
-  aula, students, canEdit, isAdmin, currentUserUid,
+  aula, students, canEdit, isAdmin, currentUserUid, currentUserEmail,
   onClose, onSaved,
 }: Props) {
   const isCreate = !aula
@@ -107,6 +119,10 @@ export function AulaModal({
   )
 
   const [availableTeachers, setAvailableTeachers] = useState<AulaTeacher[]>([])
+
+  const [chamadaCode, setChamadaCode] = useState('')
+  const [chamadaState, setChamadaState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [chamadaError, setChamadaError] = useState<string | null>(null)
 
   useEffect(() => {
     if (mode !== 'edit') return
@@ -212,6 +228,27 @@ export function AulaModal({
       body: JSON.stringify({ attendance: updated }),
     })
   }
+
+  async function submitChamada() {
+    if (!chamadaCode.trim() || chamadaState === 'loading' || !aula) return
+    setChamadaState('loading')
+    setChamadaError(null)
+    const res = await fetch(`/api/turmas/${turmaId}/aulas/${aula.id}/chamada`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: chamadaCode.trim() }),
+    })
+    if (res.ok) {
+      setChamadaState('ok')
+      onSaved()
+    } else {
+      const d = await res.json()
+      setChamadaError(d.error ?? 'Erro ao registrar presença.')
+      setChamadaState('error')
+    }
+  }
+
+  const alreadyPresent = currentUserEmail ? (attendance[currentUserEmail] === 'present') : false
 
   const unselectedTeachers = availableTeachers.filter(
     (t) => !form.teachers.find((ft) => ft.uid === t.uid)
@@ -567,8 +604,8 @@ export function AulaModal({
             </div>
           )}
 
-          {/* Attendance */}
-          {mode === 'view' && aula && students.length > 0 && (
+          {/* Attendance — teacher/admin view */}
+          {mode === 'view' && aula && canEdit && students.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
                 Chamada
@@ -592,9 +629,8 @@ export function AulaModal({
                           return (
                             <button
                               key={s}
-                              onClick={() => canEdit && handleAttendance(email, s)}
-                              disabled={!canEdit}
-                              className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition-colors disabled:cursor-default"
+                              onClick={() => handleAttendance(email, s)}
+                              className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition-colors"
                               style={{
                                 background: active ? cfg.bg : 'transparent',
                                 borderColor: active ? cfg.color : 'var(--c-border-md)',
@@ -611,6 +647,52 @@ export function AulaModal({
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Attendance — student view */}
+          {mode === 'view' && aula && !canEdit && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+                Chamada
+              </p>
+              {alreadyPresent || chamadaState === 'ok' ? (
+                <div className="flex items-center gap-2 py-1">
+                  <HiCheckCircle className="w-4 h-4" style={{ color: '#22c55e' }} />
+                  <span className="text-xs font-medium" style={{ color: '#22c55e' }}>Presença registrada</span>
+                </div>
+              ) : !isAulaActive(aula) ? (
+                <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>
+                  Campo disponível somente durante o horário da aula.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={chamadaCode}
+                      onChange={(e) => { setChamadaCode(e.target.value.replace(/\D/g, '')); setChamadaState('idle'); setChamadaError(null) }}
+                      onKeyDown={(e) => e.key === 'Enter' && submitChamada()}
+                      placeholder="Código de 4 dígitos"
+                      className="flex-1 rounded-lg px-2.5 py-1.5 text-sm border outline-none font-mono tracking-widest"
+                      style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                    />
+                    <button
+                      onClick={submitChamada}
+                      disabled={chamadaCode.length !== 4 || chamadaState === 'loading'}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold transition-opacity disabled:opacity-40"
+                      style={{ background: turmaIconColor, color: '#fff' }}
+                    >
+                      {chamadaState === 'loading' ? '...' : 'Confirmar'}
+                    </button>
+                  </div>
+                  {chamadaState === 'error' && chamadaError && (
+                    <p className="text-xs" style={{ color: '#ef4444' }}>{chamadaError}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
