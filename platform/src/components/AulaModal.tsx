@@ -19,6 +19,11 @@ const STATUS_CONFIG: Record<
   late:    { label: 'A', color: '#f59e0b', bg: '#f59e0b18' },
 }
 
+function parseLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 function isAulaActive(aula: Aula): boolean {
   if (!aula.startTime || !aula.endTime) return false
   const [y, m, d] = aula.date.split('-').map(Number)
@@ -538,8 +543,21 @@ export function AulaModal({
                   ))}
                 </div>
               )
-            ) : (
-              (aula?.driveLinks ?? []).length === 0 ? (
+            ) : (() => {
+              const aulaDate = aula ? parseLocalDate(aula.date) : null
+              const today = new Date(); today.setHours(0, 0, 0, 0)
+              const unlockDate = aulaDate ? new Date(aulaDate) : null
+              if (unlockDate) unlockDate.setDate(unlockDate.getDate() - 7)
+              const materialsLocked = !canEdit && aulaDate && aulaDate > today && unlockDate && unlockDate > today
+
+              if (materialsLocked && unlockDate) {
+                return (
+                  <p className="text-sm" style={{ color: 'var(--c-faint)' }}>
+                    Disponível a partir de {unlockDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}.
+                  </p>
+                )
+              }
+              return (aula?.driveLinks ?? []).length === 0 ? (
                 <p className="text-sm" style={{ color: 'var(--c-faint)' }}>Nenhum arquivo.</p>
               ) : (
                 <ul className="flex flex-col gap-1.5">
@@ -559,7 +577,7 @@ export function AulaModal({
                   ))}
                 </ul>
               )
-            )}
+            })()}
           </div>
 
           {/* Approve banner */}
