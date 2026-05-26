@@ -30,7 +30,7 @@ export async function proxy(req: NextRequest) {
 
     if (isAuthRoute) return NextResponse.redirect(new URL(home, req.url))
 
-    const isShared = pathname.startsWith('/dashboard/turmas')
+    const isShared = pathname.startsWith('/dashboard/turmas') || pathname.startsWith('/dashboard/aula')
     if (isDashboard && !isShared && !pathname.startsWith(home)) {
       return NextResponse.redirect(new URL(home, req.url))
     }

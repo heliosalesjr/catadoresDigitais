@@ -313,7 +313,7 @@ export default function StudentDashboard() {
                     {aulas.map((aula) => (
                       <Link
                         key={aula.id}
-                        href={`/dashboard/turmas/${aula.turmaId}`}
+                        href={`/dashboard/aula/${aula.turmaId}/${aula.id}`}
                         className="flex items-center gap-4 px-6 py-3.5 transition-opacity hover:opacity-75 border-t"
                         style={{ borderColor: 'var(--c-border)' }}
                       >
