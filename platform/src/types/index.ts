@@ -72,3 +72,14 @@ export interface Aula {
   avaliacoes?: Avaliacao[]
   createdAt: string
 }
+
+export interface BancoAula {
+  id: string
+  title: string
+  description: string
+  teachers: AulaTeacher[]
+  driveLinks: DriveLink[]
+  avaliacoes?: Avaliacao[]
+  createdBy: string
+  createdAt: string
+}

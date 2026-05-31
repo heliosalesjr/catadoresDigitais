@@ -14,6 +14,7 @@ import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } fro
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
+import { BancoPanel } from './BancoPanel'
 
 const MONTHS_PT = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -74,7 +75,7 @@ interface AddState {
   saving: boolean
 }
 
-type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores'
+type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco'
 
 export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
@@ -116,8 +117,8 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           </span>
         </div>
         <div className="flex gap-1 mt-2 overflow-x-auto">
-          {((['estatisticas', 'conteudo', 'presencas', 'professores'] as Tab[]).filter(
-            (t) => (t !== 'estatisticas' || canEdit) && (t !== 'presencas' || canEdit)
+          {((['estatisticas', 'conteudo', 'presencas', 'professores', 'banco'] as Tab[]).filter(
+            (t) => (t !== 'estatisticas' || canEdit) && (t !== 'presencas' || canEdit) && (t !== 'banco' || canEdit)
           )).map((t) => {
             const active = tab === t
             const tabLabel = {
@@ -125,6 +126,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
               conteudo:     <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>,
               presencas:    <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
               professores:  <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
+              banco:        <><HiListBullet className="w-3.5 h-3.5" /> Banco de Aulas</>,
             }[t]
             return (
               <button
@@ -196,6 +198,15 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           turma={turma}
           currentUser={currentUser}
           onRefresh={onRefreshTurma}
+        />
+      )}
+
+      {/* Banco de Aulas tab */}
+      {tab === 'banco' && (
+        <BancoPanel
+          turma={turma}
+          currentUser={currentUser}
+          onRefreshAulas={onRefresh}
         />
       )}
     </>
