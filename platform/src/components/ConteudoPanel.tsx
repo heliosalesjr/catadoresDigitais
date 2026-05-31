@@ -15,6 +15,7 @@ import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 import { BancoPanel } from './BancoPanel'
+import { AulaModal } from './AulaModal'
 
 const MONTHS_PT = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -243,6 +244,7 @@ function AulaCard({
   onStart, onCancel, onChange, onSubmit, onRefresh,
 }: CardProps) {
   const [viewingLink, setViewingLink] = useState<DriveLink | null>(null)
+  const [editingAula, setEditingAula] = useState(false)
   const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
   const [chamadaCode, setChamadaCode] = useState('')
@@ -312,22 +314,34 @@ function AulaCard({
       style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       transition={{ duration: 0.25, ease }}
     >
-      {/* Aula info — read-only */}
+      {/* Aula info */}
       <div
         className="px-4 pt-3.5 pb-3"
         style={{ borderLeft: `3px solid ${turma.iconColor}` }}
       >
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
-            {aula.title}
-          </p>
-          {aula.status === 'pending' && (
-            <span
-              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: '#f59e0b18', color: '#f59e0b' }}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+            <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
+              {aula.title}
+            </p>
+            {aula.status === 'pending' && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                style={{ background: '#f59e0b18', color: '#f59e0b' }}
+              >
+                Pendente
+              </span>
+            )}
+          </div>
+          {canEdit && (
+            <button
+              onClick={() => setEditingAula(true)}
+              className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
+              style={{ color: 'var(--c-subtle)' }}
+              title="Editar aula"
             >
-              Pendente
-            </span>
+              <HiPencilSquare className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
         <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
@@ -616,6 +630,26 @@ function AulaCard({
             avaliacoes={avaliacoes}
             accentColor={turma.iconColor}
             onClose={() => setTestingAvaliacao(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editingAula && (
+          <AulaModal
+            turmaId={turma.id}
+            turmaIconColor={turma.iconColor}
+            date={aula.date}
+            turmaStartDate={turma.startDate}
+            turmaEndDate={turma.endDate}
+            aula={aula}
+            students={turma.students}
+            canEdit={canEdit}
+            isAdmin={currentUser?.role === 'admin'}
+            currentUserUid={currentUser?.uid ?? ''}
+            currentUserEmail={currentUser?.email}
+            onClose={() => setEditingAula(false)}
+            onSaved={() => { setEditingAula(false); onRefresh() }}
           />
         )}
       </AnimatePresence>
