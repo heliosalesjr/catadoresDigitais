@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiArchiveBox, HiPlus, HiPencilSquare, HiTrash, HiCalendarDays,
-  HiLink, HiListBullet,
+  HiLink, HiListBullet, HiCheckCircle,
 } from 'react-icons/hi2'
-import type { BancoAula, Turma, UserProfile, Avaliacao } from '@/types'
+import type { BancoAula, Aula, Turma, UserProfile, Avaliacao } from '@/types'
 import { BancoAulaModal } from './BancoAulaModal'
 import { AgendarBancoModal } from './AgendarBancoModal'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
@@ -32,6 +32,7 @@ function genId() {
 
 interface PanelProps {
   turma: Turma
+  aulas: Aula[]
   currentUser: UserProfile | null
   onRefreshAulas: () => void
 }
@@ -42,12 +43,13 @@ interface CardProps {
   b: BancoAula
   turma: Turma
   currentUser: UserProfile | null
+  isApplied: boolean
   onDelete: () => void
   onRefresh: () => void
   onRefreshAulas: () => void
 }
 
-function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas }: CardProps) {
+function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRefreshAulas }: CardProps) {
   const isAdmin = currentUser?.role === 'admin'
   const canDelete = isAdmin || b.createdBy === currentUser?.uid
 
@@ -57,6 +59,7 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
 
   const avaliacoes = b.avaliacoes ?? []
+  const borderColor = isApplied ? `${turma.iconColor}55` : turma.iconColor
 
   async function saveAvaliacao(data: Omit<Avaliacao, 'id' | 'createdAt'>) {
     const newAv: Avaliacao = { ...data, id: genId(), createdAt: new Date().toISOString() }
@@ -89,20 +92,36 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
       {/* Header */}
       <div
         className="px-4 pt-3.5 pb-3"
-        style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+        style={{ borderLeft: `3px solid ${borderColor}` }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
-              {b.title}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p
+                className="text-sm font-semibold leading-snug truncate"
+                style={{ color: isApplied ? 'var(--c-subtle)' : 'var(--c-text)' }}
+              >
+                {b.title}
+              </p>
+              {isApplied && (
+                <span
+                  className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+                  style={{ background: `${turma.iconColor}12`, color: turma.iconColor, border: `1px solid ${turma.iconColor}30` }}
+                >
+                  <HiCheckCircle className="w-3 h-3" /> Já aplicada
+                </span>
+              )}
+            </div>
             {b.teachers.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {b.teachers.map((t) => (
                   <span
                     key={t.uid}
                     className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                    style={{ background: `${turma.iconColor}12`, color: turma.iconColor }}
+                    style={{
+                      background: `${turma.iconColor}12`,
+                      color: isApplied ? 'var(--c-subtle)' : turma.iconColor,
+                    }}
                   >
                     {t.name}
                   </span>
@@ -110,7 +129,10 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
               </div>
             )}
             {b.description && (
-              <p className="text-xs mt-2 leading-relaxed line-clamp-2" style={{ color: 'var(--c-subtle)' }}>
+              <p
+                className="text-xs mt-2 leading-relaxed line-clamp-2"
+                style={{ color: 'var(--c-faint)' }}
+              >
                 {b.description}
               </p>
             )}
@@ -156,10 +178,7 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
                   className="flex items-start gap-2 rounded-lg px-2.5 py-2"
                   style={{ background: 'var(--c-bg)' }}
                 >
-                  <TypeIcon
-                    className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
-                    style={{ color: turma.iconColor }}
-                  />
+                  <TypeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: turma.iconColor }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs leading-snug" style={{ color: 'var(--c-text)' }}>
                       {av.question}
@@ -201,9 +220,9 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
         <button
           onClick={() => setAgendando(true)}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: turma.iconColor, color: '#fff' }}
+          style={{ background: isApplied ? `${turma.iconColor}80` : turma.iconColor, color: '#fff' }}
         >
-          <HiCalendarDays className="w-3.5 h-3.5" /> Agendar
+          <HiCalendarDays className="w-3.5 h-3.5" /> Agendar novamente
         </button>
         {canDelete && (
           <button
@@ -270,7 +289,7 @@ function BancoCard({ b, turma, currentUser, onDelete, onRefresh, onRefreshAulas 
 
 // ─── BancoPanel ───────────────────────────────────────────────────────────────
 
-export function BancoPanel({ turma, currentUser, onRefreshAulas }: PanelProps) {
+export function BancoPanel({ turma, aulas, currentUser, onRefreshAulas }: PanelProps) {
   const [banco, setBanco] = useState<BancoAula[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -322,17 +341,21 @@ export function BancoPanel({ turma, currentUser, onRefreshAulas }: PanelProps) {
           </p>
         </div>
       ) : (
-        banco.map((b) => (
-          <BancoCard
-            key={b.id}
-            b={b}
-            turma={turma}
-            currentUser={currentUser}
-            onDelete={() => handleDelete(b)}
-            onRefresh={fetchBanco}
-            onRefreshAulas={onRefreshAulas}
-          />
-        ))
+        banco.map((b) => {
+          const isApplied = aulas.some((a) => a.bancoAulaId === b.id)
+          return (
+            <BancoCard
+              key={b.id}
+              b={b}
+              turma={turma}
+              currentUser={currentUser}
+              isApplied={isApplied}
+              onDelete={() => handleDelete(b)}
+              onRefresh={fetchBanco}
+              onRefreshAulas={onRefreshAulas}
+            />
+          )
+        })
       )}
 
       <AnimatePresence>

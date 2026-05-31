@@ -10,7 +10,7 @@ import {
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
   HiEye, HiEyeSlash,
 } from 'react-icons/hi2'
-import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
+import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher, AttendanceStatus } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -206,6 +206,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
       {tab === 'banco' && (
         <BancoPanel
           turma={turma}
+          aulas={aulas}
           currentUser={currentUser}
           onRefreshAulas={onRefresh}
         />
@@ -250,6 +251,8 @@ function AulaCard({
   const [chamadaCode, setChamadaCode] = useState('')
   const [chamadaState, setChamadaState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [chamadaError, setChamadaError] = useState<string | null>(null)
+  const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>(aula.attendance)
+  const [showCode, setShowCode] = useState(false)
 
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
@@ -266,6 +269,17 @@ function AulaCard({
   const unlockDate = new Date(aulaDate); unlockDate.setDate(aulaDate.getDate() - 7)
   const materialsLocked = isStudent && aulaDate > today && unlockDate > today
   const unlockDateStr = unlockDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+
+  async function handleAttendance(email: string, status: AttendanceStatus) {
+    const next = attendance[email] === status ? null : status
+    const updated = { ...attendance, [email]: next }
+    setAttendance(updated)
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attendance: updated }),
+    })
+  }
 
   async function submitChamada() {
     if (!chamadaCode.trim() || chamadaState === 'loading') return
@@ -553,6 +567,93 @@ function AulaCard({
         )}
       </div>
 
+      {/* ── Código de chamada (professor/admin) ── */}
+      {canEdit && aula.attendanceCode && (
+        <div
+          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
+          style={{ borderColor: 'var(--c-border)' }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+              Código de chamada
+            </span>
+            <button
+              onClick={() => setShowCode((v) => !v)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-opacity hover:opacity-80"
+              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+            >
+              {showCode
+                ? <><HiEyeSlash className="w-3 h-3" /> Ocultar</>
+                : <><HiEye className="w-3 h-3" /> Revelar</>
+              }
+            </button>
+          </div>
+          <AnimatePresence>
+            {showCode && (
+              <motion.p
+                key="code"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease }}
+                className="text-4xl font-black font-mono tracking-[0.3em] leading-none overflow-hidden"
+                style={{ color: turma.iconColor }}
+              >
+                {aula.attendanceCode}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── Chamada (professor/admin) ── */}
+      {canEdit && turma.students.length > 0 && (
+        <div
+          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
+          style={{ borderColor: 'var(--c-border)' }}
+        >
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
+            Chamada
+          </span>
+          <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--c-border)' }}>
+            {turma.students.map((email, i) => {
+              const status = attendance[email] ?? null
+              return (
+                <div
+                  key={email}
+                  className="flex items-center gap-3 px-3 py-2"
+                  style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                >
+                  <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
+                    {email}
+                  </span>
+                  <div className="flex gap-1 flex-shrink-0">
+                    {(['present', 'absent', 'late'] as const).map((s) => {
+                      const active = status === s
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => handleAttendance(email, s)}
+                          className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition-colors"
+                          style={{
+                            background: active ? `${STATUS_COLOR[s]}18` : 'transparent',
+                            borderColor: active ? STATUS_COLOR[s] : 'var(--c-border-md)',
+                            color: active ? STATUS_COLOR[s] : 'var(--c-faint)',
+                          }}
+                          title={s === 'present' ? 'Presente' : s === 'absent' ? 'Falta' : 'Atraso'}
+                        >
+                          {STATUS_LABEL[s]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Responder chamada (alunos) ── */}
       {isStudent && (
         <div
@@ -648,6 +749,7 @@ function AulaCard({
             isAdmin={currentUser?.role === 'admin'}
             currentUserUid={currentUser?.uid ?? ''}
             currentUserEmail={currentUser?.email}
+            initialMode="edit"
             onClose={() => setEditingAula(false)}
             onSaved={() => { setEditingAula(false); onRefresh() }}
           />

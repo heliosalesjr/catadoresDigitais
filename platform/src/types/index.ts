@@ -70,6 +70,7 @@ export interface Aula {
   attendanceCode?: string // 4-digit code for student check-in
   status?: 'published' | 'pending' // undefined treated as published (legacy)
   avaliacoes?: Avaliacao[]
+  bancoAulaId?: string
   createdAt: string
 }
 

@@ -53,6 +53,7 @@ interface Props {
   isAdmin: boolean
   currentUserUid: string
   currentUserEmail?: string
+  initialMode?: 'view' | 'edit'
   onClose: () => void
   onSaved: () => void
 }
@@ -101,10 +102,11 @@ function AttendanceCodeReveal({ code, accentColor }: { code: string; accentColor
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
   aula, students, canEdit, isAdmin, currentUserUid, currentUserEmail,
+  initialMode,
   onClose, onSaved,
 }: Props) {
   const isCreate = !aula
-  const [mode, setMode] = useState<'view' | 'edit'>(isCreate ? 'edit' : 'view')
+  const [mode, setMode] = useState<'view' | 'edit'>(initialMode ?? (isCreate ? 'edit' : 'view'))
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)

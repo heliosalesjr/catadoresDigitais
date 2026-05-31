@@ -46,6 +46,7 @@ export async function POST(
       attendance: {},
       attendanceCode,
       status,
+      bancoAulaId: bancoId,
       createdAt: new Date().toISOString(),
     })
 
