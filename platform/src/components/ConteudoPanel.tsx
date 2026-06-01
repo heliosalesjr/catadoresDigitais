@@ -1039,8 +1039,11 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
   const totalStudents = turma.students.length
   const totalProfessors = turma.professors?.length ?? 0
 
-  // Attendance stats across all aulas that have data
-  const aulasWithData = aulas.filter((a) => Object.keys(a.attendance).length > 0)
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const aulasPast = aulas.filter((a) => a.date < todayStr)
+
+  // Attendance stats across past aulas that have data
+  const aulasWithData = aulasPast.filter((a) => Object.keys(a.attendance).length > 0)
   const avgAttendancePct =
     aulasWithData.length > 0 && totalStudents > 0
       ? Math.round(
@@ -1064,12 +1067,12 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
       ? { label: 'Regular', color: '#f59e0b' }
       : { label: 'Baixa', color: '#ef4444' }
 
-  // Students who have never been present
+  // Students who have never been present (considering only past aulas)
   const neverPresent =
     aulasWithData.length > 0
       ? turma.students.filter(
           (email) =>
-            !aulas.some((a) => a.attendance[email] === 'present'),
+            !aulasPast.some((a) => a.attendance[email] === 'present'),
         )
       : []
 
