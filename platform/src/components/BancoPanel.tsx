@@ -293,6 +293,7 @@ export function BancoPanel({ turma, aulas, currentUser, onRefreshAulas }: PanelP
   const [banco, setBanco] = useState<BancoAula[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [subTab, setSubTab] = useState<'disponiveis' | 'aplicadas'>('disponiveis')
 
   const fetchBanco = useCallback(async () => {
     setLoading(true)
@@ -309,10 +310,14 @@ export function BancoPanel({ turma, aulas, currentUser, onRefreshAulas }: PanelP
     fetchBanco()
   }
 
+  const disponiveisBanco = banco.filter((b) => !aulas.some((a) => a.bancoAulaId === b.id))
+  const aplicadasBanco   = banco.filter((b) =>  aulas.some((a) => a.bancoAulaId === b.id))
+  const currentList = subTab === 'disponiveis' ? disponiveisBanco : aplicadasBanco
+
   return (
-    <div className="p-4 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4 pt-4">
         <div className="flex items-center gap-2">
           <HiArchiveBox className="w-4 h-4" style={{ color: turma.iconColor }} />
           <span className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>
@@ -328,35 +333,82 @@ export function BancoPanel({ turma, aulas, currentUser, onRefreshAulas }: PanelP
         </button>
       </div>
 
-      {loading ? (
-        <p className="text-sm py-8 text-center" style={{ color: 'var(--c-faint)' }}>
-          Carregando...
-        </p>
-      ) : banco.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-          <HiArchiveBox className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
-          <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Banco vazio</p>
-          <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
-            Crie aulas aqui e agende-as no calendário quando quiser.
-          </p>
-        </div>
-      ) : (
-        banco.map((b) => {
-          const isApplied = aulas.some((a) => a.bancoAulaId === b.id)
+      {/* Sub-tabs */}
+      <div className="flex gap-1 px-4">
+        {([
+          { key: 'disponiveis', label: 'Disponíveis', count: disponiveisBanco.length },
+          { key: 'aplicadas',   label: 'Aplicadas',   count: aplicadasBanco.length },
+        ] as const).map(({ key, label, count }) => {
+          const active = subTab === key
           return (
+            <button
+              key={key}
+              onClick={() => setSubTab(key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
+              style={{
+                background: active ? `${turma.iconColor}15` : 'transparent',
+                color: active ? turma.iconColor : 'var(--c-subtle)',
+                border: `1px solid ${active ? `${turma.iconColor}40` : 'var(--c-border)'}`,
+              }}
+            >
+              {label}
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+                style={{
+                  background: active ? turma.iconColor : 'var(--c-bg)',
+                  color: active ? '#fff' : 'var(--c-subtle)',
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Card list */}
+      <div className="px-4 pb-4 flex flex-col gap-3">
+        {loading ? (
+          <p className="text-sm py-8 text-center" style={{ color: 'var(--c-faint)' }}>
+            Carregando...
+          </p>
+        ) : currentList.length === 0 ? (
+          subTab === 'disponiveis' ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+              <HiArchiveBox className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+              <p className="font-semibold" style={{ color: 'var(--c-text)' }}>
+                {banco.length === 0 ? 'Banco vazio' : 'Todas as aulas foram aplicadas'}
+              </p>
+              <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                {banco.length === 0
+                  ? 'Crie aulas aqui e agende-as no calendário quando quiser.'
+                  : 'Crie uma nova aula ou veja as já aplicadas na outra aba.'}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+              <HiCheckCircle className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+              <p className="font-semibold" style={{ color: 'var(--c-text)' }}>Nenhuma aula aplicada ainda</p>
+              <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                Agende aulas do banco no calendário para vê-las aqui.
+              </p>
+            </div>
+          )
+        ) : (
+          currentList.map((b) => (
             <BancoCard
               key={b.id}
               b={b}
               turma={turma}
               currentUser={currentUser}
-              isApplied={isApplied}
+              isApplied={subTab === 'aplicadas'}
               onDelete={() => handleDelete(b)}
               onRefresh={fetchBanco}
               onRefreshAulas={onRefreshAulas}
             />
-          )
-        })
-      )}
+          ))
+        )}
+      </div>
 
       <AnimatePresence>
         {creating && (
