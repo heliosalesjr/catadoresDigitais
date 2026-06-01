@@ -1029,6 +1029,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
   const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000))
   const elapsedDays = Math.max(0, Math.round((today.getTime() - start.getTime()) / 86400000))
   const remainingDays = Math.max(0, Math.round((end.getTime() - today.getTime()) / 86400000))
+  const daysUntilStart = Math.max(0, Math.round((start.getTime() - today.getTime()) / 86400000))
   const progress = Math.min(100, Math.round((elapsedDays / totalDays) * 100))
   const hasStarted = today >= start
   const hasEnded = today > end
@@ -1082,7 +1083,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
   if (!hasStarted) {
     insights.push({
       icon: <HiClock className="w-4 h-4 flex-shrink-0" />,
-      text: `O curso começa em ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}.`,
+      text: `O curso começa em ${daysUntilStart} dia${daysUntilStart !== 1 ? 's' : ''}.`,
     })
   } else if (hasEnded) {
     insights.push({
