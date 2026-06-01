@@ -10,7 +10,7 @@ import {
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
   HiEye, HiEyeSlash,
 } from 'react-icons/hi2'
-import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher, AttendanceStatus } from '@/types'
+import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -248,57 +248,18 @@ function AulaCard({
   const [editingAula, setEditingAula] = useState(false)
   const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
-  const [chamadaCode, setChamadaCode] = useState('')
-  const [chamadaState, setChamadaState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
-  const [chamadaError, setChamadaError] = useState<string | null>(null)
-  const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>(aula.attendance)
-  const [showCode, setShowCode] = useState(false)
-
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
   const detectedType = adding?.url ? detectType(adding.url) : null
   const avaliacoes = aula.avaliacoes ?? []
 
   const isStudent = !canEdit && currentUser?.role === 'student'
-  const studentEmail = currentUser?.email ?? null
-  const alreadyPresent = studentEmail ? aula.attendance[studentEmail] === 'present' : false
-  const aulaAtiva = isAulaActive(aula)
 
   const aulaDate = parseLocalDate(aula.date)
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const unlockDate = new Date(aulaDate); unlockDate.setDate(aulaDate.getDate() - 7)
   const materialsLocked = isStudent && aulaDate > today && unlockDate > today
   const unlockDateStr = unlockDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-
-  async function handleAttendance(email: string, status: AttendanceStatus) {
-    const next = attendance[email] === status ? null : status
-    const updated = { ...attendance, [email]: next }
-    setAttendance(updated)
-    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ attendance: updated }),
-    })
-  }
-
-  async function submitChamada() {
-    if (!chamadaCode.trim() || chamadaState === 'loading') return
-    setChamadaState('loading')
-    setChamadaError(null)
-    const res = await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}/chamada`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: chamadaCode.trim() }),
-    })
-    if (res.ok) {
-      setChamadaState('ok')
-      onRefresh()
-    } else {
-      const d = await res.json()
-      setChamadaError(d.error ?? 'Erro ao registrar presença.')
-      setChamadaState('error')
-    }
-  }
 
   async function saveAvaliacao(data: Omit<Avaliacao, 'id' | 'createdAt'>) {
     const newAv: Avaliacao = { ...data, id: genId(), createdAt: new Date().toISOString() }
@@ -566,143 +527,6 @@ function AulaCard({
           </>
         )}
       </div>
-
-      {/* ── Código de chamada (professor/admin) ── */}
-      {canEdit && aula.attendanceCode && (
-        <div
-          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
-          style={{ borderColor: 'var(--c-border)' }}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
-              Código de chamada
-            </span>
-            <button
-              onClick={() => setShowCode((v) => !v)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-opacity hover:opacity-80"
-              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
-            >
-              {showCode
-                ? <><HiEyeSlash className="w-3 h-3" /> Ocultar</>
-                : <><HiEye className="w-3 h-3" /> Revelar</>
-              }
-            </button>
-          </div>
-          <AnimatePresence>
-            {showCode && (
-              <motion.p
-                key="code"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.22, ease }}
-                className="text-4xl font-black font-mono tracking-[0.3em] leading-none overflow-hidden"
-                style={{ color: turma.iconColor }}
-              >
-                {aula.attendanceCode}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* ── Chamada (professor/admin) ── */}
-      {canEdit && turma.students.length > 0 && (
-        <div
-          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
-          style={{ borderColor: 'var(--c-border)' }}
-        >
-          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
-            Chamada
-          </span>
-          <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--c-border)' }}>
-            {turma.students.map((email, i) => {
-              const status = attendance[email] ?? null
-              return (
-                <div
-                  key={email}
-                  className="flex items-center gap-3 px-3 py-2"
-                  style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
-                >
-                  <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
-                    {email}
-                  </span>
-                  <div className="flex gap-1 flex-shrink-0">
-                    {(['present', 'absent', 'late'] as const).map((s) => {
-                      const active = status === s
-                      return (
-                        <button
-                          key={s}
-                          onClick={() => handleAttendance(email, s)}
-                          className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition-colors"
-                          style={{
-                            background: active ? `${STATUS_COLOR[s]}18` : 'transparent',
-                            borderColor: active ? STATUS_COLOR[s] : 'var(--c-border-md)',
-                            color: active ? STATUS_COLOR[s] : 'var(--c-faint)',
-                          }}
-                          title={s === 'present' ? 'Presente' : s === 'absent' ? 'Falta' : 'Atraso'}
-                        >
-                          {STATUS_LABEL[s]}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Responder chamada (alunos) ── */}
-      {isStudent && (
-        <div
-          className="px-4 py-2.5 flex flex-col gap-1.5 border-t"
-          style={{ borderColor: 'var(--c-border)' }}
-        >
-          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--c-subtle)' }}>
-            Chamada
-          </span>
-
-          {alreadyPresent || chamadaState === 'ok' ? (
-            <div className="flex items-center gap-2 py-1">
-              <HiCheckCircle className="w-4 h-4" style={{ color: '#22c55e' }} />
-              <span className="text-xs font-medium" style={{ color: '#22c55e' }}>Presença registrada</span>
-            </div>
-          ) : !aulaAtiva ? (
-            <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>
-              Campo disponível somente durante o horário da aula.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={chamadaCode}
-                  onChange={(e) => { setChamadaCode(e.target.value.replace(/\D/g, '')); setChamadaState('idle'); setChamadaError(null) }}
-                  onKeyDown={(e) => e.key === 'Enter' && submitChamada()}
-                  placeholder="Código de 4 dígitos"
-                  className="flex-1 rounded-lg px-2.5 py-1.5 text-sm border outline-none font-mono tracking-widest"
-                  style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
-                />
-                <button
-                  onClick={submitChamada}
-                  disabled={chamadaCode.length !== 4 || chamadaState === 'loading'}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition-opacity disabled:opacity-40"
-                  style={{ background: turma.iconColor, color: '#fff' }}
-                >
-                  {chamadaState === 'loading' ? '...' : 'Confirmar'}
-                </button>
-              </div>
-              {chamadaState === 'error' && chamadaError && (
-                <p className="text-xs" style={{ color: '#ef4444' }}>{chamadaError}</p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Overlays ── */}
       <AnimatePresence>
