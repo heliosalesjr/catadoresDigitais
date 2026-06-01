@@ -82,6 +82,8 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
   const [adding, setAdding] = useState<AddState | null>(null)
   const [tab, setTab] = useState<Tab>(canEdit ? 'estatisticas' : 'conteudo')
   const [conteudoSubTab, setConteudoSubTab] = useState<'proximas' | 'passadas'>('proximas')
+  const [conteudoPage, setConteudoPage] = useState(1)
+  const CONTEUDO_PAGE_SIZE = 10
 
   const todayStr = (() => {
     const t = new Date()
@@ -166,75 +168,102 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
       )}
 
       {/* Conteúdo tab */}
-      {tab === 'conteudo' && (
-        <div className="flex flex-col gap-0">
-          {/* Sub-tabs */}
-          <div className="flex gap-1 px-4 pt-3 pb-2">
-            {([
-              { key: 'proximas' as const, label: 'Próximas aulas', count: aulasProximas.length },
-              { key: 'passadas' as const, label: 'Passadas',       count: aulaPassadas.length },
-            ]).map(({ key, label, count }) => {
-              const active = conteudoSubTab === key
-              return (
-                <button
-                  key={key}
-                  onClick={() => { setConteudoSubTab(key); setAdding(null) }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                  style={{
-                    background: active ? `${turma.iconColor}15` : 'transparent',
-                    color: active ? turma.iconColor : 'var(--c-subtle)',
-                    border: `1px solid ${active ? `${turma.iconColor}40` : 'var(--c-border)'}`,
-                  }}
-                >
-                  {label}
-                  <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+      {tab === 'conteudo' && (() => {
+        const fullList = conteudoSubTab === 'proximas' ? aulasProximas : aulaPassadas
+        const pagedList = fullList.slice(0, conteudoPage * CONTEUDO_PAGE_SIZE)
+        const hasMore = pagedList.length < fullList.length
+        return (
+          <div className="flex flex-col gap-0">
+            {/* Sub-tabs */}
+            <div className="flex gap-1 px-4 pt-3 pb-2">
+              {([
+                { key: 'proximas' as const, label: 'Próximas aulas', count: aulasProximas.length },
+                { key: 'passadas' as const, label: 'Passadas',       count: aulaPassadas.length },
+              ]).map(({ key, label, count }) => {
+                const active = conteudoSubTab === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => { setConteudoSubTab(key); setConteudoPage(1); setAdding(null) }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
                     style={{
-                      background: active ? turma.iconColor : 'var(--c-bg)',
-                      color: active ? '#fff' : 'var(--c-subtle)',
+                      background: active ? `${turma.iconColor}15` : 'transparent',
+                      color: active ? turma.iconColor : 'var(--c-subtle)',
+                      border: `1px solid ${active ? `${turma.iconColor}40` : 'var(--c-border)'}`,
                     }}
                   >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                    {label}
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+                      style={{
+                        background: active ? turma.iconColor : 'var(--c-bg)',
+                        color: active ? '#fff' : 'var(--c-subtle)',
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
 
-          {/* List */}
-          <div className="px-4 pb-4 flex flex-col gap-3">
-            {(conteudoSubTab === 'proximas' ? aulasProximas : aulaPassadas).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-                <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
-                <p className="font-semibold" style={{ color: 'var(--c-text)' }}>
-                  {conteudoSubTab === 'proximas' ? 'Nenhuma aula agendada' : 'Nenhuma aula realizada ainda'}
-                </p>
-                <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
-                  {conteudoSubTab === 'proximas'
-                    ? 'As próximas aulas aparecerão aqui quando forem agendadas.'
-                    : 'O histórico de aulas anteriores aparecerá aqui.'}
-                </p>
-              </div>
-            ) : (
-              (conteudoSubTab === 'proximas' ? aulasProximas : aulaPassadas).map((aula) => (
-                <AulaCard
-                  key={aula.id}
-                  aula={aula}
-                  turma={turma}
-                  canEdit={canEdit}
-                  currentUser={currentUser}
-                  adding={adding?.aulaId === aula.id ? adding : null}
-                  onStart={() => setAdding({ aulaId: aula.id, label: '', url: '', saving: false })}
-                  onCancel={() => setAdding(null)}
-                  onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
-                  onSubmit={() => submitMaterial(aula)}
-                  onRefresh={onRefresh}
-                />
-              ))
-            )}
+            {/* List */}
+            <div className="px-4 pb-4 flex flex-col gap-3">
+              {fullList.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+                  <HiDocumentText className="w-10 h-10" style={{ color: 'var(--c-faint)' }} />
+                  <p className="font-semibold" style={{ color: 'var(--c-text)' }}>
+                    {conteudoSubTab === 'proximas' ? 'Nenhuma aula agendada' : 'Nenhuma aula realizada ainda'}
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                    {conteudoSubTab === 'proximas'
+                      ? 'As próximas aulas aparecerão aqui quando forem agendadas.'
+                      : 'O histórico de aulas anteriores aparecerá aqui.'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {pagedList.map((aula) => (
+                    <AulaCard
+                      key={aula.id}
+                      aula={aula}
+                      turma={turma}
+                      canEdit={canEdit}
+                      currentUser={currentUser}
+                      adding={adding?.aulaId === aula.id ? adding : null}
+                      onStart={() => setAdding({ aulaId: aula.id, label: '', url: '', saving: false })}
+                      onCancel={() => setAdding(null)}
+                      onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
+                      onSubmit={() => submitMaterial(aula)}
+                      onRefresh={onRefresh}
+                    />
+                  ))}
+
+                  {/* Pagination footer */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+                      {pagedList.length} de {fullList.length} aula{fullList.length !== 1 ? 's' : ''}
+                    </span>
+                    {hasMore && (
+                      <button
+                        onClick={() => setConteudoPage((p) => p + 1)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        style={{
+                          background: `${turma.iconColor}15`,
+                          color: turma.iconColor,
+                          border: `1px solid ${turma.iconColor}40`,
+                        }}
+                      >
+                        Ver mais ({fullList.length - pagedList.length} restantes)
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Presenças tab */}
       {tab === 'presencas' && (
