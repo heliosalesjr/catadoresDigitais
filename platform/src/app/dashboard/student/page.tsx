@@ -12,6 +12,15 @@ import type { Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import type { FrequenciaResult } from '@/app/api/student/frequencia/route'
 
+function Sk({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      className={`animate-pulse rounded ${className}`}
+      style={{ background: 'var(--c-border)', ...style }}
+    />
+  )
+}
+
 function parseLocalDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d)
@@ -84,26 +93,27 @@ export default function StudentDashboard() {
     { label: 'Próximas aulas', value: upcoming.length, icon: <HiClock className="w-5 h-5" />, loading: aulasLoading },
   ]
 
-  if (authLoading) {
-    return (
-      <main className="p-6 md:p-8 flex items-center justify-center min-h-[50vh]">
-        <p style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
-      </main>
-    )
-  }
-
   return (
     <main className="p-6 md:p-8">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
 
         {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>
-            Olá, {user?.name?.split(' ')[0]} 👋
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--c-subtle)' }}>
-            Acompanhe suas turmas e próximas aulas.
-          </p>
+          {authLoading ? (
+            <div className="flex flex-col gap-2">
+              <Sk className="h-7 w-48" />
+              <Sk className="h-4 w-60 mt-1" />
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>
+                Olá, {user?.name?.split(' ')[0]} 👋
+              </h1>
+              <p className="text-sm mt-1" style={{ color: 'var(--c-subtle)' }}>
+                Acompanhe suas turmas e próximas aulas.
+              </p>
+            </>
+          )}
         </div>
 
         {/* Stats */}
@@ -123,9 +133,10 @@ export default function StudentDashboard() {
                 </div>
                 <div>
                   <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>{s.label}</p>
-                  <p className="text-3xl font-bold mt-0.5" style={{ color: 'var(--c-text)' }}>
-                    {s.loading ? '—' : s.value}
-                  </p>
+                  {s.loading
+                    ? <Sk className="h-8 w-14 mt-0.5" />
+                    : <p className="text-3xl font-bold mt-0.5" style={{ color: 'var(--c-text)' }}>{s.value}</p>
+                  }
                 </div>
               </div>
             ))}
@@ -143,15 +154,22 @@ export default function StudentDashboard() {
               </div>
               <div>
                 <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>Frequência</p>
-                <p
-                  className="text-3xl font-bold mt-0.5"
-                  style={{ color: frequenciaLoading || freqPct === null ? 'var(--c-text)' : freqLow ? '#f59e0b' : '#22c55e' }}
-                >
-                  {frequenciaLoading ? '—' : freqPct === null ? '—' : `${freqPct}%`}
-                </p>
-                {!frequenciaLoading && freqPct === null && (
-                  <p className="text-xs mt-1" style={{ color: 'var(--c-faint)' }}>Nenhuma aula realizada.</p>
-                )}
+                {frequenciaLoading
+                  ? <Sk className="h-8 w-14 mt-0.5" />
+                  : (
+                    <>
+                      <p
+                        className="text-3xl font-bold mt-0.5"
+                        style={{ color: freqPct === null ? 'var(--c-text)' : freqLow ? '#f59e0b' : '#22c55e' }}
+                      >
+                        {freqPct === null ? '—' : `${freqPct}%`}
+                      </p>
+                      {freqPct === null && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--c-faint)' }}>Nenhuma aula realizada.</p>
+                      )}
+                    </>
+                  )
+                }
               </div>
             </div>
           </div>
@@ -176,10 +194,23 @@ export default function StudentDashboard() {
 
           {turmasLoading ? (
             <div
-              className="rounded-2xl border px-6 py-10 text-center text-sm"
-              style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)', color: 'var(--c-subtle)' }}
+              className="rounded-2xl border p-5 flex flex-col gap-4"
+              style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
             >
-              Carregando...
+              <div className="flex items-start gap-3">
+                <Sk className="w-10 h-10 rounded-xl flex-shrink-0" />
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <Sk className="h-4 w-40" />
+                  <Sk className="h-3 w-32" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between">
+                  <Sk className="h-3 w-24" />
+                  <Sk className="h-4 w-20 rounded-full" />
+                </div>
+                <Sk className="w-full h-1.5 rounded-full" />
+              </div>
             </div>
           ) : turmas.length === 0 ? (
             <div
@@ -215,7 +246,6 @@ export default function StudentDashboard() {
                     className="rounded-2xl border p-5 flex flex-col gap-4 transition-opacity hover:opacity-75"
                     style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
                   >
-                    {/* Header */}
                     <div className="flex items-start gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -237,7 +267,6 @@ export default function StudentDashboard() {
                       />
                     </div>
 
-                    {/* Progress */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
@@ -292,9 +321,28 @@ export default function StudentDashboard() {
             style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
           >
             {aulasLoading ? (
-              <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
-                Carregando...
-              </div>
+              <>
+                <div className="px-6 py-3" style={{ background: 'var(--c-bg)' }}>
+                  <Sk className="h-3 w-12" />
+                </div>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 px-6 py-3.5 border-t"
+                    style={{ borderColor: 'var(--c-border)' }}
+                  >
+                    <Sk className="rounded-full flex-shrink-0" style={{ width: 4, height: 40 }} />
+                    <div className="flex-1 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <Sk className="h-4 w-40" />
+                        <Sk className="h-4 w-14 rounded-full flex-shrink-0" />
+                      </div>
+                      <Sk className="h-3 w-28" />
+                    </div>
+                    <Sk className="h-3 w-12 flex-shrink-0" />
+                  </div>
+                ))}
+              </>
             ) : grouped.length === 0 ? (
               <div className="px-6 py-10 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>
                 Nenhuma aula agendada.
