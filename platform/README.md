@@ -105,6 +105,164 @@ var(--c-border)    /* bordas sutis */
 var(--c-border-md) /* bordas de inputs */
 ```
 
+## Caching com TanStack Query
+
+### O problema que o caching resolve
+
+Sem cache, cada vez que o usuário navega de volta para o dashboard — saindo de uma turma, por exemplo — o React desmonta e remonta o componente, disparando todos os `fetch` novamente. O resultado é uma tela em branco ou com skeletons que some e reaparece, mesmo que os dados não tenham mudado nada.
+
+O padrão **stale-while-revalidate** resolve isso: na volta ao dashboard, os dados do cache são exibidos *imediatamente*, e uma verificação em background acontece para confirmar se há novidade. O usuário nunca vê reload.
+
+---
+
+### Por que TanStack Query (e não SWR ou fetch puro)
+
+| | Fetch puro + useState | SWR | TanStack Query |
+|---|---|---|---|
+| Cache entre navegações | Não | Sim | Sim |
+| Deduplicação de requests | Não | Sim | Sim |
+| Mutations com invalidação automática | Manual | Limitado | `useMutation` + `invalidateQueries` |
+| DevTools visuais | Não | Não | Sim |
+| Controle fino de staleTime por query | Não | Sim | Sim |
+
+O SWR seria suficiente para o cache básico, mas o projeto usa mutations (adicionar à allowlist, alterar role, registrar chamada) que precisam refletir no cache de forma coordenada. O TanStack Query tem `useMutation` com `onSuccess` para isso, o que evita código manual de sincronização de estado.
+
+---
+
+### Conceitos fundamentais
+
+#### `staleTime` — por quanto tempo os dados são "frescos"
+
+```ts
+new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 2 * 60 * 1000 } // 2 minutos
+  }
+})
+```
+
+Durante o `staleTime`, o cache é servido diretamente sem nenhum fetch. Após esse prazo, os dados ficam "stale" (velhos): na próxima vez que o componente montar ou a janela ganhar foco, um refetch silencioso acontece em background — mas os dados stale já aparecem na tela enquanto isso.
+
+**Regra prática:** quanto mais frequentemente os dados mudam, menor o `staleTime`. Queries muito estáticas (ex: allowlist) usam `5 * 60 * 1000` (5 min). Queries dinâmicas (ex: upcoming-aulas) usam o default de 2 min.
+
+#### `gcTime` — por quanto tempo os dados ficam na memória após unmount
+
+O valor padrão é 5 minutos. Após esse tempo sem nenhum componente usando aquela query, os dados são removidos da memória. Se o usuário voltar antes disso, os dados ainda estão lá. Se voltar depois, uma tela de loading aparece normalmente (como na primeira visita).
+
+#### `isLoading` vs `isFetching`
+
+| Flag | Quando é `true` |
+|------|-----------------|
+| `isLoading` | Query nunca foi executada ainda (sem dados em cache) |
+| `isFetching` | Qualquer fetch em curso, incluindo refetch silencioso em background |
+
+Os skeletons devem usar `isLoading` — assim não piscam durante refetches em background quando já há dados na tela.
+
+#### `enabled` — queries condicionais
+
+```ts
+const { loading: authLoading } = useAuth()
+const { data } = useStudentTurmas(!authLoading)
+```
+
+Queries com `enabled: false` ficam em estado `idle` — não fazem fetch, não atualizam o cache. Isso é necessário aqui porque as rotas API validam a sessão do usuário: disparar um fetch antes de a autenticação estar resolvida retornaria 401.
+
+O loading efetivo nos componentes combina os dois estados:
+```ts
+const turmasLoading = authLoading || turmasQuery.isLoading
+```
+
+---
+
+### Estrutura de cache do projeto
+
+Cada endpoint tem seu próprio hook e sua própria **query key** — um array que identifica unicamente aquele dado no cache global.
+
+```
+['student', 'turmas']          → /api/student/turmas
+['student', 'upcoming-aulas']  → /api/student/upcoming-aulas
+['student', 'frequencia']      → /api/student/frequencia
+['teacher', 'turmas']          → /api/teacher/turmas
+['teacher', 'upcoming-aulas']  → /api/teacher/upcoming-aulas
+['admin', 'upcoming-aulas']    → /api/admin/upcoming-aulas
+['admin', 'allowlist']         → /api/admin/allowlist
+['admin', 'turmas']            → /api/admin/turmas
+['admin', 'users']             → /api/admin/users
+```
+
+Usar arrays hierárquicos (`['admin', 'turmas']`) permite invalidar grupos inteiros se necessário:
+```ts
+// Invalida tudo do admin de uma vez
+queryClient.invalidateQueries({ queryKey: ['admin'] })
+```
+
+---
+
+### Mutations e sincronização de cache
+
+Quando uma action do usuário muda dados no servidor, o cache precisa ser atualizado. Há dois padrões em uso:
+
+#### `invalidateQueries` — refaz o fetch para garantir consistência
+
+Usado quando a resposta do servidor pode diferir do que o cliente calcularia (ex: campos gerados pelo servidor, timestamps, etc.):
+
+```ts
+// useAdminAllowlist.ts
+const addMutation = useMutation({
+  mutationFn: (data) => fetch('/api/admin/allowlist', { method: 'POST', ... }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'allowlist'] }),
+})
+```
+
+Após o POST, o TanStack Query refaz o GET da allowlist automaticamente e atualiza a UI.
+
+#### `setQueryData` — atualiza o cache diretamente sem refetch
+
+Usado quando a mudança é previsível (ex: remover um item por ID):
+
+```ts
+// useUsers.ts
+const deleteUserMutation = useMutation({
+  mutationFn: (uid) => fetch(`/api/admin/users/${uid}`, { method: 'DELETE' }),
+  onSuccess: (_, uid) =>
+    queryClient.setQueryData(['admin', 'users'], (prev) =>
+      prev?.filter((u) => u.uid !== uid) ?? []
+    ),
+})
+```
+
+O item some da lista imediatamente, sem precisar de um refetch que buscaria todos os usuários novamente.
+
+---
+
+### Lazy loading de turmas no admin
+
+O dashboard admin só precisa da lista de turmas quando o usuário abre um modal (lista de usuários ou detalhe de usuário). Buscar isso no mount seria desperdício:
+
+```ts
+// Começa desabilitado
+const [turmasEnabled, setTurmasEnabled] = useState(false)
+const { data: turmas = [] } = useAdminTurmas(turmasEnabled)
+
+// Habilita na primeira ação que precisar
+function openCard(filter) {
+  setActiveCard(filter)
+  setTurmasEnabled(true) // dispara o fetch uma única vez
+}
+```
+
+Depois do primeiro fetch, o `staleTime` de 5 minutos garante que abrir e fechar modais múltiplas vezes não dispara novos requests — o cache é servido diretamente.
+
+---
+
+### QueryProvider e DevTools
+
+O `QueryClientProvider` fica em `src/providers/QueryProvider.tsx` e é inserido no layout raiz, dentro do `ThemeProvider`. A instância do `QueryClient` é criada com `useState` (não no corpo do módulo) para que cada usuário/request tenha seu próprio cache isolado — essencial em ambientes com Server-Side Rendering.
+
+Em desenvolvimento, o ícone do TanStack Query DevTools aparece no canto da tela. Clicando nele é possível inspecionar o estado de cada query, ver dados em cache, forçar refetches e simular erros.
+
+---
+
 ## Desenvolvimento
 
 ```bash
