@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { useTeacherTurmas } from '@/hooks/useTeacherTurmas'
+import { useTeacherUpcomingAulas } from '@/hooks/useTeacherUpcomingAulas'
 import { TECH_ICONS } from '@/lib/icons'
 import {
   HiAcademicCap, HiUsers, HiCalendarDays, HiClock,
   HiChevronRight, HiArrowTopRightOnSquare,
 } from 'react-icons/hi2'
-import type { Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 
 function parseLocalDate(iso: string) {
@@ -46,25 +46,13 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function TeacherDashboard() {
   const { user, loading: authLoading } = useAuth()
-  const [turmas, setTurmas] = useState<Turma[]>([])
-  const [turmasLoading, setTurmasLoading] = useState(true)
-  const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
-  const [aulasLoading, setAulasLoading] = useState(true)
 
-  const fetchData = useCallback(async () => {
-    const [turmasRes, aulasRes] = await Promise.all([
-      fetch('/api/teacher/turmas'),
-      fetch('/api/teacher/upcoming-aulas'),
-    ])
-    if (turmasRes.ok) setTurmas(await turmasRes.json())
-    if (aulasRes.ok) setUpcomingAulas(await aulasRes.json())
-    setTurmasLoading(false)
-    setAulasLoading(false)
-  }, [])
+  const { data: turmas = [], isLoading: turmasQueryLoading } = useTeacherTurmas(!authLoading)
+  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useTeacherUpcomingAulas(!authLoading)
 
-  useEffect(() => { if (!authLoading) fetchData() }, [authLoading, fetchData])
+  const turmasLoading = authLoading || turmasQueryLoading
+  const aulasLoading = authLoading || aulasQueryLoading
 
-  // Derived stats
   const totalAlunos = new Set(turmas.flatMap((t) => t.students)).size
   const { mon, sun } = getWeekISO()
   const aulasThisWeek = upcomingAulas.filter((a) => a.date >= mon && a.date <= sun).length
@@ -165,7 +153,6 @@ export default function TeacherDashboard() {
                     className="rounded-2xl border p-5 flex flex-col gap-4 transition-opacity hover:opacity-75"
                     style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
                   >
-                    {/* Header */}
                     <div className="flex items-start gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -187,7 +174,6 @@ export default function TeacherDashboard() {
                       />
                     </div>
 
-                    {/* Footer */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--c-subtle)' }}>
                         <HiUsers className="w-3.5 h-3.5" />

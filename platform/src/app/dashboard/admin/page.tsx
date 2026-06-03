@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
+import { useAdminUpcomingAulas } from '@/hooks/useAdminUpcomingAulas'
+import { useAdminAllowlist } from '@/hooks/useAdminAllowlist'
+import { useAdminTurmas } from '@/hooks/useAdminTurmas'
+import { useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 import { HiAcademicCap, HiChevronRight, HiCalendarDays, HiClock, HiTrash, HiShieldCheck, HiPlus } from 'react-icons/hi2'
 import Link from 'next/link'
-import type { UserProfile, Turma, AllowlistEntry } from '@/types'
+import type { UserProfile, Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { UserListModal, type CardFilter } from '@/components/UserListModal'
 import { UserDetailPanel } from '@/components/UserDetailPanel'
@@ -49,80 +53,45 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
+  const queryClient = useQueryClient()
+
   const { users, loading: usersLoading, updateRole, deleteUser } = useUsers()
+  const { data: upcomingAulas = [], isLoading: aulasLoading } = useAdminUpcomingAulas()
+  const {
+    allowlist,
+    allowlistLoading,
+    addToAllowlist,
+    addingToAllowlist,
+    removeFromAllowlist,
+    removingFromAllowlist,
+  } = useAdminAllowlist()
+
+  const [turmasEnabled, setTurmasEnabled] = useState(false)
+  const { data: turmas = [], isLoading: turmasLoading } = useAdminTurmas(turmasEnabled)
+
   const [detailUser, setDetailUser] = useState<UserProfile | null>(null)
-  const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
-  const [aulasLoading, setAulasLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
   const [activeCard, setActiveCard] = useState<CardFilter | null>(null)
-  const [turmas, setTurmas] = useState<Turma[]>([])
-  const [turmasLoading, setTurmasLoading] = useState(false)
-  const [turmasFetched, setTurmasFetched] = useState(false)
-  const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([])
-  const [allowlistLoading, setAllowlistLoading] = useState(true)
   const [newEmail, setNewEmail] = useState('')
   const [newRole, setNewRole] = useState<'student' | 'teacher'>('student')
-  const [addingToAllowlist, setAddingToAllowlist] = useState(false)
-  const [removingFromAllowlist, setRemovingFromAllowlist] = useState<string | null>(null)
-
-  const fetchTurmas = useCallback(async () => {
-    if (turmasFetched) return
-    setTurmasLoading(true)
-    const res = await fetch('/api/admin/turmas')
-    if (res.ok) setTurmas(await res.json())
-    setTurmasLoading(false)
-    setTurmasFetched(true)
-  }, [turmasFetched])
 
   function openCard(filter: CardFilter) {
     setActiveCard(filter)
-    fetchTurmas()
+    setTurmasEnabled(true)
   }
-
-  useEffect(() => {
-    fetch('/api/admin/upcoming-aulas')
-      .then((r) => r.json())
-      .then((data) => { setUpcomingAulas(data); setAulasLoading(false) })
-      .catch(() => setAulasLoading(false))
-  }, [])
-
-  useEffect(() => {
-    fetch('/api/admin/allowlist')
-      .then((r) => r.json())
-      .then((data) => { setAllowlist(data); setAllowlistLoading(false) })
-      .catch(() => setAllowlistLoading(false))
-  }, [])
-
-  useEffect(() => { setPage(1) }, [search, roleFilter])
 
   async function handleAddToAllowlist(e: React.FormEvent) {
     e.preventDefault()
     if (!newEmail.trim()) return
-    setAddingToAllowlist(true)
-    const res = await fetch('/api/admin/allowlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: newEmail.trim().toLowerCase(), role: newRole }),
-    })
-    if (res.ok) {
-      const entry: AllowlistEntry = { email: newEmail.trim().toLowerCase(), role: newRole, createdAt: new Date().toISOString() }
-      setAllowlist((prev) => [entry, ...prev.filter((e) => e.email !== entry.email)])
-      setNewEmail('')
-    }
-    setAddingToAllowlist(false)
-  }
-
-  async function handleRemoveFromAllowlist(email: string) {
-    setRemovingFromAllowlist(email)
-    const res = await fetch(`/api/admin/allowlist/${encodeURIComponent(email)}`, { method: 'DELETE' })
-    if (res.ok) setAllowlist((prev) => prev.filter((e) => e.email !== email))
-    setRemovingFromAllowlist(null)
+    await addToAllowlist({ email: newEmail.trim().toLowerCase(), role: newRole })
+    setNewEmail('')
   }
 
   async function handleAddToTurma(turmaId: string, studentEmail: string) {
-    const turma = turmas.find((t) => t.id === turmaId)
+    const currentTurmas = queryClient.getQueryData<Turma[]>(['admin', 'turmas']) ?? []
+    const turma = currentTurmas.find((t) => t.id === turmaId)
     if (!turma || turma.students?.includes(studentEmail)) return
     const updatedStudents = [...(turma.students ?? []), studentEmail]
     const res = await fetch(`/api/admin/turmas/${turmaId}`, {
@@ -131,7 +100,9 @@ export default function AdminDashboard() {
       body: JSON.stringify({ students: updatedStudents }),
     })
     if (res.ok) {
-      setTurmas((prev) => prev.map((t) => t.id === turmaId ? { ...t, students: updatedStudents } : t))
+      queryClient.setQueryData<Turma[]>(['admin', 'turmas'], (prev) =>
+        prev?.map((t) => t.id === turmaId ? { ...t, students: updatedStudents } : t) ?? []
+      )
     }
   }
 
@@ -211,7 +182,6 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
 
-              {/* Pending aulas — always first */}
               {pendingAulas.length > 0 && (
                 <div>
                   <div
@@ -268,10 +238,8 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* Published aulas grouped by date */}
               {grouped.map(([date, aulas]) => (
                 <div key={date}>
-                  {/* Date header */}
                   <div
                     className="px-6 py-2 text-xs font-semibold uppercase tracking-wider"
                     style={{ background: 'var(--c-bg)', color: 'var(--c-subtle)' }}
@@ -279,7 +247,6 @@ export default function AdminDashboard() {
                     {formatDateLabel(date)}
                   </div>
 
-                  {/* Aulas for this date */}
                   {aulas.map((aula) => (
                     <Link
                       key={aula.id}
@@ -287,13 +254,10 @@ export default function AdminDashboard() {
                       className="flex items-center gap-4 px-6 py-3.5 transition-opacity hover:opacity-75 border-t"
                       style={{ borderColor: 'var(--c-border)' }}
                     >
-                      {/* Color accent */}
                       <div
                         className="w-1 h-10 rounded-full flex-shrink-0"
                         style={{ background: aula.turmaIconColor }}
                       />
-
-                      {/* Title + turma + professor */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
@@ -312,15 +276,12 @@ export default function AdminDashboard() {
                           </p>
                         )}
                       </div>
-
-                      {/* Time */}
                       {aula.startTime && (
                         <div className="flex items-center gap-1.5 flex-shrink-0 text-xs" style={{ color: 'var(--c-muted)' }}>
                           <HiClock className="w-3.5 h-3.5" />
                           <span>{aula.startTime}{aula.endTime ? ` – ${aula.endTime}` : ''}</span>
                         </div>
                       )}
-
                       <HiChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-faint)' }} />
                     </Link>
                   ))}
@@ -417,7 +378,7 @@ export default function AdminDashboard() {
                     {entry.role === 'teacher' ? 'Professor' : 'Aluno'}
                   </span>
                   <button
-                    onClick={() => handleRemoveFromAllowlist(entry.email)}
+                    onClick={() => removeFromAllowlist(entry.email)}
                     disabled={removingFromAllowlist === entry.email}
                     className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0 disabled:opacity-50"
                     style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
@@ -448,14 +409,14 @@ export default function AdminDashboard() {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                 placeholder="Buscar por nome ou e-mail..."
                 className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
                 style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
               />
               <select
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
+                onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }}
                 className="rounded-xl px-3 py-2 text-sm border outline-none"
                 style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
               >
@@ -483,7 +444,7 @@ export default function AdminDashboard() {
               {paginatedUsers.map((u, i) => (
                 <li
                   key={u.uid}
-                  onClick={() => { setDetailUser(u); fetchTurmas() }}
+                  onClick={() => { setDetailUser(u); setTurmasEnabled(true) }}
                   className="flex items-center gap-4 px-6 py-4 cursor-pointer transition-opacity hover:opacity-75"
                   style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
                 >

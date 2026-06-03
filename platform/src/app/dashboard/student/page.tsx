@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { useStudentTurmas } from '@/hooks/useStudentTurmas'
+import { useStudentUpcomingAulas } from '@/hooks/useStudentUpcomingAulas'
+import { useStudentFrequencia } from '@/hooks/useStudentFrequencia'
 import { TECH_ICONS } from '@/lib/icons'
 import {
   HiCalendarDays, HiClock, HiChartBar,
   HiChevronRight, HiArrowTopRightOnSquare, HiExclamationTriangle,
 } from 'react-icons/hi2'
-import type { Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
-import type { FrequenciaResult } from '@/app/api/student/frequencia/route'
 
 function Sk({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
   return (
@@ -56,28 +56,14 @@ function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
 
 export default function StudentDashboard() {
   const { user, loading: authLoading } = useAuth()
-  const [turmas, setTurmas] = useState<Turma[]>([])
-  const [turmasLoading, setTurmasLoading] = useState(true)
-  const [upcomingAulas, setUpcomingAulas] = useState<UpcomingAula[]>([])
-  const [aulasLoading, setAulasLoading] = useState(true)
-  const [frequencia, setFrequencia] = useState<FrequenciaResult | null>(null)
-  const [frequenciaLoading, setFrequenciaLoading] = useState(true)
 
-  const fetchData = useCallback(async () => {
-    const [turmasRes, aulasRes, freqRes] = await Promise.all([
-      fetch('/api/student/turmas'),
-      fetch('/api/student/upcoming-aulas'),
-      fetch('/api/student/frequencia'),
-    ])
-    if (turmasRes.ok) setTurmas(await turmasRes.json())
-    if (aulasRes.ok) setUpcomingAulas(await aulasRes.json())
-    if (freqRes.ok) setFrequencia(await freqRes.json())
-    setTurmasLoading(false)
-    setAulasLoading(false)
-    setFrequenciaLoading(false)
-  }, [])
+  const { data: turmas = [], isLoading: turmasQueryLoading } = useStudentTurmas(!authLoading)
+  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useStudentUpcomingAulas(!authLoading)
+  const { data: frequencia, isLoading: frequenciaQueryLoading } = useStudentFrequencia(!authLoading)
 
-  useEffect(() => { if (!authLoading) fetchData() }, [authLoading, fetchData])
+  const turmasLoading = authLoading || turmasQueryLoading
+  const aulasLoading = authLoading || aulasQueryLoading
+  const frequenciaLoading = authLoading || frequenciaQueryLoading
 
   const { mon, sun } = getWeekISO()
   const todayISO = new Date().toISOString().split('T')[0]
