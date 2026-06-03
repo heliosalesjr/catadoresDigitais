@@ -15,8 +15,8 @@ import type { FrequenciaResult } from '@/app/api/student/frequencia/route'
 function Sk({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`animate-pulse rounded ${className}`}
-      style={{ background: 'var(--c-border)', ...style }}
+      className={`sk rounded ${className}`}
+      style={style}
     />
   )
 }
