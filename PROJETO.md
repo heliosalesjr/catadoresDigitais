@@ -62,7 +62,32 @@
 | Acesso rápido às turmas | ✅ |
 | Lista de usuários com gestão de roles (aluno ↔ professor) | ✅ |
 | Busca / filtro na lista de usuários | ✅ |
+| Paginação de 10 usuários por página | ✅ |
 | Deletar usuário (com confirmação inline) | ✅ |
+| Allowlist: adicionar / remover emails com role | ✅ |
+| UserDetailPanel (slide-over de detalhes do usuário) | ✅ |
+
+---
+
+### Painel do Professor
+| Feature | Status |
+|---------|--------|
+| Stats: minhas turmas, alunos no total, aulas esta semana, próximas aulas | ✅ |
+| Minhas turmas (filtradas via `/api/teacher/turmas`) | ✅ |
+| Próximas aulas do professor (via `/api/teacher/upcoming-aulas`) | ✅ |
+| Link para a turma a partir das próximas aulas | ✅ |
+| Gestão de aulas/materiais nas turmas onde é professor | ✅ (via CalendarGrid) |
+
+---
+
+### Painel do Aluno
+| Feature | Status |
+|---------|--------|
+| Stats: aulas esta semana, próximas aulas, frequência (%) | ✅ |
+| Aviso de frequência baixa (< 85%) | ✅ |
+| Minha turma com barra de progresso temporal | ✅ |
+| Próximas aulas agrupadas por data com tag da turma e professor | ✅ |
+| Link direto para página da aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
 
 ---
 
@@ -86,7 +111,18 @@
 | Editar aula | ✅ |
 | Deletar aula | ✅ |
 | Calendário colapsável com FAB para reabrir | ✅ |
-| Scroll no painel de conteúdo | ⚠️ bug pendente |
+| Página individual de aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
+
+---
+
+### Banco de Aulas
+| Feature | Status |
+|---------|--------|
+| Criar aula no banco (`turmas/{id}/banco/{bancoId}`) | ✅ |
+| Editar / deletar aula do banco | ✅ |
+| Agendar aula do banco para uma data (`/api/turmas/[id]/banco/[bancoId]/agendar`) | ✅ |
+| Painel BancoPanel com lista e modal de criação/edição | ✅ |
+| AgendarBancoModal para escolher data e horário ao agendar | ✅ |
 
 ---
 
@@ -111,7 +147,8 @@
 | Criar avaliação | ✅ |
 | Deletar avaliação | ✅ |
 | "Testar avaliação" — simulação da visão do aluno | ✅ |
-| Submissão real pelo aluno (salvar no Firestore) | ❌ |
+| Submissão real pelo aluno via página da aula | ✅ |
+| API `/api/turmas/[id]/aulas/[aulaId]/respostas` (GET por role, POST do aluno) | ✅ |
 | Ver respostas dos alunos (visão professor / admin) | ❌ |
 | Feedback / correção de respostas abertas | ❌ |
 
@@ -120,41 +157,62 @@
 ### Frequência (Chamada)
 | Feature | Status |
 |---------|--------|
-| Campo `attendance` modelado no tipo `Aula` | ✅ |
-| UI para marcar chamada (presente / ausente / atrasado) | ❌ |
-| Relatório de frequência por aluno | ❌ |
+| Campo `attendance` no tipo `Aula` | ✅ |
+| `attendanceCode` — código de 4 dígitos gerado pelo professor | ✅ |
+| Aluno responde chamada com código via `AulaModal` | ✅ |
+| API `/api/turmas/[id]/aulas/[aulaId]/chamada` (POST) | ✅ |
+| API `/api/student/frequencia` — percentual de presença do aluno | ✅ |
+| UI para marcar chamada manualmente (P/F/A pelo professor) | ❌ |
+| Relatório de frequência por aluno (visão admin/teacher) | ❌ |
 
 ---
 
-### Painel do Professor
-| Feature | Status |
-|---------|--------|
-| Layout base com stats | ✅ (placeholder) |
-| Minhas turmas (filtradas pelas turmas onde é professor) | ❌ |
-| Próximas aulas do professor | ❌ |
-| Gestão de aulas e materiais das suas turmas | ❌ |
+## Rotas API (plataforma)
+
+| Rota | Método | Acesso |
+|------|--------|--------|
+| `/api/auth/session` | POST | público |
+| `/api/admin/allowlist` | GET, POST | admin |
+| `/api/admin/allowlist/[email]` | DELETE | admin |
+| `/api/admin/upcoming-aulas` | GET | admin/teacher |
+| `/api/admin/users` | GET | admin |
+| `/api/admin/users/[uid]` | PATCH, DELETE | admin |
+| `/api/admin/turmas` | GET | admin |
+| `/api/admin/turmas/[id]` | GET, PATCH, DELETE | admin |
+| `/api/teacher/turmas` | GET | teacher |
+| `/api/teacher/upcoming-aulas` | GET | teacher |
+| `/api/student/turmas` | GET | student |
+| `/api/student/upcoming-aulas` | GET | student |
+| `/api/student/frequencia` | GET | student |
+| `/api/turmas/[id]` | GET, PATCH, DELETE | editor |
+| `/api/turmas/[id]/aulas` | GET, POST | editor |
+| `/api/turmas/[id]/aulas/[aulaId]` | GET, PATCH, DELETE | editor |
+| `/api/turmas/[id]/aulas/[aulaId]/chamada` | POST | any |
+| `/api/turmas/[id]/aulas/[aulaId]/respostas` | GET, POST | any (GET: editor vê todas; aluno vê só as suas) |
+| `/api/turmas/[id]/banco` | GET, POST | editor |
+| `/api/turmas/[id]/banco/[bancoId]` | GET, PATCH, DELETE | editor |
+| `/api/turmas/[id]/banco/[bancoId]/agendar` | POST | editor |
+| `/api/users/teachers` | GET | editor |
 
 ---
 
-### Painel do Aluno
-| Feature | Status |
-|---------|--------|
-| Layout base | ✅ (placeholder) |
-| Minhas turmas (turmas onde está matriculado) | ❌ |
-| Ver aulas e materiais das suas turmas | ❌ |
-| Submeter avaliações | ❌ |
-| Consultar própria frequência | ❌ |
+## Schema Firestore
+
+- `users/{uid}` — `{ uid, email, name, photoURL, role, createdAt }`
+- `allowlist/{email}` — `{ email, role, createdAt }`
+- `turmas/{id}` — `{ name, icon, iconColor, startDate, endDate, students: string[], professors?: TurmaTeacher[], createdBy, createdAt }`
+- `turmas/{id}/aulas/{id}` — `{ title, description, date, startTime, endTime, status, teachers: AulaTeacher[], driveLinks, attendance: { [email]: 'present'|'absent'|'late'|null }, attendanceCode?, avaliacoes?, bancoAulaId?, createdAt }`
+- `turmas/{id}/aulas/{id}/respostas/{email}` — `{ studentEmail, studentName, answers: Record<avaliacaoId, string>, submittedAt }`
+- `turmas/{id}/banco/{id}` — `{ title, description, teachers: AulaTeacher[], driveLinks, avaliacoes?, createdBy, createdAt }`
 
 ---
 
 ## Prioridades sugeridas
 
-1. **Bug do scroll** no painel de conteúdo da turma
-2. **Painel do aluno** — acesso às turmas, materiais e avaliações
-3. **Submissão de avaliações** — salvar respostas do aluno no Firestore
-4. **UI de frequência** — marcar chamada por aula
-5. **Painel do professor** — minhas turmas e próximas aulas
-6. **Gerenciar matrículas** — adicionar / remover alunos de uma turma
-7. **Formulário de inscrição** da landing page
-8. **Remover material** individual de uma aula
-9. **Deploy** — landing + platform em produção
+1. **Ver respostas dos alunos** — painel professor/admin para consultar respostas por aula
+2. **UI de chamada manual** — professor marca P/F/A diretamente (sem código)
+3. **Relatório de frequência** — visão admin/teacher com tabela por aluno
+4. **Gerenciar matrículas** — adicionar / remover alunos de uma turma
+5. **Remover material** individual de uma aula / banco
+6. **Formulário de inscrição** da landing page
+7. **Deploy** — landing + platform em produção
