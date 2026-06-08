@@ -27,11 +27,18 @@ interface Props {
   avaliacoes: Avaliacao[]
   accentColor: string
   onClose: () => void
+  turmaId?: string
+  aulaId?: string
+  onSubmitted?: () => void
 }
 
-export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props) {
+export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId, aulaId, onSubmitted }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const isStudentMode = !!(turmaId && aulaId)
+  const answeredCount = Object.keys(answers).length
 
   // Shuffle quiz options once on mount, stable per session
   const quizStates = useMemo<Record<string, QuizState>>(() => {
@@ -58,7 +65,25 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
     return qs.shuffled.indexOf(ans) === qs.correctIdx
   }
 
-  const correctCount = submitted ? avaliacoes.filter(isCorrect).length : 0
+  const correctCount = submitted && !isStudentMode ? avaliacoes.filter(isCorrect).length : 0
+
+  async function handleSubmit() {
+    if (isStudentMode) {
+      setSubmitting(true)
+      await fetch(`/api/turmas/${turmaId}/aulas/${aulaId}/respostas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      })
+      setSubmitting(false)
+    }
+    setSubmitted(true)
+  }
+
+  function handleClose() {
+    if (submitted && isStudentMode) onSubmitted?.()
+    onClose()
+  }
 
   const inputStyle = {
     background: 'var(--c-bg)',
@@ -74,7 +99,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.60)', backdropFilter: 'blur(4px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     >
       <motion.div
         initial={{ scale: 0.95, y: 8, opacity: 0 }}
@@ -92,14 +117,16 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
         >
           <div>
             <h2 className="font-bold text-base" style={{ color: 'var(--c-text)' }}>
-              Teste de Avaliação
+              {isStudentMode ? 'Avaliação' : 'Teste de Avaliação'}
             </h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
-              Simulação da experiência do aluno
-            </p>
+            {!isStudentMode && (
+              <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
+                Simulação da experiência do aluno
+              </p>
+            )}
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0"
             style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
           >
@@ -111,7 +138,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
           {avaliacoes.map((av, i) => {
             const ans = answers[av.id] ?? ''
             const qs = quizStates[av.id]
-            const correct = submitted ? isCorrect(av) : null
+            const correct = submitted && !isStudentMode ? isCorrect(av) : null
             const textRemaining = TEXT_LIMIT - ans.length
             const nearLimit = ans.length > TEXT_LIMIT * 0.85
 
@@ -136,7 +163,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
                       {TYPE_LABEL[av.type]}
                     </span>
                   </div>
-                  {submitted && (
+                  {submitted && !isStudentMode && (
                     correct
                       ? <HiCheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#22c55e' }} />
                       : <HiXCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
@@ -154,7 +181,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
                     className="rounded-xl px-3 py-2.5 text-sm border outline-none disabled:opacity-60"
                     style={{
                       ...inputStyle,
-                      borderColor: submitted
+                      borderColor: submitted && !isStudentMode
                         ? correct ? '#22c55e' : '#ef4444'
                         : 'var(--c-border-md)',
                     }}
@@ -177,7 +204,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
                       className="rounded-xl px-3 py-2.5 text-sm border outline-none resize-none disabled:opacity-60"
                       style={{
                         ...inputStyle,
-                        borderColor: submitted
+                        borderColor: submitted && !isStudentMode
                           ? correct ? '#22c55e' : '#ef4444'
                           : 'var(--c-border-md)',
                       }}
@@ -202,17 +229,17 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
                     {qs.shuffled.map((opt, j) => {
                       const selected = ans === opt
                       const isCorrectOpt = j === qs.correctIdx
-                      const wrongSelected = submitted && selected && !correct
+                      const wrongSelected = submitted && !isStudentMode && selected && !correct
 
                       let border = 'var(--c-border-md)'
                       let bg = 'transparent'
                       let color = 'var(--c-text)'
 
-                      if (submitted && isCorrectOpt) {
+                      if (submitted && !isStudentMode && isCorrectOpt) {
                         border = '#22c55e'; bg = '#22c55e14'; color = '#22c55e'
                       } else if (wrongSelected) {
                         border = '#ef4444'; bg = '#ef444414'; color = '#ef4444'
-                      } else if (!submitted && selected) {
+                      } else if (selected) {
                         border = accentColor; bg = `${accentColor}12`; color = accentColor
                       }
 
@@ -239,11 +266,12 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
         <div className="p-5 pt-0 flex flex-col gap-2">
           {!submitted ? (
             <button
-              onClick={() => setSubmitted(true)}
-              className="w-full py-2.5 rounded-xl text-sm font-bold"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-2.5 rounded-xl text-sm font-bold disabled:opacity-60"
               style={{ background: accentColor, color: '#fff' }}
             >
-              Enviar respostas
+              {submitting ? 'Enviando...' : 'Enviar respostas'}
             </button>
           ) : (
             <>
@@ -251,10 +279,13 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose }: Props)
                 className="rounded-xl p-3 text-center text-sm font-semibold"
                 style={{ background: `${accentColor}15`, color: accentColor }}
               >
-                {correctCount} de {avaliacoes.length} {avaliacoes.length === 1 ? 'questão' : 'questões'} corretas
+                {isStudentMode
+                  ? `${answeredCount} de ${avaliacoes.length} ${avaliacoes.length === 1 ? 'questão' : 'questões'} enviadas`
+                  : `${correctCount} de ${avaliacoes.length} ${avaliacoes.length === 1 ? 'questão' : 'questões'} corretas`
+                }
               </div>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="w-full py-2.5 rounded-xl text-sm border"
                 style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-muted)' }}
               >

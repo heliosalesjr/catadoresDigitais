@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
@@ -346,12 +346,21 @@ function AulaCard({
   const [editingAula, setEditingAula] = useState(false)
   const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
+  const [resposta, setResposta] = useState<{ answers: Record<string, string>; submittedAt: string } | null | 'loading'>('loading')
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
   const detectedType = adding?.url ? detectType(adding.url) : null
   const avaliacoes = aula.avaliacoes ?? []
 
   const isStudent = !canEdit && currentUser?.role === 'student'
+
+  useEffect(() => {
+    if (!isStudent || avaliacoes.length === 0) { setResposta(null); return }
+    fetch(`/api/turmas/${turma.id}/aulas/${aula.id}/respostas`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setResposta(data))
+      .catch(() => setResposta(null))
+  }, [])
 
   const aulaDate = parseLocalDate(aula.date)
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -577,13 +586,24 @@ function AulaCard({
         {avaliacoes.length === 0 ? (
           <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhuma avaliação.</p>
         ) : isStudent ? (
-          <button
-            onClick={() => setTestingAvaliacao(true)}
-            className="w-full py-1.5 rounded-lg text-xs font-semibold border transition-opacity hover:opacity-80"
-            style={{ borderColor: turma.iconColor, color: turma.iconColor }}
-          >
-            Responder Avaliação
-          </button>
+          resposta === 'loading' ? (
+            <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Carregando...</p>
+          ) : resposta ? (
+            <div
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-center"
+              style={{ background: `${turma.iconColor}15`, color: turma.iconColor }}
+            >
+              {Object.keys(resposta.answers).length} de {avaliacoes.length} {avaliacoes.length === 1 ? 'questão' : 'questões'} enviadas
+            </div>
+          ) : (
+            <button
+              onClick={() => setTestingAvaliacao(true)}
+              className="w-full py-1.5 rounded-lg text-xs font-semibold border transition-opacity hover:opacity-80"
+              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+            >
+              Responder Avaliação
+            </button>
+          )
         ) : (
           <>
             {avaliacoes.map((av) => {
@@ -661,6 +681,16 @@ function AulaCard({
             avaliacoes={avaliacoes}
             accentColor={turma.iconColor}
             onClose={() => setTestingAvaliacao(false)}
+            {...(isStudent ? {
+              turmaId: turma.id,
+              aulaId: aula.id,
+              onSubmitted: () => {
+                fetch(`/api/turmas/${turma.id}/aulas/${aula.id}/respostas`)
+                  .then((r) => r.ok ? r.json() : null)
+                  .then((data) => setResposta(data))
+                  .catch(() => {})
+              },
+            } : {})}
           />
         )}
       </AnimatePresence>
