@@ -16,6 +16,7 @@ import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 import { BancoPanel } from './BancoPanel'
 import { AulaModal } from './AulaModal'
+import { AnotacoesPanel } from './AnotacoesPanel'
 
 const MONTHS_PT = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -76,7 +77,7 @@ interface AddState {
   saving: boolean
 }
 
-type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco'
+type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco' | 'anotacoes'
 
 export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
@@ -134,8 +135,12 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           </span>
         </div>
         <div className="flex gap-1 mt-2 overflow-x-auto">
-          {((['estatisticas', 'conteudo', 'presencas', 'professores', 'banco'] as Tab[]).filter(
-            (t) => (t !== 'estatisticas' || canEdit) && (t !== 'presencas' || canEdit) && (t !== 'banco' || canEdit)
+          {((['estatisticas', 'conteudo', 'presencas', 'professores', 'banco', 'anotacoes'] as Tab[]).filter(
+            (t) =>
+              (t !== 'estatisticas' || canEdit) &&
+              (t !== 'presencas' || canEdit) &&
+              (t !== 'banco' || canEdit) &&
+              (t !== 'anotacoes' || !canEdit)
           )).map((t) => {
             const active = tab === t
             const tabLabel = {
@@ -144,6 +149,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
               presencas:    <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
               professores:  <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
               banco:        <><HiListBullet className="w-3.5 h-3.5" /> Banco de Aulas</>,
+              anotacoes:    <><HiPencilSquare className="w-3.5 h-3.5" /> Anotações</>,
             }[t]
             return (
               <button
@@ -292,6 +298,15 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           aulas={aulas}
           currentUser={currentUser}
           onRefreshAulas={onRefresh}
+        />
+      )}
+
+      {/* Anotações tab */}
+      {tab === 'anotacoes' && currentUser && (
+        <AnotacoesPanel
+          uid={currentUser.uid}
+          turmaId={turma.id}
+          accentColor={turma.iconColor}
         />
       )}
     </>

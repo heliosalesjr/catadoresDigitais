@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useStudentTurmas } from '@/hooks/useStudentTurmas'
 import { useStudentUpcomingAulas } from '@/hooks/useStudentUpcomingAulas'
 import { useStudentFrequencia } from '@/hooks/useStudentFrequencia'
+import { useStudentLastNota } from '@/hooks/useStudentLastNota'
 import { TECH_ICONS } from '@/lib/icons'
 import {
   HiCalendarDays, HiClock, HiChartBar,
@@ -60,6 +61,9 @@ export default function StudentDashboard() {
   const { data: turmas = [], isLoading: turmasQueryLoading } = useStudentTurmas(!authLoading)
   const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useStudentUpcomingAulas(!authLoading)
   const { data: frequencia, isLoading: frequenciaQueryLoading } = useStudentFrequencia(!authLoading)
+  const { data: lastNota } = useStudentLastNota(!authLoading && !!user ? user.uid : null)
+
+  const turmaId = turmas[0]?.id ?? null
 
   const turmasLoading = authLoading || turmasQueryLoading
   const aulasLoading = authLoading || aulasQueryLoading
@@ -391,6 +395,66 @@ export default function StudentDashboard() {
             )}
           </div>
         </section>
+
+        {/* Última anotação */}
+        {!authLoading && user && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Última anotação</h2>
+              {turmaId && (
+                <Link
+                  href={`/dashboard/turmas/${turmaId}`}
+                  className="text-xs transition-opacity hover:opacity-75"
+                  style={{ color: 'var(--c-subtle)' }}
+                >
+                  Ver todas →
+                </Link>
+              )}
+            </div>
+
+            <div
+              className="rounded-2xl border p-5"
+              style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+            >
+              {!lastNota ? (
+                <div className="text-center py-2">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>
+                    Nenhuma anotação ainda
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--c-subtle)' }}>
+                    Acesse sua turma e crie suas primeiras anotações.
+                  </p>
+                  {turmaId && (
+                    <Link
+                      href={`/dashboard/turmas/${turmaId}`}
+                      className="inline-block mt-3 text-xs px-4 py-2 rounded-xl font-semibold transition-opacity hover:opacity-75"
+                      style={{ background: 'var(--c-border)', color: 'var(--c-text)' }}
+                    >
+                      Ir para a turma
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--c-text)' }}>
+                      {lastNota.title || 'Sem título'}
+                    </p>
+                    <span className="text-[10px] flex-shrink-0 mt-0.5" style={{ color: 'var(--c-faint)' }}>
+                      {new Date(lastNota.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                  {lastNota.content && (
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--c-subtle)' }}>
+                      {lastNota.content.replace(/[#*_`>\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}
+                      {lastNota.content.length > 120 ? '…' : ''}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
+        )}
 
       </div>
     </main>
