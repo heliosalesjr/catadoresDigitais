@@ -576,6 +576,14 @@ function AulaCard({
 
         {avaliacoes.length === 0 ? (
           <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhuma avaliação.</p>
+        ) : isStudent ? (
+          <button
+            onClick={() => setTestingAvaliacao(true)}
+            className="w-full py-1.5 rounded-lg text-xs font-semibold border transition-opacity hover:opacity-80"
+            style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+          >
+            Responder Avaliação
+          </button>
         ) : (
           <>
             {avaliacoes.map((av) => {
