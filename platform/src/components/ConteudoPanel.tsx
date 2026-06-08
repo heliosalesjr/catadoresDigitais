@@ -68,6 +68,7 @@ interface Props {
   currentUser: UserProfile | null
   onRefresh: () => void
   onRefreshTurma: () => void
+  initialTab?: string
 }
 
 interface AddState {
@@ -79,9 +80,14 @@ interface AddState {
 
 type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco' | 'anotacoes'
 
-export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma }: Props) {
+export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma, initialTab }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
-  const [tab, setTab] = useState<Tab>(canEdit ? 'estatisticas' : 'conteudo')
+
+  const validTabs: Tab[] = ['estatisticas', 'conteudo', 'presencas', 'professores', 'banco', 'anotacoes']
+  const defaultTab: Tab = canEdit ? 'estatisticas' : 'conteudo'
+  const [tab, setTab] = useState<Tab>(
+    initialTab && validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : defaultTab
+  )
   const [conteudoSubTab, setConteudoSubTab] = useState<'proximas' | 'passadas'>('proximas')
   const [conteudoPage, setConteudoPage] = useState(1)
   const CONTEUDO_PAGE_SIZE = 10

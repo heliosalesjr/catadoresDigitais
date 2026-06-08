@@ -403,7 +403,7 @@ export default function StudentDashboard() {
               <h2 className="font-semibold" style={{ color: 'var(--c-text)' }}>Última anotação</h2>
               {turmaId && (
                 <Link
-                  href={`/dashboard/turmas/${turmaId}`}
+                  href={`/dashboard/turmas/${turmaId}?tab=anotacoes`}
                   className="text-xs transition-opacity hover:opacity-75"
                   style={{ color: 'var(--c-subtle)' }}
                 >
@@ -426,7 +426,7 @@ export default function StudentDashboard() {
                   </p>
                   {turmaId && (
                     <Link
-                      href={`/dashboard/turmas/${turmaId}`}
+                      href={`/dashboard/turmas/${turmaId}?tab=anotacoes`}
                       className="inline-block mt-3 text-xs px-4 py-2 rounded-xl font-semibold transition-opacity hover:opacity-75"
                       style={{ background: 'var(--c-border)', color: 'var(--c-text)' }}
                     >

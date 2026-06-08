@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { use } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
@@ -33,6 +34,8 @@ const CALENDAR_MOBILE_H = 420
 export default function TurmaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const initialTab = searchParams.get('tab') ?? undefined
   const [turma, setTurma] = useState<Turma | null>(null)
   const [loading, setLoading] = useState(true)
   const [calendarOpen, setCalendarOpen] = useState(true)
@@ -162,6 +165,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               currentUser={user}
               onRefresh={fetchAulas}
               onRefreshTurma={fetchTurma}
+              initialTab={initialTab}
             />
           )}
         </div>
