@@ -7,15 +7,11 @@ export function Footer() {
       style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
     >
       <div className="max-w-4xl mx-auto flex flex-col items-center gap-5">
-        <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'var(--c-faint)' }}>
-          Realização
-        </p>
-
-        <div className="flex items-center justify-center gap-8 flex-wrap">
-          <div
-            className="rounded-xl px-4 py-2.5 flex items-center"
-            style={{ background: '#fff' }}
-          >
+        <div className="flex items-end justify-center gap-10 flex-wrap">
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[10px] uppercase tracking-widest font-medium" style={{ color: 'var(--c-faint)' }}>
+              Realização
+            </p>
             <Image
               src="/ipes-logo.webp"
               alt="Instituto Ipês"
@@ -26,10 +22,10 @@ export function Footer() {
             />
           </div>
 
-          <div
-            className="rounded-xl px-4 py-2.5 flex items-center"
-            style={{ background: '#fff' }}
-          >
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[10px] uppercase tracking-widest font-medium" style={{ color: 'var(--c-faint)' }}>
+              Patrocínio
+            </p>
             <Image
               src="/CAIXA_2cores_positiva.png"
               alt="Caixa Econômica Federal"
