@@ -6,7 +6,7 @@ export function Footer() {
       className="mt-auto border-t px-6 py-8"
       style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
     >
-      <div className="max-w-4xl mx-auto flex flex-col items-center gap-5">
+      <div className="max-w-4xl mx-auto flex flex-col items-center gap-8">
         <div className="flex items-end justify-center gap-10 flex-wrap">
           <div className="flex flex-col items-center gap-2">
             <p className="text-[10px] uppercase tracking-widest font-medium" style={{ color: 'var(--c-faint)' }}>
@@ -37,9 +37,14 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="text-[11px] text-center" style={{ color: 'var(--c-faint)' }}>
-          Catadores Digitais · Programa de formação em tecnologia
-        </p>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-[11px] text-center" style={{ color: 'var(--c-faint)' }}>
+            Catadores Digitais · Programa de formação em tecnologia
+          </p>
+          <p className="text-xs font-bold text-center" style={{ color: 'var(--c-subtle)' }}>
+            © {new Date().getFullYear()} Instituto Ipês. Todos os direitos reservados.
+          </p>
+        </div>
       </div>
     </footer>
   )
