@@ -56,6 +56,16 @@ turmas/{id}/aulas/{id}
   attendance: { [email]: 'present' | 'absent' | 'late' }
   attendanceCode: string
   avaliacoes: Avaliacao[]
+
+turmas/{id}/aulas/{id}/respostas/{email}
+  studentEmail, studentName
+  answers: { [avaliacaoId]: string }
+  submittedAt: string (ISO)
+
+users/{uid}/notas/{id}
+  title, content (Markdown)
+  turmaId: string
+  createdAt, updatedAt: string (ISO)
 ```
 
 ## Rotas API
@@ -70,13 +80,38 @@ turmas/{id}/aulas/{id}
 | `/api/turmas/[id]/aulas` | GET, POST | any/editor | Lista e cria aulas |
 | `/api/turmas/[id]/aulas/[aulaId]` | PATCH, DELETE | editor | Edita ou remove aula |
 | `/api/turmas/[id]/aulas/[aulaId]/chamada` | POST | any | Aluno responde chamada com código |
+| `/api/turmas/[id]/aulas/[aulaId]/respostas` | GET | any | Editor recebe todas as respostas; aluno recebe só a sua (ou `null`) |
+| `/api/turmas/[id]/aulas/[aulaId]/respostas` | POST | any | Aluno envia respostas da avaliação (salva em `respostas/{email}`) |
 
 ## Permissões do aluno
 
 - Tab **Presenças** oculta
+- Tab **Banco de Aulas** oculta
+- Tab **Anotações** visível **apenas para alunos** (editores não veem)
 - **Materiais** de aulas futuras bloqueados até 7 dias antes da data
 - Aba **Professores**: somente nome e email visíveis (telefone oculto)
 - **Modal de aula**: exibe input de código de chamada (não botões P/F/A)
+- **Avaliações**: aluno vê apenas o botão "Responder Avaliação" (sem lista de questões); após enviar, o botão é substituído por um indicador "X de Y questões enviadas" e a avaliação não pode ser reaberta
+
+## Anotações do aluno
+
+Cada aluno pode criar múltiplas notas em Markdown, associadas à sua turma. As notas são armazenadas na subcoleção `users/{uid}/notas` (acesso permitido apenas ao próprio usuário pelas Firestore Rules).
+
+**Componentes:**
+- `AnotacoesPanel` — aba "Anotações" dentro da página da turma; exibe lista de notas + editor com preview em Markdown e auto-save de 1,5 s
+- `useStudentLastNota` — busca a nota mais recente para o card de resumo no dashboard
+
+**Navegação direta para a aba:** links no dashboard usam `?tab=anotacoes` na URL, e a página da turma lê esse parâmetro via `useSearchParams` para abrir a aba correspondente no `ConteudoPanel`.
+
+**Firestore Rules** — a subcoleção de notas precisa de uma regra explícita (subcoleções não herdam automaticamente a regra do documento pai):
+```
+match /users/{uid} {
+  allow read, write: if request.auth.uid == uid;
+  match /notas/{notaId} {
+    allow read, write: if request.auth.uid == uid;
+  }
+}
+```
 
 ## Padrões importantes
 
@@ -179,15 +214,16 @@ const turmasLoading = authLoading || turmasQuery.isLoading
 Cada endpoint tem seu próprio hook e sua própria **query key** — um array que identifica unicamente aquele dado no cache global.
 
 ```
-['student', 'turmas']          → /api/student/turmas
-['student', 'upcoming-aulas']  → /api/student/upcoming-aulas
-['student', 'frequencia']      → /api/student/frequencia
-['teacher', 'turmas']          → /api/teacher/turmas
-['teacher', 'upcoming-aulas']  → /api/teacher/upcoming-aulas
-['admin', 'upcoming-aulas']    → /api/admin/upcoming-aulas
-['admin', 'allowlist']         → /api/admin/allowlist
-['admin', 'turmas']            → /api/admin/turmas
-['admin', 'users']             → /api/admin/users
+['student', 'turmas']            → /api/student/turmas
+['student', 'upcoming-aulas']    → /api/student/upcoming-aulas
+['student', 'frequencia']        → /api/student/frequencia
+['student', 'last-nota', uid]    → Firestore users/{uid}/notas (última nota)
+['teacher', 'turmas']            → /api/teacher/turmas
+['teacher', 'upcoming-aulas']    → /api/teacher/upcoming-aulas
+['admin', 'upcoming-aulas']      → /api/admin/upcoming-aulas
+['admin', 'allowlist']           → /api/admin/allowlist
+['admin', 'turmas']              → /api/admin/turmas
+['admin', 'users']               → /api/admin/users
 ```
 
 Usar arrays hierárquicos (`['admin', 'turmas']`) permite invalidar grupos inteiros se necessário:
