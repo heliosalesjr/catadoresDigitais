@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiCalendarDays, HiChevronLeft, HiChevronRight, HiChevronDown, HiPlus,
@@ -67,7 +67,17 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, c
     (endMonth.getFullYear() - startMonth.getFullYear()) * 12 +
     (endMonth.getMonth() - startMonth.getMonth()) + 1
 
-  const [currentMonth, setCurrentMonth] = useState<Date>(startMonth)
+  const initialMonth = (() => {
+    const today = new Date()
+    const current = new Date(today.getFullYear(), today.getMonth(), 1)
+    if (current < startMonth) return startMonth
+    if (current > endMonth) return endMonth
+    return current
+  })()
+
+  const [currentMonth, setCurrentMonth] = useState<Date>(initialMonth)
+
+  useEffect(() => { onMonthChange(initialMonth) }, [])
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [selectedAula, setSelectedAula] = useState<Aula | null>(null)
   const [modalOpen, setModalOpen] = useState(false)

@@ -50,8 +50,15 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
     setTurma(data)
     setLoading(false)
     setSelectedMonth((prev) => prev ?? (() => {
-      const [y, m] = data.startDate.split('-').map(Number)
-      return new Date(y, m - 1, 1)
+      const [sy, sm] = data.startDate.split('-').map(Number)
+      const [ey, em] = data.endDate.split('-').map(Number)
+      const start = new Date(sy, sm - 1, 1)
+      const end = new Date(ey, em - 1, 1)
+      const current = new Date()
+      const currentMonth = new Date(current.getFullYear(), current.getMonth(), 1)
+      if (currentMonth < start) return start
+      if (currentMonth > end) return end
+      return currentMonth
     })())
   }, [id])
 
