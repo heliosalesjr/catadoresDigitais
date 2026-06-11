@@ -1340,7 +1340,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
               ? hasEnded
                 ? 'Encerrado'
                 : `Iniciou há ${elapsedDays} dia${elapsedDays !== 1 ? 's' : ''}`
-              : `Começa em ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}`}
+              : `Começa em ${daysUntilStart} dia${daysUntilStart !== 1 ? 's' : ''}`}
           </span>
           <span>
             {!hasEnded && `Faltam ${remainingDays} dia${remainingDays !== 1 ? 's' : ''}`}
