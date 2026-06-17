@@ -57,7 +57,7 @@ export function Footer() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-dm text-xs text-[var(--c-subtle)] text-center sm:text-left">
-            © 2025 Catadores Digitais — Instituto Ipês. Todos os direitos reservados.
+            © 2026 Catadores Digitais — Instituto Ipês. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-1">
             <span className="font-dm text-xs text-[var(--c-faint)]">Realizado com</span>
