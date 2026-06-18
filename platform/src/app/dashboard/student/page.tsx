@@ -134,7 +134,7 @@ export default function StudentDashboard() {
             {/* Frequência */}
             <div
               className="rounded-2xl p-5 border flex flex-col gap-3"
-              style={{ background: 'var(--c-bg-alt)', borderColor: freqLow ? '#f59e0b66' : 'var(--c-border)' }}
+              style={{ background: 'var(--c-bg-alt)', borderColor: freqLow ? 'var(--c-warning-strong)' : 'var(--c-border)' }}
             >
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -150,7 +150,7 @@ export default function StudentDashboard() {
                     <>
                       <p
                         className="text-3xl font-bold mt-0.5"
-                        style={{ color: freqPct === null ? 'var(--c-text)' : freqLow ? '#f59e0b' : '#22c55e' }}
+                        style={{ color: freqPct === null ? 'var(--c-text)' : freqLow ? 'var(--c-warning)' : 'var(--c-success)' }}
                       >
                         {freqPct === null ? '—' : `${freqPct}%`}
                       </p>
@@ -168,10 +168,10 @@ export default function StudentDashboard() {
           {freqLow && (
             <div
               className="flex items-start gap-3 rounded-2xl px-4 py-3.5"
-              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+              style={{ background: 'var(--c-warning-soft)', border: '1px solid var(--c-warning-strong)' }}
             >
-              <HiExclamationTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
-              <p className="text-sm leading-snug" style={{ color: '#f59e0b' }}>
+              <HiExclamationTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--c-warning)' }} />
+              <p className="text-sm leading-snug" style={{ color: 'var(--c-warning)' }}>
                 Sua frequência está abaixo de 85%. Entre em contato com seu professor ou com a coordenação.
               </p>
             </div>

@@ -224,13 +224,13 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
             )}
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm" style={{ color: 'var(--c-danger)' }}>{error}</p>}
 
           <button
             type="submit"
             disabled={saving}
             className="w-full py-3.5 rounded-2xl text-sm font-bold transition-opacity disabled:opacity-50"
-            style={{ background: '#FFC530', color: '#1A0A3C' }}
+            style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
           >
             {submitLabel}
           </button>
@@ -238,10 +238,10 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
           {isEdit && (
             <div
               className="rounded-2xl border p-5 flex flex-col gap-3"
-              style={{ borderColor: '#ef444430', background: '#ef444408' }}
+              style={{ borderColor: 'var(--c-danger-strong)', background: 'var(--c-danger-soft)' }}
             >
               <div>
-                <p className="text-sm font-semibold" style={{ color: '#ef4444' }}>Zona de perigo</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--c-danger)' }}>Zona de perigo</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
                   Esta ação é irreversível. A turma e todas as suas aulas serão deletadas permanentemente.
                 </p>
@@ -257,7 +257,7 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
                     }}
                     disabled={deleting}
                     className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
-                    style={{ background: '#ef4444', color: '#fff' }}
+                    style={{ background: 'var(--c-danger)', color: 'var(--c-bg)' }}
                   >
                     {deleting ? 'Deletando...' : 'Sim, deletar turma'}
                   </button>
@@ -275,7 +275,7 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
                   type="button"
                   onClick={() => setConfirmDelete(true)}
                   className="flex items-center gap-2 self-start text-sm px-4 py-2 rounded-xl border transition-colors"
-                  style={{ borderColor: '#ef444460', color: '#ef4444' }}
+                  style={{ borderColor: 'var(--c-danger-strong)', color: 'var(--c-danger)' }}
                 >
                   <HiTrash className="w-4 h-4" />
                   Deletar turma

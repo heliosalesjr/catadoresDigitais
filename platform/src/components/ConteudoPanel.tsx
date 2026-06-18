@@ -415,7 +415,7 @@ function AulaCard({
             {aula.status === 'pending' && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
               >
                 Pendente
               </span>
@@ -733,9 +733,9 @@ const STATUS_LABEL: Record<string, string> = {
   late: 'A',
 }
 const STATUS_COLOR: Record<string, string> = {
-  present: '#22c55e',
-  absent: '#ef4444',
-  late: '#f59e0b',
+  present: 'var(--c-success)',
+  absent: 'var(--c-danger)',
+  late: 'var(--c-warning)',
 }
 
 interface PresencasPanelProps {
@@ -1203,12 +1203,12 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
     avgAttendancePct === null
       ? null
       : avgAttendancePct >= 80
-      ? { label: 'Ótima', color: '#22c55e' }
+      ? { label: 'Ótima', color: 'var(--c-success)' }
       : avgAttendancePct >= 65
-      ? { label: 'Boa', color: '#10b981' }
+      ? { label: 'Boa', color: 'var(--c-success)' }
       : avgAttendancePct >= 50
-      ? { label: 'Regular', color: '#f59e0b' }
-      : { label: 'Baixa', color: '#ef4444' }
+      ? { label: 'Regular', color: 'var(--c-warning)' }
+      : { label: 'Baixa', color: 'var(--c-danger)' }
 
   // Students who have never been present (considering only past aulas)
   const neverPresent =
@@ -1236,7 +1236,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
     insights.push({
       icon: <HiClock className="w-4 h-4 flex-shrink-0" />,
       text: `Atenção: faltam apenas ${remainingDays} dia${remainingDays !== 1 ? 's' : ''} para o término do curso.`,
-      color: '#f59e0b',
+      color: 'var(--c-warning)',
     })
   }
 
@@ -1257,13 +1257,13 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
     insights.push({
       icon: <HiArrowTrendingUp className="w-4 h-4 flex-shrink-0" />,
       text: `Frequência média de ${avgAttendancePct}% — excelente engajamento da turma!`,
-      color: '#22c55e',
+      color: 'var(--c-success)',
     })
   } else if (avgAttendancePct !== null && avgAttendancePct < 65) {
     insights.push({
       icon: <HiArrowTrendingDown className="w-4 h-4 flex-shrink-0" />,
       text: `Frequência média de ${avgAttendancePct}% — considere estratégias para aumentar o engajamento.`,
-      color: '#ef4444',
+      color: 'var(--c-danger)',
     })
   }
 
@@ -1271,7 +1271,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
     insights.push({
       icon: <HiUsers className="w-4 h-4 flex-shrink-0" />,
       text: `${neverPresent.length} aluno${neverPresent.length !== 1 ? 's' : ''} ainda não registrou${neverPresent.length !== 1 ? 'ram' : ''} presença em nenhuma aula.`,
-      color: '#f59e0b',
+      color: 'var(--c-warning)',
     })
   }
 

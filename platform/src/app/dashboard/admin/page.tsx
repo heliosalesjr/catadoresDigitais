@@ -22,9 +22,15 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: '#FFC530',
-  teacher: '#A855F7',
-  student: '#06B6D4',
+  admin: 'var(--c-gold)',
+  teacher: 'var(--c-purple)',
+  student: 'var(--c-info)',
+}
+
+const ROLE_BG_COLORS: Record<string, string> = {
+  admin: 'var(--c-gold-soft)',
+  teacher: 'var(--c-purple-soft)',
+  student: 'var(--c-info-soft)',
 }
 
 function formatDateLabel(iso: string): string {
@@ -186,7 +192,7 @@ export default function AdminDashboard() {
                 <div>
                   <div
                     className="px-6 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
-                    style={{ background: '#f59e0b12', color: '#f59e0b' }}
+                    style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
                   >
                     Aguardando aprovação · {pendingAulas.length}
                   </div>
@@ -195,7 +201,7 @@ export default function AdminDashboard() {
                       key={aula.id}
                       href={`/dashboard/turmas/${aula.turmaId}`}
                       className="flex items-center gap-4 px-6 py-3.5 transition-opacity hover:opacity-75 border-t"
-                      style={{ borderColor: '#f59e0b22' }}
+                      style={{ borderColor: 'var(--c-warning-soft)' }}
                     >
                       <div
                         className="w-1 h-10 rounded-full flex-shrink-0"
@@ -214,7 +220,7 @@ export default function AdminDashboard() {
                           </span>
                           <span
                             className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                            style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                            style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
                           >
                             Pendente
                           </span>
@@ -232,7 +238,7 @@ export default function AdminDashboard() {
                           {aula.startTime}{aula.endTime ? ` – ${aula.endTime}` : ''}
                         </div>
                       )}
-                      <HiChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#f59e0b88' }} />
+                      <HiChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--c-warning-strong)' }} />
                     </Link>
                   ))}
                 </div>
@@ -299,8 +305,8 @@ export default function AdminDashboard() {
             style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FFC53018' }}>
-                <HiAcademicCap className="w-5 h-5" style={{ color: '#FFC530' }} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--c-gold-soft)' }}>
+                <HiAcademicCap className="w-5 h-5" style={{ color: 'var(--c-gold)' }} />
               </div>
               <div>
                 <p className="font-semibold text-sm" style={{ color: 'var(--c-text)' }}>Turmas</p>
@@ -346,7 +352,7 @@ export default function AdminDashboard() {
               type="submit"
               disabled={addingToAllowlist}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
-              style={{ background: '#FFC530', color: '#06030F' }}
+              style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
             >
               <HiPlus className="w-4 h-4" />
               {addingToAllowlist ? '...' : 'Adicionar'}
@@ -371,8 +377,8 @@ export default function AdminDashboard() {
                   <span
                     className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                     style={{
-                      color: entry.role === 'teacher' ? '#A855F7' : '#06B6D4',
-                      background: entry.role === 'teacher' ? '#A855F718' : '#06B6D418',
+                      color: entry.role === 'teacher' ? 'var(--c-purple)' : 'var(--c-info)',
+                      background: entry.role === 'teacher' ? 'var(--c-purple-soft)' : 'var(--c-info-soft)',
                     }}
                   >
                     {entry.role === 'teacher' ? 'Professor' : 'Aluno'}
@@ -466,7 +472,7 @@ export default function AdminDashboard() {
 
                   <span
                     className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ color: ROLE_COLORS[u.role], background: `${ROLE_COLORS[u.role]}18` }}
+                    style={{ color: ROLE_COLORS[u.role], background: ROLE_BG_COLORS[u.role] }}
                   >
                     {ROLE_LABEL[u.role]}
                   </span>

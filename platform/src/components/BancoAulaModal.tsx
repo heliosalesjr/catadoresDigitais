@@ -285,7 +285,7 @@ export function BancoAulaModal({ turmaId, turmaIconColor, banco, currentUser, on
             )}
           </div>
 
-          {error && <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>}
+          {error && <p className="text-sm" style={{ color: 'var(--c-danger)' }}>{error}</p>}
 
           {/* Actions */}
           <div className="flex gap-2">

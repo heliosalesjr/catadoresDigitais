@@ -6,7 +6,8 @@ import { HiXMark, HiTrash } from 'react-icons/hi2'
 import type { UserProfile, Turma } from '@/types'
 
 const ROLE_LABEL = { admin: 'Admin', teacher: 'Professor', student: 'Aluno' }
-const ROLE_COLORS = { admin: '#FFC530', teacher: '#A855F7', student: '#06B6D4' }
+const ROLE_COLORS = { admin: 'var(--c-gold)', teacher: 'var(--c-purple)', student: 'var(--c-info)' }
+const ROLE_BG_COLORS = { admin: 'var(--c-gold-soft)', teacher: 'var(--c-purple-soft)', student: 'var(--c-info-soft)' }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -107,7 +108,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
               <p className="text-sm truncate" style={{ color: 'var(--c-subtle)' }}>{user.email}</p>
               <span
                 className="inline-block mt-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ color: ROLE_COLORS[currentRole], background: `${ROLE_COLORS[currentRole]}18` }}
+                style={{ color: ROLE_COLORS[currentRole], background: ROLE_BG_COLORS[currentRole] }}
               >
                 {ROLE_LABEL[currentRole]}
               </span>
@@ -134,7 +135,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
                     disabled={updatingRole}
                     className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50"
                     style={{
-                      background: currentRole === role ? `${ROLE_COLORS[role]}18` : 'transparent',
+                      background: currentRole === role ? ROLE_BG_COLORS[role] : 'transparent',
                       borderColor: currentRole === role ? ROLE_COLORS[role] : 'var(--c-border-md)',
                       color: currentRole === role ? ROLE_COLORS[role] : 'var(--c-muted)',
                     }}
@@ -186,7 +187,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
                   <button
                     onClick={() => setShowTurmaList(true)}
                     className="text-xs px-3 py-1.5 rounded-lg border self-start transition-colors"
-                    style={{ borderColor: '#FFC530', color: '#FFC530' }}
+                    style={{ borderColor: 'var(--c-gold)', color: 'var(--c-gold)' }}
                   >
                     + Adicionar turma
                   </button>
@@ -233,7 +234,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
                 <button
                   onClick={() => setConfirmDelete(true)}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm transition-colors"
-                  style={{ borderColor: '#ef444440', color: '#ef4444' }}
+                  style={{ borderColor: 'var(--c-danger-strong)', color: 'var(--c-danger)' }}
                 >
                   <HiTrash className="w-4 h-4" />
                   Deletar usuário
@@ -244,7 +245,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
                     onClick={handleDelete}
                     disabled={deleting}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
-                    style={{ background: '#ef4444', color: '#fff' }}
+                    style={{ background: 'var(--c-danger)', color: 'var(--c-bg)' }}
                   >
                     {deleting ? 'Deletando...' : 'Confirmar exclusão'}
                   </button>

@@ -228,7 +228,7 @@ function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRe
           <button
             onClick={onDelete}
             className="ml-auto flex items-center justify-center w-7 h-7 rounded-lg border transition-opacity hover:opacity-80"
-            style={{ borderColor: 'var(--c-border-md)', color: '#ef444480' }}
+            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
             title="Excluir"
           >
             <HiTrash className="w-3.5 h-3.5" />

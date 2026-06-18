@@ -14,9 +14,9 @@ const STATUS_CONFIG: Record<
   NonNullable<AttendanceStatus>,
   { label: string; color: string; bg: string }
 > = {
-  present: { label: 'P', color: '#22c55e', bg: '#22c55e18' },
-  absent:  { label: 'F', color: '#ef4444', bg: '#ef444418' },
-  late:    { label: 'A', color: '#f59e0b', bg: '#f59e0b18' },
+  present: { label: 'P', color: 'var(--c-success)', bg: 'var(--c-success-soft)' },
+  absent:  { label: 'F', color: 'var(--c-danger)', bg: 'var(--c-danger-soft)' },
+  late:    { label: 'A', color: 'var(--c-warning)', bg: 'var(--c-warning-soft)' },
 }
 
 function parseLocalDate(iso: string): Date {
@@ -304,7 +304,7 @@ export function AulaModal({
                 {isPending && (
                   <span
                     className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 flex-shrink-0"
-                    style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                    style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
                   >
                     Pendente
                   </span>
@@ -344,7 +344,7 @@ export function AulaModal({
                     onClick={handleDelete}
                     disabled={deleting}
                     className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-                    style={{ borderColor: 'var(--c-border-md)', color: '#ef444480' }}
+                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
                     title="Excluir"
                   >
                     <HiTrash className="w-4 h-4" />
@@ -586,16 +586,16 @@ export function AulaModal({
           {mode === 'view' && isPending && isAdmin && (
             <div
               className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
-              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+              style={{ background: 'var(--c-warning-soft)', border: '1px solid var(--c-warning-strong)' }}
             >
-              <p className="text-xs leading-snug" style={{ color: '#f59e0b' }}>
+              <p className="text-xs leading-snug" style={{ color: 'var(--c-warning)' }}>
                 Esta aula foi criada por um professor e aguarda sua aprovação.
               </p>
               <button
                 onClick={handleApprove}
                 disabled={saving}
                 className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity disabled:opacity-50"
-                style={{ background: '#f59e0b', color: '#fff' }}
+                style={{ background: 'var(--c-warning)', color: 'var(--c-bg)' }}
               >
                 {saving ? '...' : 'Aprovar'}
               </button>
@@ -606,9 +606,9 @@ export function AulaModal({
           {mode === 'view' && isPending && !isAdmin && (
             <div
               className="rounded-xl px-4 py-3"
-              style={{ background: '#f59e0b12', border: '1px solid #f59e0b44' }}
+              style={{ background: 'var(--c-warning-soft)', border: '1px solid var(--c-warning-strong)' }}
             >
-              <p className="text-xs" style={{ color: '#f59e0b' }}>
+              <p className="text-xs" style={{ color: 'var(--c-warning)' }}>
                 Aula aguardando aprovação do administrador.
               </p>
             </div>
@@ -678,8 +678,8 @@ export function AulaModal({
               </p>
               {alreadyPresent || chamadaState === 'ok' ? (
                 <div className="flex items-center gap-2 py-1">
-                  <HiCheckCircle className="w-4 h-4" style={{ color: '#22c55e' }} />
-                  <span className="text-xs font-medium" style={{ color: '#22c55e' }}>Presença registrada</span>
+                  <HiCheckCircle className="w-4 h-4" style={{ color: 'var(--c-success)' }} />
+                  <span className="text-xs font-medium" style={{ color: 'var(--c-success)' }}>Presença registrada</span>
                 </div>
               ) : !isAulaActive(aula) ? (
                 <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>
@@ -709,7 +709,7 @@ export function AulaModal({
                     </button>
                   </div>
                   {chamadaState === 'error' && chamadaError && (
-                    <p className="text-xs" style={{ color: '#ef4444' }}>{chamadaError}</p>
+                    <p className="text-xs" style={{ color: 'var(--c-danger)' }}>{chamadaError}</p>
                   )}
                 </div>
               )}

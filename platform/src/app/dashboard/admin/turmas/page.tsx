@@ -48,7 +48,7 @@ export default function TurmasPage() {
           <Link
             href="/dashboard/admin/turmas/nova"
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
-            style={{ background: '#FFC530', color: '#1A0A3C' }}
+            style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
           >
             <HiPlus className="w-4 h-4" />
             Nova turma
@@ -66,7 +66,7 @@ export default function TurmasPage() {
             <Link
               href="/dashboard/admin/turmas/nova"
               className="px-4 py-2 rounded-xl text-sm font-semibold"
-              style={{ background: '#FFC530', color: '#1A0A3C' }}
+              style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
             >
               Criar primeira turma
             </Link>
@@ -124,7 +124,7 @@ export default function TurmasPage() {
                         onClick={() => handleDelete(turma.id)}
                         disabled={deleting === turma.id}
                         className="text-xs px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
-                        style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                        style={{ borderColor: 'var(--c-danger)', color: 'var(--c-danger)' }}
                       >
                         {deleting === turma.id ? '...' : 'Confirmar'}
                       </button>

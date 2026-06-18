@@ -165,8 +165,8 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
                   </div>
                   {submitted && !isStudentMode && (
                     correct
-                      ? <HiCheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#22c55e' }} />
-                      : <HiXCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+                      ? <HiCheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--c-success)' }} />
+                      : <HiXCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--c-danger)' }} />
                   )}
                 </div>
 
@@ -182,7 +182,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
                     style={{
                       ...inputStyle,
                       borderColor: submitted && !isStudentMode
-                        ? correct ? '#22c55e' : '#ef4444'
+                        ? correct ? 'var(--c-success)' : 'var(--c-danger)'
                         : 'var(--c-border-md)',
                     }}
                   />
@@ -205,7 +205,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
                       style={{
                         ...inputStyle,
                         borderColor: submitted && !isStudentMode
-                          ? correct ? '#22c55e' : '#ef4444'
+                          ? correct ? 'var(--c-success)' : 'var(--c-danger)'
                           : 'var(--c-border-md)',
                       }}
                     />
@@ -215,7 +215,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
                       </span>
                       <span
                         className="text-xs font-semibold tabular-nums transition-colors"
-                        style={{ color: nearLimit ? '#ef4444' : 'var(--c-subtle)' }}
+                        style={{ color: nearLimit ? 'var(--c-danger)' : 'var(--c-subtle)' }}
                       >
                         {textRemaining}
                       </span>
@@ -236,9 +236,9 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
                       let color = 'var(--c-text)'
 
                       if (submitted && !isStudentMode && isCorrectOpt) {
-                        border = '#22c55e'; bg = '#22c55e14'; color = '#22c55e'
+                        border = 'var(--c-success)'; bg = 'var(--c-success-soft)'; color = 'var(--c-success)'
                       } else if (wrongSelected) {
-                        border = '#ef4444'; bg = '#ef444414'; color = '#ef4444'
+                        border = 'var(--c-danger)'; bg = 'var(--c-danger-soft)'; color = 'var(--c-danger)'
                       } else if (selected) {
                         border = accentColor; bg = `${accentColor}12`; color = accentColor
                       }

@@ -16,9 +16,15 @@ const FILTER_LABEL: Record<CardFilter, string> = {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: '#FFC530',
-  teacher: '#A855F7',
-  student: '#06B6D4',
+  admin: 'var(--c-gold)',
+  teacher: 'var(--c-purple)',
+  student: 'var(--c-info)',
+}
+
+const ROLE_BG_COLORS: Record<string, string> = {
+  admin: 'var(--c-gold-soft)',
+  teacher: 'var(--c-purple-soft)',
+  student: 'var(--c-info-soft)',
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -134,7 +140,7 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
                           className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                           style={{
                             color: ROLE_COLORS[u.role],
-                            background: `${ROLE_COLORS[u.role]}18`,
+                            background: ROLE_BG_COLORS[u.role],
                           }}
                         >
                           {ROLE_LABEL[u.role]}
@@ -167,7 +173,7 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
                           ) : (
                             <span
                               className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                              style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
                             >
                               <HiExclamationTriangle className="w-3 h-3" />
                               Sem turma
@@ -187,7 +193,7 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
                           ) : (
                             <span
                               className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: '#f59e0b18', color: '#f59e0b' }}
+                              style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
                             >
                               <HiExclamationTriangle className="w-3 h-3" />
                               Sem turma associada

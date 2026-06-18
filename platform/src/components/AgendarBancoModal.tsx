@@ -143,7 +143,7 @@ export function AgendarBancoModal({
             </div>
           </div>
 
-          {error && <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>}
+          {error && <p className="text-sm" style={{ color: 'var(--c-danger)' }}>{error}</p>}
 
           <div className="flex gap-2 mt-1">
             <button

@@ -423,7 +423,7 @@ export default function ModoAulaPage({
                       />
                       <div className="flex justify-between px-1">
                         <span className="text-xs" style={{ color: 'var(--c-faint)' }}>Máximo {TEXT_LIMIT} caracteres</span>
-                        <span className="text-xs font-semibold tabular-nums" style={{ color: nearLimit ? '#ef4444' : 'var(--c-faint)' }}>
+                        <span className="text-xs font-semibold tabular-nums" style={{ color: nearLimit ? 'var(--c-danger)' : 'var(--c-faint)' }}>
                           {TEXT_LIMIT - ans.length}
                         </span>
                       </div>
@@ -460,8 +460,8 @@ export default function ModoAulaPage({
             {/* Submit */}
             {avalSubmitted ? (
               <div className="flex items-center gap-2">
-                <HiCheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#22c55e' }} />
-                <span className="text-sm font-medium" style={{ color: '#22c55e' }}>
+                <HiCheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--c-success)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--c-success)' }}>
                   Respostas enviadas
                 </span>
               </div>
@@ -475,7 +475,7 @@ export default function ModoAulaPage({
                 >
                   {avalSubmitting ? 'Enviando...' : 'Enviar respostas'}
                 </button>
-                {avalError && <p className="text-xs" style={{ color: '#ef4444' }}>{avalError}</p>}
+                {avalError && <p className="text-xs" style={{ color: 'var(--c-danger)' }}>{avalError}</p>}
                 {!allAnswered && (
                   <p className="text-xs" style={{ color: 'var(--c-faint)' }}>
                     Responda todas as questões para enviar.
@@ -497,8 +497,8 @@ export default function ModoAulaPage({
             </p>
             {alreadyPresent || chamadaState === 'ok' ? (
               <div className="flex items-center gap-2">
-                <HiCheckCircle className="w-5 h-5" style={{ color: '#22c55e' }} />
-                <span className="text-sm font-medium" style={{ color: '#22c55e' }}>
+                <HiCheckCircle className="w-5 h-5" style={{ color: 'var(--c-success)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--c-success)' }}>
                   Presença registrada
                 </span>
               </div>
@@ -534,7 +534,7 @@ export default function ModoAulaPage({
                   </button>
                 </div>
                 {chamadaState === 'error' && chamadaError && (
-                  <p className="text-xs" style={{ color: '#ef4444' }}>{chamadaError}</p>
+                  <p className="text-xs" style={{ color: 'var(--c-danger)' }}>{chamadaError}</p>
                 )}
               </div>
             )}
