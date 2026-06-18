@@ -90,7 +90,6 @@ users/{uid}/notas/{id}
 - Tab **Anotações** visível **apenas para alunos** (editores não veem)
 - **Materiais** de aulas futuras bloqueados até 7 dias antes da data
 - Aba **Professores**: somente nome e email visíveis (telefone oculto)
-- **Modal de aula**: exibe input de código de chamada (não botões P/F/A)
 - **Avaliações**: aluno vê apenas o botão "Responder Avaliação" (sem lista de questões); após enviar, o botão é substituído por um indicador "X de Y questões enviadas" e a avaliação não pode ser reaberta
 
 ## Anotações do aluno
@@ -130,15 +129,33 @@ Nunca combinar dois filtros de desigualdade em campos diferentes na mesma query.
 ```
 
 ### CSS variables
+Definidas em `src/context/ThemeContext.tsx` (objetos `DARK`/`LIGHT`, aplicadas via `root.style.setProperty`) com fallback em `src/app/globals.css` (`:root`). Os valores de cada tema são calibrados para contraste WCAG AA contra o respectivo `--c-bg`/`--c-bg-alt`.
+
 ```css
 var(--c-bg)        /* fundo principal */
 var(--c-bg-alt)    /* cards e painéis */
 var(--c-text)      /* texto principal */
+var(--c-muted)     /* texto secundário forte */
 var(--c-subtle)    /* texto secundário */
-var(--c-faint)     /* texto terciário */
+var(--c-faint)     /* texto terciário — só uso decorativo, não informativo */
 var(--c-border)    /* bordas sutis */
 var(--c-border-md) /* bordas de inputs */
 ```
+
+Cores semânticas de status/papel, cada uma com 3 variantes — base (texto/ícone), `-soft` (~10% opacidade, fundo de chip) e `-strong` (~30-45%, borda/hover/ênfase):
+```css
+var(--c-success) / --c-success-soft / --c-success-strong   /* presente, frequência boa */
+var(--c-warning) / --c-warning-soft / --c-warning-strong   /* atraso, pendente, alerta */
+var(--c-danger)  / --c-danger-soft  / --c-danger-strong    /* falta, erro, excluir */
+var(--c-info)    / --c-info-soft    / --c-info-strong       /* badge "aluno" */
+var(--c-purple)  / --c-purple-soft  / --c-purple-strong     /* badge "professor" */
+var(--c-gold)    / --c-gold-soft    / --c-gold-strong       /* badge "admin" */
+```
+
+Para usar uma cor semântica como fundo sólido com texto legível em ambos os temas, use `color: var(--c-bg)` no texto em vez de um branco fixo — `--c-bg` é escuro no dark mode e claro no light mode, então o contraste se resolve automaticamente.
+
+### Datas não podem ser no passado
+Criar aula (calendário) e agendar aula do banco compartilham a mesma regra: a data não pode ser anterior a hoje, dentro da janela `startDate`/`endDate` da turma. A validação existe em duas camadas — client (atributo `min` do `<input type="date">`, calculado como `max(turmaStartDate, hoje)`) e servidor (`POST /api/turmas/[id]/aulas` e `POST /api/turmas/[id]/banco/[bancoId]/agendar` comparam `body.date` com a data atual). Editar uma aula já existente no passado continua permitido — a regra vale só para criar/agendar.
 
 ## Caching com TanStack Query
 
