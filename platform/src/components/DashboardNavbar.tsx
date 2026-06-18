@@ -49,7 +49,7 @@ export function DashboardNavbar({ title: titleProp }: Props) {
       <div className="flex items-center gap-3 min-w-0">
         <a
           href={LANDING_URL}
-          className="flex-shrink-0 text-2xl font-extrabold tracking-tight leading-none"
+          className="flex-shrink-0 text-2xl font-extrabold tracking-normal leading-none"
           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
           <span className="logo-gradient">Catadores</span>

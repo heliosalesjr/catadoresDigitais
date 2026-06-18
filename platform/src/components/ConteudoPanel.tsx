@@ -710,11 +710,9 @@ function AulaCard({
             turmaStartDate={turma.startDate}
             turmaEndDate={turma.endDate}
             aula={aula}
-            students={turma.students}
             canEdit={canEdit}
             isAdmin={currentUser?.role === 'admin'}
             currentUserUid={currentUser?.uid ?? ''}
-            currentUserEmail={currentUser?.email}
             initialMode="edit"
             onClose={() => setEditingAula(false)}
             onSaved={() => { setEditingAula(false); onRefresh() }}

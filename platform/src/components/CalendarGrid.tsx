@@ -53,14 +53,13 @@ interface Props {
   canEdit: boolean
   isAdmin: boolean
   currentUserUid: string
-  currentUserEmail?: string
   isMobile: boolean
   onCollapse: () => void
   onRefresh: () => void
   onMonthChange: (month: Date) => void
 }
 
-export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, currentUserEmail, isMobile, onCollapse, onRefresh, onMonthChange }: Props) {
+export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, isMobile, onCollapse, onRefresh, onMonthChange }: Props) {
   const startMonth = startOfMonth(parseLocalDate(turma.startDate))
   const endMonth = startOfMonth(parseLocalDate(turma.endDate))
   const totalMonths =
@@ -318,11 +317,9 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, c
             turmaStartDate={turma.startDate}
             turmaEndDate={turma.endDate}
             aula={selectedAula}
-            students={turma.students}
             canEdit={canEdit}
             isAdmin={isAdmin}
             currentUserUid={currentUserUid}
-            currentUserEmail={currentUserEmail}
             onClose={() => setModalOpen(false)}
             onSaved={() => { onRefresh(); setModalOpen(false) }}
           />

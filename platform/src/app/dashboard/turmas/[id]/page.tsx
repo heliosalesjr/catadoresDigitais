@@ -196,7 +196,6 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               canEdit={canEdit}
               isAdmin={isAdmin}
               currentUserUid={user.uid}
-              currentUserEmail={user.email}
               isMobile={isMobile}
               onCollapse={() => setCalendarOpen(false)}
               onRefresh={fetchAulas}
