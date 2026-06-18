@@ -13,7 +13,7 @@ export function Logo({ size = 'md', showTagline = false }: LogoProps) {
 
   return (
     <div className="flex flex-col leading-none">
-      <div className={`font-syne font-extrabold tracking-tight leading-none ${s.wordMark}`}>
+      <div className={`font-syne font-extrabold tracking-normal leading-none ${s.wordMark}`}>
         <span className="logo-gradient">Catadores</span>
         {' '}
         <span style={{ color: 'var(--c-text)' }}>Digitais</span>

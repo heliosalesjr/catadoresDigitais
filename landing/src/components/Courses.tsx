@@ -90,7 +90,7 @@ export function Courses() {
     <section id="cursos" className="relative py-24 md:py-32 overflow-hidden">
       <div
         className="absolute inset-0 transition-colors duration-500"
-        style={{ background: isDark ? 'linear-gradient(to bottom, #06030F, #0F0A1E, #06030F)' : 'linear-gradient(to bottom, #FFFBF0, #FFF5E3, #FFFBF0)' }}
+        style={{ background: isDark ? 'linear-gradient(to bottom, #06030F, #0F0A1E, #06030F)' : 'linear-gradient(to bottom, #FFFFFF, #F1F0FC, #FFFFFF)' }}
       />
       <div className="absolute top-0 left-0 right-0 section-divider" />
 

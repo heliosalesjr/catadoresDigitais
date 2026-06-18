@@ -27,9 +27,9 @@
   --c-scrollbar:     #1A1230;
 
   /* Logo gradient stops — never change the gradient string, only these values */
-  --logo-c1: #FF6B35;
-  --logo-c2: #7C3AED;
-  --logo-c3: #7C3AED;  /* same as c2 = effectively 2-stop in light mode */
+  --logo-c1: #6D28D9;   /*  7.1:1 ✓ */
+  --logo-c2: #4F46E5;   /*  6.3:1 ✓ */
+  --logo-c3: #1D4ED8;   /*  6.7:1 ✓ */
 
   /* Accessible accent text colors — dark enough for light bg */
   --c-accent-yellow: #8A6200;   /*  5.4:1 ✓ */
