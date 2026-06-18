@@ -222,7 +222,7 @@ function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRe
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-80"
           style={{ background: isApplied ? `${turma.iconColor}80` : turma.iconColor, color: '#fff' }}
         >
-          <HiCalendarDays className="w-3.5 h-3.5" /> Agendar novamente
+          <HiCalendarDays className="w-3.5 h-3.5" /> {isApplied ? 'Agendar novamente' : 'Agendar'}
         </button>
         {canDelete && (
           <button
