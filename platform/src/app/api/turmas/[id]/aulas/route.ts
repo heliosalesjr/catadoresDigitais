@@ -55,6 +55,12 @@ export async function POST(
     return Response.json({ error: 'Data fora do período da turma.' }, { status: 400 })
   }
 
+  const now = new Date()
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  if (body.date < todayISO) {
+    return Response.json({ error: 'Não é possível criar uma aula para uma data passada.' }, { status: 400 })
+  }
+
   const attendanceCode = String(Math.floor(1000 + Math.random() * 9000))
   const status = auth.role === 'admin' ? 'published' : 'pending'
 

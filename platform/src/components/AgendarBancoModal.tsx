@@ -7,6 +7,11 @@ import type { BancoAula } from '@/types'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
+function todayISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const inputStyle = {
   background: 'var(--c-bg)',
   borderColor: 'var(--c-border-md)',
@@ -31,6 +36,8 @@ export function AgendarBancoModal({
   const [endTime, setEndTime] = useState('22:00')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const minDate = turmaStartDate > todayISO() ? turmaStartDate : todayISO()
 
   async function handleAgendar() {
     if (!date) return setError('Selecione uma data.')
@@ -108,7 +115,7 @@ export function AgendarBancoModal({
             <input
               type="date"
               value={date}
-              min={turmaStartDate}
+              min={minDate}
               max={turmaEndDate}
               onChange={(e) => setDate(e.target.value)}
               className="rounded-xl px-3 py-2 text-sm border outline-none"

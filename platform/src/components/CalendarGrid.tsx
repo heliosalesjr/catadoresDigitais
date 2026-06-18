@@ -238,7 +238,7 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, i
               const inCurrentMonth = day.getMonth() === currentMonth.getMonth()
               const inRange = iso >= turma.startDate && iso <= turma.endDate
               const blocked = inCurrentMonth && !inRange
-              const clickable = inRange && (dayAulas.length > 0 || canEdit)
+              const clickable = inRange && (dayAulas.length > 0 || (canEdit && iso >= today))
 
               return (
                 <button

@@ -7,6 +7,11 @@ import type { Aula, AulaTeacher } from '@/types'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
+function todayISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function fmtDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
@@ -65,6 +70,10 @@ export function AulaModal({
   })
 
   const [availableTeachers, setAvailableTeachers] = useState<AulaTeacher[]>([])
+
+  const minDate = isCreate
+    ? (turmaStartDate > todayISO() ? turmaStartDate : todayISO())
+    : turmaStartDate
 
   useEffect(() => {
     if (mode !== 'edit') return
@@ -202,7 +211,7 @@ export function AulaModal({
               <input
                 type="date"
                 value={form.date}
-                min={turmaStartDate}
+                min={minDate}
                 max={turmaEndDate}
                 onChange={(e) => setField('date', e.target.value)}
                 className="mt-1.5 rounded-lg px-2 py-1 text-xs border outline-none"

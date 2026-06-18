@@ -24,6 +24,12 @@ export async function POST(
     return Response.json({ error: 'Data fora do período da turma.' }, { status: 400 })
   }
 
+  const now = new Date()
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  if (body.date < todayISO) {
+    return Response.json({ error: 'Não é possível agendar para uma data passada.' }, { status: 400 })
+  }
+
   const bancoDoc = await adminDb.collection('turmas').doc(id).collection('banco').doc(bancoId).get()
   if (!bancoDoc.exists) return Response.json({ error: 'Aula do banco não encontrada.' }, { status: 404 })
 
