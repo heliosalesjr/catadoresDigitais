@@ -20,26 +20,32 @@ interface Props {
   onClose: () => void
   onRoleUpdate: (uid: string, role: 'student' | 'teacher') => Promise<void>
   onDelete: (uid: string) => Promise<void>
-  onAddToTurma: (turmaId: string, email: string) => Promise<void>
+  onAddToTurma: (turmaId: string, user: UserProfile) => Promise<void>
+  onRemoveFromTurma: (turmaId: string, user: UserProfile) => Promise<void>
 }
 
-export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUpdate, onDelete, onAddToTurma }: Props) {
+export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUpdate, onDelete, onAddToTurma, onRemoveFromTurma }: Props) {
   const [currentRole, setCurrentRole] = useState(user.role)
   const [updatingRole, setUpdatingRole] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [addingToTurma, setAddingToTurma] = useState<string | null>(null)
-  const [showTurmaList, setShowTurmaList] = useState(false)
+  const [addingToTurma, setAddingToTurma] = useState(false)
+  const [removingTurmaId, setRemovingTurmaId] = useState<string | null>(null)
+  const [selectedTurmaId, setSelectedTurmaId] = useState('')
 
-  const studentTurmas = turmas.filter((t) => t.students?.includes(user.email))
-  const teacherTurmas = turmas.filter((t) => t.professors?.some((p) => p.uid === user.uid))
-  const unenrolledTurmas = turmas.filter((t) => !t.students?.includes(user.email))
+  const isTeacher = currentRole === 'teacher'
+  const enrolledTurmas = isTeacher
+    ? turmas.filter((t) => t.professors?.some((p) => p.uid === user.uid))
+    : turmas.filter((t) => t.students?.includes(user.email))
+  const enrolledIds = new Set(enrolledTurmas.map((t) => t.id))
+  const availableTurmas = turmas.filter((t) => !enrolledIds.has(t.id))
 
   async function handleRoleChange(role: 'student' | 'teacher') {
     if (role === currentRole || updatingRole) return
     setUpdatingRole(true)
     await onRoleUpdate(user.uid, role)
     setCurrentRole(role)
+    setSelectedTurmaId('')
     setUpdatingRole(false)
   }
 
@@ -49,11 +55,18 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
     onClose()
   }
 
-  async function handleAddToTurma(turmaId: string) {
-    setAddingToTurma(turmaId)
-    await onAddToTurma(turmaId, user.email)
-    setAddingToTurma(null)
-    setShowTurmaList(false)
+  async function handleAddToTurma() {
+    if (!selectedTurmaId) return
+    setAddingToTurma(true)
+    await onAddToTurma(selectedTurmaId, { ...user, role: currentRole })
+    setSelectedTurmaId('')
+    setAddingToTurma(false)
+  }
+
+  async function handleRemoveFromTurma(turmaId: string) {
+    setRemovingTurmaId(turmaId)
+    await onRemoveFromTurma(turmaId, { ...user, role: currentRole })
+    setRemovingTurmaId(null)
   }
 
   return (
@@ -150,78 +163,73 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
           {/* Turmas */}
           <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)' }}>
             <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: 'var(--c-faint)' }}>
-              {currentRole === 'teacher' ? 'Turmas que ministra' : 'Turmas'}
+              {isTeacher ? 'Turmas que ministra' : 'Turmas'}
             </p>
 
             {turmasLoading ? (
               <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>Carregando...</p>
-            ) : currentRole === 'teacher' ? (
-              teacherTurmas.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>Nenhuma turma atribuída.</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {teacherTurmas.map((turma) => (
-                    <li key={turma.id} className="flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: turma.iconColor }} />
-                      <span className="text-sm" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              )
             ) : (
               <>
-                {studentTurmas.length === 0 ? (
-                  <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>Não matriculado em nenhuma turma.</p>
+                {enrolledTurmas.length === 0 ? (
+                  <p className="text-sm" style={{ color: 'var(--c-subtle)' }}>
+                    {isTeacher ? 'Nenhuma turma atribuída ainda.' : 'Não matriculado em nenhuma turma.'}
+                  </p>
                 ) : (
-                  <ul className="flex flex-col gap-2 mb-1">
-                    {studentTurmas.map((turma) => (
-                      <li key={turma.id} className="flex items-center gap-2.5">
+                  <ul className="flex flex-col gap-1.5">
+                    {enrolledTurmas.map((turma) => (
+                      <li
+                        key={turma.id}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg"
+                        style={{ background: 'var(--c-bg-alt)' }}
+                      >
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: turma.iconColor }} />
-                        <span className="text-sm" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
+                        <span className="text-sm flex-1 truncate" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
+                        <button
+                          onClick={() => handleRemoveFromTurma(turma.id)}
+                          disabled={removingTurmaId === turma.id}
+                          title={isTeacher ? 'Remover da turma' : 'Remover matrícula'}
+                          className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-70 disabled:opacity-40"
+                          style={{ color: 'var(--c-faint)' }}
+                        >
+                          {removingTurmaId === turma.id ? (
+                            <span className="text-[10px]">...</span>
+                          ) : (
+                            <HiXMark className="w-3.5 h-3.5" />
+                          )}
+                        </button>
                       </li>
                     ))}
                   </ul>
                 )}
 
-                {!showTurmaList ? (
-                  <button
-                    onClick={() => setShowTurmaList(true)}
-                    className="text-xs px-3 py-1.5 rounded-lg border self-start transition-colors"
-                    style={{ borderColor: 'var(--c-gold)', color: 'var(--c-gold)' }}
-                  >
-                    + Adicionar turma
-                  </button>
-                ) : (
-                  <div className="flex flex-col gap-1">
-                    {unenrolledTurmas.length === 0 ? (
-                      <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>
-                        Já matriculado em todas as turmas.
-                      </p>
-                    ) : (
-                      unenrolledTurmas.map((turma) => (
-                        <button
-                          key={turma.id}
-                          onClick={() => handleAddToTurma(turma.id)}
-                          disabled={addingToTurma === turma.id}
-                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-opacity hover:opacity-75 disabled:opacity-40"
-                          style={{ background: 'var(--c-bg-alt)' }}
-                        >
-                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: turma.iconColor }} />
-                          <span className="text-sm flex-1" style={{ color: 'var(--c-text)' }}>{turma.name}</span>
-                          {addingToTurma === turma.id && (
-                            <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>...</span>
-                          )}
-                        </button>
-                      ))
-                    )}
-                    <button
-                      onClick={() => setShowTurmaList(false)}
-                      className="text-xs mt-1 self-start"
-                      style={{ color: 'var(--c-subtle)' }}
+                {availableTurmas.length > 0 ? (
+                  <div className="flex gap-2 pt-1">
+                    <select
+                      value={selectedTurmaId}
+                      onChange={(e) => setSelectedTurmaId(e.target.value)}
+                      className="flex-1 rounded-lg px-2.5 py-2 text-sm border outline-none min-w-0"
+                      style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
                     >
-                      Cancelar
+                      <option value="" disabled>
+                        {isTeacher ? 'Atribuir a uma turma...' : 'Matricular em uma turma...'}
+                      </option>
+                      {availableTurmas.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAddToTurma}
+                      disabled={!selectedTurmaId || addingToTurma}
+                      className="px-3 py-2 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50 flex-shrink-0"
+                      style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
+                    >
+                      {addingToTurma ? '...' : 'Adicionar'}
                     </button>
                   </div>
+                ) : (
+                  <p className="text-xs" style={{ color: 'var(--c-faint)' }}>
+                    {isTeacher ? 'Já atribuído a todas as turmas existentes.' : 'Já matriculado em todas as turmas existentes.'}
+                  </p>
                 )}
               </>
             )}

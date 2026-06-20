@@ -98,20 +98,46 @@ export default function AdminDashboard() {
     setNewTurmaId('')
   }
 
-  async function handleAddToTurma(turmaId: string, studentEmail: string) {
-    const currentTurmas = queryClient.getQueryData<Turma[]>(['admin', 'turmas']) ?? []
-    const turma = currentTurmas.find((t) => t.id === turmaId)
-    if (!turma || turma.students?.includes(studentEmail)) return
-    const updatedStudents = [...(turma.students ?? []), studentEmail]
+  async function patchTurma(turmaId: string, body: Partial<Turma>) {
     const res = await fetch(`/api/admin/turmas/${turmaId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ students: updatedStudents }),
+      body: JSON.stringify(body),
     })
     if (res.ok) {
       queryClient.setQueryData<Turma[]>(['admin', 'turmas'], (prev) =>
-        prev?.map((t) => t.id === turmaId ? { ...t, students: updatedStudents } : t) ?? []
+        prev?.map((t) => t.id === turmaId ? { ...t, ...body } : t) ?? []
       )
+    }
+  }
+
+  async function handleAddToTurma(turmaId: string, user: UserProfile) {
+    const currentTurmas = queryClient.getQueryData<Turma[]>(['admin', 'turmas']) ?? []
+    const turma = currentTurmas.find((t) => t.id === turmaId)
+    if (!turma) return
+
+    if (user.role === 'teacher') {
+      if (turma.professors?.some((p) => p.uid === user.uid)) return
+      const professors = [...(turma.professors ?? []), { uid: user.uid, name: user.name, email: user.email }]
+      await patchTurma(turmaId, { professors })
+    } else {
+      if (turma.students?.includes(user.email)) return
+      const students = [...(turma.students ?? []), user.email]
+      await patchTurma(turmaId, { students })
+    }
+  }
+
+  async function handleRemoveFromTurma(turmaId: string, user: UserProfile) {
+    const currentTurmas = queryClient.getQueryData<Turma[]>(['admin', 'turmas']) ?? []
+    const turma = currentTurmas.find((t) => t.id === turmaId)
+    if (!turma) return
+
+    if (user.role === 'teacher') {
+      const professors = (turma.professors ?? []).filter((p) => p.uid !== user.uid)
+      await patchTurma(turmaId, { professors })
+    } else {
+      const students = (turma.students ?? []).filter((email) => email !== user.email)
+      await patchTurma(turmaId, { students })
     }
   }
 
@@ -567,6 +593,7 @@ export default function AdminDashboard() {
             onRoleUpdate={updateRole}
             onDelete={deleteUser}
             onAddToTurma={handleAddToTurma}
+            onRemoveFromTurma={handleRemoveFromTurma}
           />
         )}
       </AnimatePresence>
