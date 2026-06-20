@@ -39,6 +39,7 @@
 | Sessão server-side (cookies HttpOnly) | ✅ |
 | Proteção de rotas por role (admin / teacher / student) | ✅ |
 | Logout | ✅ |
+| Matrícula automática na turma do convite (allowlist) no primeiro login (`/api/auth/enroll`) | ✅ |
 | Logout automático por inatividade | ❌ |
 
 ---
@@ -61,11 +62,13 @@
 | "Próximas aulas" com turma, professor e horário | ✅ |
 | Acesso rápido às turmas | ✅ |
 | Lista de usuários com gestão de roles (aluno ↔ professor) | ✅ |
-| Busca / filtro na lista de usuários | ✅ |
+| Busca / filtro na lista de usuários (filtro padrão: Professores) | ✅ |
 | Paginação de 10 usuários por página | ✅ |
 | Deletar usuário (com confirmação inline) | ✅ |
-| Allowlist: adicionar / remover emails com role | ✅ |
+| Allowlist: adicionar / remover emails com role + turma obrigatória | ✅ |
+| Allowlist mostra a turma vinculada a cada convite na lista | ✅ |
 | UserDetailPanel (slide-over de detalhes do usuário) | ✅ |
+| UserDetailPanel: adicionar / remover de turmas (aluno e professor) | ✅ |
 
 ---
 
@@ -98,7 +101,7 @@
 | Criar turma (nome, ícone, cor, datas, alunos) | ✅ |
 | Editar turma | ✅ |
 | Deletar turma (na lista e na edição, com confirmação) | ✅ |
-| Gerenciar alunos matriculados (adicionar / remover) | ❌ |
+| Gerenciar alunos/professores matriculados direto na tela de edição da turma | ❌ (hoje só é possível via perfil do usuário, no painel admin) |
 
 ---
 
@@ -178,6 +181,7 @@
 | Rota | Método | Acesso |
 |------|--------|--------|
 | `/api/auth/session` | POST | público |
+| `/api/auth/enroll` | POST | usuário autenticado (self, matrícula automática no 1º login) |
 | `/api/admin/allowlist` | GET, POST | admin |
 | `/api/admin/allowlist/[email]` | DELETE | admin |
 | `/api/admin/upcoming-aulas` | GET | admin/teacher |
@@ -205,7 +209,7 @@
 ## Schema Firestore
 
 - `users/{uid}` — `{ uid, email, name, photoURL, role, createdAt }`
-- `allowlist/{email}` — `{ email, role, createdAt }`
+- `allowlist/{email}` — `{ email, role, turmaId, createdAt }`
 - `turmas/{id}` — `{ name, icon, iconColor, startDate, endDate, students: string[], professors?: TurmaTeacher[], createdBy, createdAt }`
 - `turmas/{id}/aulas/{id}` — `{ title, description, date, startTime, endTime, status, teachers: AulaTeacher[], driveLinks, attendance: { [email]: 'present'|'absent'|'late'|null }, attendanceCode?, avaliacoes?, bancoAulaId?, createdAt }`
 - `turmas/{id}/aulas/{id}/respostas/{email}` — `{ studentEmail, studentName, answers: Record<avaliacaoId, string>, submittedAt }`
@@ -218,7 +222,7 @@
 1. **Ver respostas dos alunos** — painel professor/admin para consultar respostas por aula
 2. **UI de chamada manual** — professor marca P/F/A diretamente (sem código)
 3. **Relatório de frequência** — visão admin/teacher com tabela por aluno
-4. **Gerenciar matrículas** — adicionar / remover alunos de uma turma
+4. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
 5. **Remover material** individual de uma aula / banco
 6. **Formulário de inscrição** da landing page
 7. **Deploy** — landing + platform em produção
