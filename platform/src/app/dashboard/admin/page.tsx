@@ -77,7 +77,7 @@ export default function AdminDashboard() {
 
   const [detailUser, setDetailUser] = useState<UserProfile | null>(null)
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [roleFilter, setRoleFilter] = useState<string>('teacher')
   const [page, setPage] = useState(1)
   const [activeCard, setActiveCard] = useState<CardFilter | null>(null)
   const [newEmail, setNewEmail] = useState('')

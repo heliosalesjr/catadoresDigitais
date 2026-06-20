@@ -110,8 +110,11 @@
 | Criar aula (data, horário, título, descrição, professores) | ✅ |
 | Editar aula | ✅ |
 | Deletar aula | ✅ |
+| Bloqueio de data passada ao criar aula (calendário não deixa clicar em dia passado; campo de data com `min`; validação também na API) | ✅ |
 | Calendário colapsável com FAB para reabrir | ✅ |
 | Página individual de aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
+
+> O modal de aula (`AulaModal`) não exibe mais **Arquivos**, **Código de chamada** nem **Chamada** — isso fica a cargo das abas **Conteúdo** e **Banco de Aulas**, e da página individual da aula.
 
 ---
 
@@ -123,6 +126,8 @@
 | Agendar aula do banco para uma data (`/api/turmas/[id]/banco/[bancoId]/agendar`) | ✅ |
 | Painel BancoPanel com lista e modal de criação/edição | ✅ |
 | AgendarBancoModal para escolher data e horário ao agendar | ✅ |
+| Botão "Agendar" (disponíveis) vs "Agendar novamente" (aplicadas) | ✅ |
+| Bloqueio de data passada ao agendar (campo `min` + validação na API) | ✅ |
 
 ---
 
@@ -159,10 +164,11 @@
 |---------|--------|
 | Campo `attendance` no tipo `Aula` | ✅ |
 | `attendanceCode` — código de 4 dígitos gerado pelo professor | ✅ |
-| Aluno responde chamada com código via `AulaModal` | ✅ |
+| Professor revela o código de chamada (aba Conteúdo, `ConteudoPanel`) | ✅ |
+| Aluno responde chamada com código (página `/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
 | API `/api/turmas/[id]/aulas/[aulaId]/chamada` (POST) | ✅ |
 | API `/api/student/frequencia` — percentual de presença do aluno | ✅ |
-| UI para marcar chamada manualmente (P/F/A pelo professor) | ❌ |
+| UI para marcar chamada manualmente (P/F/A pelo professor) | ❌ (botão "Editar lista de chamada" existe na aba Conteúdo, mas está desabilitado — "Em breve") |
 | Relatório de frequência por aluno (visão admin/teacher) | ❌ |
 
 ---
