@@ -68,11 +68,12 @@ export default function AdminDashboard() {
     allowlistLoading,
     addToAllowlist,
     addingToAllowlist,
+    addToAllowlistError,
     removeFromAllowlist,
     removingFromAllowlist,
   } = useAdminAllowlist()
 
-  const [turmasEnabled, setTurmasEnabled] = useState(false)
+  const [turmasEnabled, setTurmasEnabled] = useState(true)
   const { data: turmas = [], isLoading: turmasLoading } = useAdminTurmas(turmasEnabled)
 
   const [detailUser, setDetailUser] = useState<UserProfile | null>(null)
@@ -82,6 +83,7 @@ export default function AdminDashboard() {
   const [activeCard, setActiveCard] = useState<CardFilter | null>(null)
   const [newEmail, setNewEmail] = useState('')
   const [newRole, setNewRole] = useState<'student' | 'teacher'>('student')
+  const [newTurmaId, setNewTurmaId] = useState('')
 
   function openCard(filter: CardFilter) {
     setActiveCard(filter)
@@ -90,9 +92,10 @@ export default function AdminDashboard() {
 
   async function handleAddToAllowlist(e: React.FormEvent) {
     e.preventDefault()
-    if (!newEmail.trim()) return
-    await addToAllowlist({ email: newEmail.trim().toLowerCase(), role: newRole })
+    if (!newEmail.trim() || !newTurmaId) return
+    await addToAllowlist({ email: newEmail.trim().toLowerCase(), role: newRole, turmaId: newTurmaId })
     setNewEmail('')
+    setNewTurmaId('')
   }
 
   async function handleAddToTurma(turmaId: string, studentEmail: string) {
@@ -329,35 +332,65 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <form onSubmit={handleAddToAllowlist} className="px-6 py-4 flex gap-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
-            <input
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="email@exemplo.com"
-              required
-              className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
-              style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
-            />
-            <select
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value as 'student' | 'teacher')}
-              className="rounded-xl px-3 py-2 text-sm border outline-none"
-              style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
-            >
-              <option value="student">Aluno</option>
-              <option value="teacher">Professor</option>
-            </select>
-            <button
-              type="submit"
-              disabled={addingToAllowlist}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
-              style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
-            >
-              <HiPlus className="w-4 h-4" />
-              {addingToAllowlist ? '...' : 'Adicionar'}
-            </button>
-          </form>
+          {!turmasLoading && turmas.length === 0 ? (
+            <div className="px-6 py-5 border-b text-sm" style={{ borderColor: 'var(--c-border)', color: 'var(--c-subtle)' }}>
+              Crie uma turma antes de adicionar alguém à lista de acesso.{' '}
+              <Link href="/dashboard/admin/turmas" className="font-semibold underline" style={{ color: 'var(--c-text)' }}>
+                Criar turma →
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleAddToAllowlist} className="px-6 py-4 flex flex-col sm:flex-row gap-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                required
+                className="flex-1 rounded-xl px-3 py-2 text-sm border outline-none"
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+              />
+              <select
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as 'student' | 'teacher')}
+                className="rounded-xl px-3 py-2 text-sm border outline-none"
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+              >
+                <option value="student">Aluno</option>
+                <option value="teacher">Professor</option>
+              </select>
+              <select
+                value={newTurmaId}
+                onChange={(e) => setNewTurmaId(e.target.value)}
+                disabled={turmasLoading}
+                required
+                className="rounded-xl px-3 py-2 text-sm border outline-none disabled:opacity-50"
+                style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+              >
+                <option value="" disabled>
+                  {turmasLoading ? 'Carregando turmas...' : 'Selecione a turma'}
+                </option>
+                {turmas.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={addingToAllowlist || !newTurmaId}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
+                style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
+              >
+                <HiPlus className="w-4 h-4" />
+                {addingToAllowlist ? '...' : 'Adicionar'}
+              </button>
+            </form>
+          )}
+
+          {addToAllowlistError && (
+            <div className="px-6 py-2 text-xs border-b" style={{ borderColor: 'var(--c-border)', color: 'var(--c-danger)' }}>
+              {addToAllowlistError.message}
+            </div>
+          )}
 
           {allowlistLoading ? (
             <div className="px-6 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Carregando...</div>
@@ -365,7 +398,9 @@ export default function AdminDashboard() {
             <div className="px-6 py-8 text-center text-sm" style={{ color: 'var(--c-subtle)' }}>Nenhum email na lista ainda.</div>
           ) : (
             <ul>
-              {allowlist.map((entry, i) => (
+              {allowlist.map((entry, i) => {
+                const turma = turmas.find((t) => t.id === entry.turmaId)
+                return (
                 <li
                   key={entry.email}
                   className="flex items-center gap-4 px-6 py-3.5"
@@ -373,6 +408,9 @@ export default function AdminDashboard() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate" style={{ color: 'var(--c-text)' }}>{entry.email}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: turma ? 'var(--c-subtle)' : 'var(--c-faint)' }}>
+                      {turma ? turma.name : 'Sem turma'}
+                    </p>
                   </div>
                   <span
                     className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
@@ -397,7 +435,8 @@ export default function AdminDashboard() {
                     )}
                   </button>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>

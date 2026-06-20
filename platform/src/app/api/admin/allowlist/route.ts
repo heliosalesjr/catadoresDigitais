@@ -16,10 +16,15 @@ export async function POST(req: Request) {
   const result = await requireAdmin()
   if (result instanceof Response) return result
 
-  const { email, role } = await req.json() as { email: string; role: Role }
+  const { email, role, turmaId } = await req.json() as { email: string; role: Role; turmaId: string }
 
-  if (!email || !ALLOWED_ROLES.includes(role)) {
+  if (!email || !ALLOWED_ROLES.includes(role) || !turmaId) {
     return Response.json({ error: 'Invalid input' }, { status: 400 })
+  }
+
+  const turmaSnap = await adminDb.collection('turmas').doc(turmaId).get()
+  if (!turmaSnap.exists) {
+    return Response.json({ error: 'Turma não encontrada' }, { status: 400 })
   }
 
   const normalized = email.trim().toLowerCase()
@@ -27,6 +32,7 @@ export async function POST(req: Request) {
   await adminDb.collection('allowlist').doc(normalized).set({
     email: normalized,
     role,
+    turmaId,
     createdAt: new Date().toISOString(),
   })
 

@@ -3,6 +3,7 @@ export type Role = 'admin' | 'teacher' | 'student'
 export interface AllowlistEntry {
   email: string
   role: 'student' | 'teacher'
+  turmaId: string
   createdAt: string
 }
 

@@ -13,12 +13,16 @@ export function useAdminAllowlist() {
   })
 
   const addMutation = useMutation({
-    mutationFn: (data: { email: string; role: 'student' | 'teacher' }) =>
-      fetch('/api/admin/allowlist', {
+    mutationFn: async (data: { email: string; role: 'student' | 'teacher'; turmaId: string }) => {
+      const res = await fetch('/api/admin/allowlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }).then((r) => r.json()),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Erro ao adicionar')
+      return json
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'allowlist'] }),
   })
 
@@ -36,6 +40,7 @@ export function useAdminAllowlist() {
     allowlistLoading: query.isLoading,
     addToAllowlist: addMutation.mutateAsync,
     addingToAllowlist: addMutation.isPending,
+    addToAllowlistError: addMutation.error as Error | null,
     removeFromAllowlist: removeMutation.mutateAsync,
     removingFromAllowlist: removeMutation.isPending ? removeMutation.variables! : null,
   }
