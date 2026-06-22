@@ -761,6 +761,7 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: Presen
   const totalStudents = turma.students.length
   const isFuture = aula.date > todayISO
   const isToday = aula.date === todayISO
+  const isPast = aula.date < todayISO
   const hasAttendance = Object.keys(aula.attendance).length > 0
 
   return (
@@ -877,8 +878,15 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: Presen
           >
             <button
               onClick={() => setShowCode((v) => !v)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-80"
-              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+              disabled={isPast}
+              title={isPast ? 'Aula já aconteceu' : undefined}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity ${
+                isPast ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'
+              }`}
+              style={{
+                borderColor: isPast ? 'var(--c-border-md)' : turma.iconColor,
+                color: isPast ? 'var(--c-subtle)' : turma.iconColor,
+              }}
             >
               {showCode
                 ? <><HiEyeSlash className="w-3.5 h-3.5" /> Ocultar código</>
