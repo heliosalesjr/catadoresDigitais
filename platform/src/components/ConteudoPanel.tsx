@@ -16,6 +16,7 @@ import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 import { BancoPanel } from './BancoPanel'
 import { AulaModal } from './AulaModal'
+import { ChamadaEditModal } from './ChamadaEditModal'
 import { AnotacoesPanel } from './AnotacoesPanel'
 
 const MONTHS_PT = [
@@ -750,10 +751,12 @@ interface PresencaAulaRowProps {
   canEdit: boolean
   studentList: string[]
   todayISO: string
+  onRefresh: () => void
 }
 
-function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: PresencaAulaRowProps) {
+function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefresh }: PresencaAulaRowProps) {
   const [showCode, setShowCode] = useState(false)
+  const [editingChamada, setEditingChamada] = useState(false)
 
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
@@ -894,9 +897,12 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: Presen
               }
             </button>
             <button
-              disabled
-              title="Em breve"
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border opacity-40 cursor-not-allowed"
+              onClick={() => setEditingChamada(true)}
+              disabled={isFuture}
+              title={isFuture ? 'Aula ainda não aconteceu' : undefined}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity ${
+                isFuture ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'
+              }`}
               style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
             >
               <HiPencilSquare className="w-3.5 h-3.5" /> Editar lista de chamada
@@ -904,11 +910,24 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO }: Presen
           </div>
         </>
       )}
+
+      <AnimatePresence>
+        {editingChamada && (
+          <ChamadaEditModal
+            turmaId={turma.id}
+            turmaIconColor={turma.iconColor}
+            aula={aula}
+            students={studentList}
+            onClose={() => setEditingChamada(false)}
+            onChange={onRefresh}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPanelProps) {
+function PresencasPanel({ turma, monthAulas, canEdit, currentUser, onRefresh }: PresencasPanelProps) {
   const studentEmail = currentUser?.email ?? null
   const todayISO = dateToISO(new Date())
 
@@ -936,6 +955,7 @@ function PresencasPanel({ turma, monthAulas, canEdit, currentUser }: PresencasPa
             canEdit={canEdit}
             studentList={studentList}
             todayISO={todayISO}
+            onRefresh={onRefresh}
           />
         )
       })}
