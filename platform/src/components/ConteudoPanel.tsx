@@ -138,7 +138,10 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
         style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
         <div className="flex items-center gap-2 pt-3 pb-0">
-          <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+          <span
+            className="text-sm font-bold px-3 py-1 rounded-lg"
+            style={{ background: turma.iconColor, color: '#fff' }}
+          >
             {MONTHS_PT[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
           </span>
         </div>
