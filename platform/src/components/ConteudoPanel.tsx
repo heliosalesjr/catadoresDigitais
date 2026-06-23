@@ -8,7 +8,7 @@ import {
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
-  HiEye, HiEyeSlash,
+  HiEye, HiEyeSlash, HiChevronDown,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
@@ -284,6 +284,16 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
                       </button>
                     )}
                   </div>
+
+                  {conteudoSubTab === 'proximas' && canEdit && (
+                    <button
+                      onClick={() => setCreatingAula(true)}
+                      className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl border-2 border-dashed transition-colors hover:opacity-80"
+                      style={{ borderColor: `${turma.iconColor}50`, color: turma.iconColor }}
+                    >
+                      <HiPlus className="w-3.5 h-3.5" /> Agendar nova aula
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -789,6 +799,7 @@ interface PresencaAulaRowProps {
 function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefresh }: PresencaAulaRowProps) {
   const [showCode, setShowCode] = useState(false)
   const [editingChamada, setEditingChamada] = useState(false)
+  const [showStudents, setShowStudents] = useState(false)
 
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
@@ -841,36 +852,71 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefres
           <p className="text-xs px-4 py-2.5" style={{ color: 'var(--c-faint)' }}>
             {canEdit ? 'Nenhum aluno matriculado.' : 'Sem dados de presença.'}
           </p>
+        ) : canEdit ? (
+          <button
+            onClick={() => setEditingChamada(true)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: 'var(--c-subtle)' }}
+          >
+            <span>Mostrar alunos ({studentList.length})</span>
+            <HiPencilSquare className="w-3.5 h-3.5 flex-shrink-0" />
+          </button>
         ) : (
-          studentList.map((email, i) => {
-            const status = aula.attendance[email] ?? null
-            return (
-              <div
-                key={email}
-                className="flex items-center gap-3 px-4 py-2"
-                style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
-              >
-                <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
-                  {email}
-                </span>
-                {status ? (
-                  <span
-                    className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ background: `${STATUS_COLOR[status]}18`, color: STATUS_COLOR[status] }}
-                  >
-                    {STATUS_LABEL[status]}
-                  </span>
-                ) : (
-                  <span
-                    className="text-xs w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ background: 'var(--c-bg)', color: 'var(--c-faint)' }}
-                  >
-                    —
-                  </span>
-                )}
-              </div>
-            )
-          })
+          <>
+            <button
+              onClick={() => setShowStudents((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-xs font-medium transition-colors hover:opacity-80"
+              style={{ color: 'var(--c-subtle)' }}
+            >
+              <span>{showStudents ? 'Ocultar alunos' : `Mostrar alunos (${studentList.length})`}</span>
+              <HiChevronDown
+                className="w-3.5 h-3.5 transition-transform flex-shrink-0"
+                style={{ transform: showStudents ? 'rotate(180deg)' : 'none' }}
+              />
+            </button>
+            <AnimatePresence>
+              {showStudents && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease }}
+                  className="overflow-hidden border-t"
+                  style={{ borderColor: 'var(--c-border)' }}
+                >
+                  {studentList.map((email, i) => {
+                    const status = aula.attendance[email] ?? null
+                    return (
+                      <div
+                        key={email}
+                        className="flex items-center gap-3 px-4 py-2"
+                        style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
+                      >
+                        <span className="flex-1 text-xs truncate" style={{ color: 'var(--c-text)' }}>
+                          {email}
+                        </span>
+                        {status ? (
+                          <span
+                            className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                            style={{ background: `${STATUS_COLOR[status]}18`, color: STATUS_COLOR[status] }}
+                          >
+                            {STATUS_LABEL[status]}
+                          </span>
+                        ) : (
+                          <span
+                            className="text-xs w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0"
+                            style={{ background: 'var(--c-bg)', color: 'var(--c-faint)' }}
+                          >
+                            —
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
         )}
       </div>
 
@@ -925,19 +971,8 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefres
             >
               {showCode
                 ? <><HiEyeSlash className="w-3.5 h-3.5" /> Ocultar código</>
-                : <><HiEye className="w-3.5 h-3.5" /> Começar a chamada</>
+                : <><HiEye className="w-3.5 h-3.5" /> Código de chamada</>
               }
-            </button>
-            <button
-              onClick={() => setEditingChamada(true)}
-              disabled={isFuture}
-              title={isFuture ? 'Aula ainda não aconteceu' : undefined}
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity ${
-                isFuture ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'
-              }`}
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            >
-              <HiPencilSquare className="w-3.5 h-3.5" /> Editar lista de chamada
             </button>
           </div>
         </>
