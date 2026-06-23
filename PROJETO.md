@@ -5,7 +5,7 @@
 | Projeto | Tecnologias |
 |---------|------------|
 | Landing | Vite + React + TypeScript + Tailwind + Framer Motion |
-| Platform | Next.js 15 (App Router) + Firebase (Auth + Firestore) + Tailwind |
+| Platform | Next.js 16 (App Router, Turbopack) + Firebase (Auth + Firestore) + Tailwind v4 |
 
 ---
 
@@ -116,6 +116,9 @@
 | Bloqueio de data passada ao criar aula (calendário não deixa clicar em dia passado; campo de data com `min`; validação também na API) | ✅ |
 | Calendário colapsável com FAB para reabrir | ✅ |
 | Página individual de aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
+| CTA "Criar primeira aula" no estado vazio da aba Conteúdo (abre `AulaModal` com data padrão = hoje, se dentro do período da turma) | ✅ |
+| CTA "Agendar nova aula" (borda tracejada) abaixo da lista, quando já existem aulas | ✅ |
+| Badge do mês/ano no topo da aba Conteúdo com cor saturada da turma, sincronizado com o calendário ao lado | ✅ |
 
 > O modal de aula (`AulaModal`) não exibe mais **Arquivos**, **Código de chamada** nem **Chamada** — isso fica a cargo das abas **Conteúdo** e **Banco de Aulas**, e da página individual da aula.
 
@@ -157,7 +160,7 @@
 | "Testar avaliação" — simulação da visão do aluno | ✅ |
 | Submissão real pelo aluno via página da aula | ✅ |
 | API `/api/turmas/[id]/aulas/[aulaId]/respostas` (GET por role, POST do aluno) | ✅ |
-| Ver respostas dos alunos (visão professor / admin) | ❌ |
+| Ver respostas dos alunos (visão professor / admin) — dentro do modal de chamada (`ChamadaEditModal`), por aluno, com indicador de certo/errado em quiz e link clicável | ✅ |
 | Feedback / correção de respostas abertas | ❌ |
 
 ---
@@ -167,11 +170,12 @@
 |---------|--------|
 | Campo `attendance` no tipo `Aula` | ✅ |
 | `attendanceCode` — código de 4 dígitos gerado pelo professor | ✅ |
-| Professor revela o código de chamada (aba Conteúdo, `ConteudoPanel`) | ✅ |
+| Professor revela o código de chamada (botão "Código de chamada", aba Conteúdo/Presenças); desabilitado em aulas já encerradas | ✅ |
 | Aluno responde chamada com código (página `/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
 | API `/api/turmas/[id]/aulas/[aulaId]/chamada` (POST) | ✅ |
 | API `/api/student/frequencia` — percentual de presença do aluno | ✅ |
-| UI para marcar chamada manualmente (P/F/A pelo professor) | ❌ (botão "Editar lista de chamada" existe na aba Conteúdo, mas está desabilitado — "Em breve") |
+| Edição manual de presença (Presente/Falta) pelo professor — botão "Mostrar alunos (N)" na aba Presenças abre `ChamadaEditModal`, com salvamento em tempo real por aluno (PATCH a cada clique) | ✅ |
+| Status "Atrasado" (`late`) — ainda existe no schema/legado (frequência conta como presença), mas não é mais oferecido na UI manual, só Presente/Falta | ℹ️ |
 | Relatório de frequência por aluno (visão admin/teacher) | ❌ |
 
 ---
@@ -219,10 +223,8 @@
 
 ## Prioridades sugeridas
 
-1. **Ver respostas dos alunos** — painel professor/admin para consultar respostas por aula
-2. **UI de chamada manual** — professor marca P/F/A diretamente (sem código)
-3. **Relatório de frequência** — visão admin/teacher com tabela por aluno
-4. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
-5. **Remover material** individual de uma aula / banco
-6. **Formulário de inscrição** da landing page
-7. **Deploy** — landing + platform em produção
+1. **Relatório de frequência** — visão admin/teacher com tabela por aluno
+2. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
+3. **Remover material** individual de uma aula / banco
+4. **Formulário de inscrição** da landing page
+5. **Deploy** — landing + platform em produção
