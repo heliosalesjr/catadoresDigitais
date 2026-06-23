@@ -131,7 +131,7 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
               return (
                 <div
                   key={email}
-                  className="rounded-xl border overflow-hidden"
+                  className="rounded-xl border overflow-hidden flex-shrink-0"
                   style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}
                 >
                   {/* Student header + attendance selector */}

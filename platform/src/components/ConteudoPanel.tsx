@@ -83,6 +83,7 @@ type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco' |
 
 export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma, initialTab }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
+  const [creatingAula, setCreatingAula] = useState(false)
 
   const validTabs: Tab[] = ['estatisticas', 'conteudo', 'presencas', 'professores', 'banco', 'anotacoes']
   const defaultTab: Tab = canEdit ? 'estatisticas' : 'conteudo'
@@ -233,6 +234,15 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
                       ? 'As próximas aulas aparecerão aqui quando forem agendadas.'
                       : 'O histórico de aulas anteriores aparecerá aqui.'}
                   </p>
+                  {conteudoSubTab === 'proximas' && canEdit && (
+                    <button
+                      onClick={() => setCreatingAula(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg mt-2 transition-opacity hover:opacity-80"
+                      style={{ background: turma.iconColor, color: '#fff' }}
+                    >
+                      <HiPlus className="w-3.5 h-3.5" /> Criar primeira aula
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -316,6 +326,25 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
           accentColor={turma.iconColor}
         />
       )}
+
+      <AnimatePresence>
+        {creatingAula && (
+          <AulaModal
+            turmaId={turma.id}
+            turmaIconColor={turma.iconColor}
+            date={todayStr >= turma.startDate && todayStr <= turma.endDate ? todayStr : turma.startDate}
+            turmaStartDate={turma.startDate}
+            turmaEndDate={turma.endDate}
+            aula={null}
+            canEdit={canEdit}
+            isAdmin={currentUser?.role === 'admin'}
+            currentUserUid={currentUser?.uid ?? ''}
+            initialMode="edit"
+            onClose={() => setCreatingAula(false)}
+            onSaved={() => { setCreatingAula(false); onRefresh() }}
+          />
+        )}
+      </AnimatePresence>
     </>
   )
 }
