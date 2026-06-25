@@ -11,6 +11,20 @@ function minutesBetween(start: string, end: string): number {
   return (eh * 60 + em) - (sh * 60 + sm)
 }
 
+async function getNamesByEmail(emails: string[]): Promise<Record<string, string>> {
+  const result: Record<string, string> = {}
+  for (let i = 0; i < emails.length; i += 30) {
+    const chunk = emails.slice(i, i + 30)
+    if (chunk.length === 0) continue
+    const snap = await adminDb.collection('users').where('email', 'in', chunk).get()
+    for (const doc of snap.docs) {
+      const data = doc.data()
+      if (data.email) result[data.email] = data.name
+    }
+  }
+  return result
+}
+
 export async function GET(req: NextRequest, { params }: Ctx) {
   const auth = await requireAdmin()
   if (auth instanceof Response) return auth
@@ -34,6 +48,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   const students = turma.students ?? []
   const totalAlunos = students.length
+  const studentNames = await getNamesByEmail(students)
   let totalDuracaoMinutos = 0
 
   const aulas = []
@@ -86,6 +101,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   return Response.json({
     periodo: { from, to },
     students,
+    studentNames,
     totalAlunos,
     totalAulas: aulas.length,
     totalDuracaoMinutos,

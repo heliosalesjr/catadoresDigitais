@@ -23,6 +23,7 @@ interface RelatorioAula {
 interface Relatorio {
   periodo: { from: string; to: string }
   students: string[]
+  studentNames: Record<string, string>
   totalAlunos: number
   totalAulas: number
   totalDuracaoMinutos: number
@@ -261,18 +262,27 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                       </tr>
                     </thead>
                     <tbody>
-                      {relatorio.students.map((email, i) => (
+                      {relatorio.students.map((email, i) => {
+                        const name = relatorio.studentNames[email]
+                        return (
                         <tr key={email}>
                           <td
-                            className="sticky left-0 z-20 px-3 py-1.5 truncate max-w-[220px]"
+                            className="sticky left-0 z-20 px-3 py-1.5 max-w-[220px]"
+                            title={email}
                             style={{
                               background: 'var(--c-bg-alt)',
-                              color: 'var(--c-text)',
                               borderRight: '1px solid var(--c-border)',
                               borderTop: i === 0 ? 'none' : '1px solid var(--c-border)',
                             }}
                           >
-                            {email}
+                            {name ? (
+                              <>
+                                <p className="truncate font-medium" style={{ color: 'var(--c-text)' }}>{name}</p>
+                                <p className="truncate text-[10px]" style={{ color: 'var(--c-faint)' }}>{email}</p>
+                              </>
+                            ) : (
+                              <p className="truncate" style={{ color: 'var(--c-text)' }}>{email}</p>
+                            )}
                           </td>
                           {relatorio.aulas.map((a) => {
                             const status = a.attendance[email] ?? null
@@ -307,7 +317,8 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                             )
                           })}
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
