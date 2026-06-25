@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { TECH_ICONS } from '@/lib/icons'
-import { HiArrowLeft, HiCalendarDays, HiPencilSquare } from 'react-icons/hi2'
+import { HiArrowLeft, HiCalendarDays, HiPencilSquare, HiChartBarSquare } from 'react-icons/hi2'
 import { CalendarGrid } from '@/components/CalendarGrid'
 import { ConteudoPanel } from '@/components/ConteudoPanel'
 import type { Turma, Aula } from '@/types'
@@ -141,14 +141,24 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
         </div>
 
         {isAdmin && (
-          <Link
-            href={`/dashboard/admin/turmas/${id}/editar`}
-            className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors flex-shrink-0"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            title="Editar turma"
-          >
-            <HiPencilSquare className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href={`/dashboard/admin/turmas/${id}/relatorio`}
+              className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+              title="Relatório da turma"
+            >
+              <HiChartBarSquare className="w-4 h-4" />
+            </Link>
+            <Link
+              href={`/dashboard/admin/turmas/${id}/editar`}
+              className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+              title="Editar turma"
+            >
+              <HiPencilSquare className="w-4 h-4" />
+            </Link>
+          </div>
         )}
       </header>
 
