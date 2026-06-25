@@ -32,7 +32,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     .orderBy('date')
     .get()
 
-  const totalAlunos = (turma.students ?? []).length
+  const students = turma.students ?? []
+  const totalAlunos = students.length
   let totalDuracaoMinutos = 0
 
   const aulas = []
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     totalDuracaoMinutos += duracaoMinutos
 
     const avaliacoes = aula.avaliacoes ?? []
-    let alunosConcluiram = 0
+    const completed: string[] = []
 
     if (avaliacoes.length > 0) {
       const respostasSnap = await adminDb
@@ -54,9 +55,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       for (const r of respostasSnap.docs) {
         const answers = (r.data().answers ?? {}) as Record<string, string>
         const completou = avaliacoes.every((av) => (answers[av.id] ?? '').trim().length > 0)
-        if (completou) alunosConcluiram++
+        if (completou) completed.push(r.id)
       }
     }
+
+    const alunosConcluiram = completed.length
 
     aulas.push({
       aulaId: aula.id,
@@ -68,6 +71,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       percentualConclusao: avaliacoes.length > 0 && totalAlunos > 0
         ? Math.round((alunosConcluiram / totalAlunos) * 100)
         : null,
+      attendance: aula.attendance ?? {},
+      completed,
     })
   }
 
@@ -80,6 +85,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   return Response.json({
     periodo: { from, to },
+    students,
     totalAlunos,
     totalAulas: aulas.length,
     totalDuracaoMinutos,

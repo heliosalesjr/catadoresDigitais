@@ -1,10 +1,10 @@
 'use client'
 
-import { use, useCallback, useEffect, useState } from 'react'
+import { Fragment, use, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup } from 'react-icons/hi2'
+import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark } from 'react-icons/hi2'
 import { TECH_ICONS } from '@/lib/icons'
-import type { Turma } from '@/types'
+import type { Turma, AttendanceStatus } from '@/types'
 
 type Modo = 'geral' | 'periodo'
 
@@ -16,10 +16,13 @@ interface RelatorioAula {
   totalAvaliacoes: number
   alunosConcluiram: number
   percentualConclusao: number | null
+  attendance: Record<string, AttendanceStatus>
+  completed: string[]
 }
 
 interface Relatorio {
   periodo: { from: string; to: string }
+  students: string[]
   totalAlunos: number
   totalAulas: number
   totalDuracaoMinutos: number
@@ -27,8 +30,17 @@ interface Relatorio {
   aulas: RelatorioAula[]
 }
 
+const ATTENDANCE_LABEL: Record<string, string> = { present: 'P', absent: 'F', late: 'A' }
+const ATTENDANCE_COLOR: Record<string, string> = {
+  present: 'var(--c-success)', absent: 'var(--c-danger)', late: 'var(--c-warning)',
+}
+
 function fmtDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function fmtDateShort(iso: string) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
 function fmtDuracao(min: number) {
@@ -88,7 +100,7 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
 
   return (
     <main className="p-6 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Link
@@ -190,49 +202,121 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
               ))}
             </div>
 
-            {/* Per-aula breakdown */}
+            {/* Aluno × Aula grid */}
             <div
               className="rounded-2xl border overflow-hidden"
               style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
             >
               <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
-                <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Aulas no período</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Aluno × Aula</p>
               </div>
 
-              {relatorio.aulas.length === 0 ? (
+              {relatorio.aulas.length === 0 || relatorio.students.length === 0 ? (
                 <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--c-faint)' }}>
-                  Nenhuma aula no período selecionado.
+                  {relatorio.aulas.length === 0 ? 'Nenhuma aula no período selecionado.' : 'Nenhum aluno matriculado.'}
                 </p>
               ) : (
-                relatorio.aulas.map((a, i) => (
-                  <div
-                    key={a.aulaId}
-                    className="flex items-center gap-3 px-4 py-3"
-                    style={{ borderTop: i === 0 ? 'none' : `1px solid var(--c-border)` }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>{a.title}</p>
-                      <p className="text-xs capitalize" style={{ color: 'var(--c-subtle)' }}>
-                        {fmtDate(a.date)} · {fmtDuracao(a.duracaoMinutos)}
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0 text-right">
-                      {a.totalAvaliacoes === 0 ? (
-                        <span className="text-xs" style={{ color: 'var(--c-faint)' }}>Sem avaliações</span>
-                      ) : (
-                        <>
-                          <p className="text-sm font-bold" style={{ color: turma.iconColor }}>
-                            {a.alunosConcluiram}/{relatorio.totalAlunos}
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>
-                            concluíram ({a.percentualConclusao}%)
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))
+                <div className="overflow-auto max-h-[70vh]">
+                  <table className="border-collapse text-xs w-full">
+                    <thead>
+                      <tr>
+                        <th
+                          rowSpan={2}
+                          className="sticky left-0 top-0 z-30 px-3 py-2 text-left font-semibold whitespace-nowrap"
+                          style={{ background: 'var(--c-bg-alt)', borderBottom: '1px solid var(--c-border)', borderRight: '1px solid var(--c-border)' }}
+                        >
+                          Aluno
+                        </th>
+                        {relatorio.aulas.map((a) => (
+                          <th
+                            key={a.aulaId}
+                            colSpan={2}
+                            className="sticky top-0 z-10 px-2 py-1.5 text-center font-medium whitespace-nowrap"
+                            style={{ background: 'var(--c-bg-alt)', borderBottom: '1px solid var(--c-border)', borderLeft: '1px solid var(--c-border)', color: 'var(--c-subtle)' }}
+                            title={a.title}
+                          >
+                            {fmtDateShort(a.date)}
+                          </th>
+                        ))}
+                      </tr>
+                      <tr>
+                        {relatorio.aulas.map((a) => (
+                          <Fragment key={a.aulaId}>
+                            <th
+                              className="sticky top-[29px] z-10 w-9 px-1 py-1 text-center font-normal"
+                              style={{ background: 'var(--c-bg-alt)', borderBottom: '1px solid var(--c-border)', borderLeft: '1px solid var(--c-border)', color: 'var(--c-faint)' }}
+                              title="Presença"
+                            >
+                              P
+                            </th>
+                            <th
+                              className="sticky top-[29px] z-10 w-9 px-1 py-1 text-center font-normal"
+                              style={{ background: 'var(--c-bg-alt)', borderBottom: '1px solid var(--c-border)', color: 'var(--c-faint)' }}
+                              title="Conclusão das atividades"
+                            >
+                              ✓
+                            </th>
+                          </Fragment>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relatorio.students.map((email, i) => (
+                        <tr key={email}>
+                          <td
+                            className="sticky left-0 z-20 px-3 py-1.5 truncate max-w-[220px]"
+                            style={{
+                              background: 'var(--c-bg-alt)',
+                              color: 'var(--c-text)',
+                              borderRight: '1px solid var(--c-border)',
+                              borderTop: i === 0 ? 'none' : '1px solid var(--c-border)',
+                            }}
+                          >
+                            {email}
+                          </td>
+                          {relatorio.aulas.map((a) => {
+                            const status = a.attendance[email] ?? null
+                            const concluiu = a.totalAvaliacoes > 0 ? a.completed.includes(email) : null
+                            return (
+                              <Fragment key={a.aulaId}>
+                                <td
+                                  className="text-center py-1.5"
+                                  style={{ borderLeft: '1px solid var(--c-border)', borderTop: i === 0 ? 'none' : '1px solid var(--c-border)' }}
+                                >
+                                  {status ? (
+                                    <span className="font-bold" style={{ color: ATTENDANCE_COLOR[status] }}>
+                                      {ATTENDANCE_LABEL[status]}
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: 'var(--c-faint)' }}>—</span>
+                                  )}
+                                </td>
+                                <td
+                                  className="text-center py-1.5"
+                                  style={{ borderTop: i === 0 ? 'none' : '1px solid var(--c-border)' }}
+                                >
+                                  {concluiu === null ? (
+                                    <span style={{ color: 'var(--c-faint)' }}>—</span>
+                                  ) : concluiu ? (
+                                    <HiCheck className="w-3.5 h-3.5 inline" style={{ color: 'var(--c-success)' }} />
+                                  ) : (
+                                    <HiXMark className="w-3.5 h-3.5 inline" style={{ color: 'var(--c-danger)' }} />
+                                  )}
+                                </td>
+                              </Fragment>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
+
+              <div className="flex items-center gap-4 px-4 py-2.5 border-t text-[11px]" style={{ borderColor: 'var(--c-border)', color: 'var(--c-faint)' }}>
+                <span><b style={{ color: 'var(--c-success)' }}>P</b> presente · <b style={{ color: 'var(--c-danger)' }}>F</b> falta · <b style={{ color: 'var(--c-warning)' }}>A</b> atrasado</span>
+                <span><HiCheck className="w-3 h-3 inline" style={{ color: 'var(--c-success)' }} /> concluiu todas as atividades · <HiXMark className="w-3 h-3 inline" style={{ color: 'var(--c-danger)' }} /> não concluiu</span>
+              </div>
             </div>
           </>
         )}
