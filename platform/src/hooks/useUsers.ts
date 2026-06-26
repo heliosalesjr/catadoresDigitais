@@ -22,6 +22,19 @@ export function useUsers() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   })
 
+  const updateNameMutation = useMutation({
+    mutationFn: ({ uid, name }: { uid: string; name: string }) =>
+      fetch(`/api/admin/users/${uid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      }),
+    onSuccess: (_, { uid, name }) =>
+      queryClient.setQueryData<UserProfile[]>(['admin', 'users'], (prev) =>
+        prev?.map((u) => u.uid === uid ? { ...u, name } : u) ?? []
+      ),
+  })
+
   const deleteUserMutation = useMutation({
     mutationFn: (uid: string) =>
       fetch(`/api/admin/users/${uid}`, { method: 'DELETE' }),
@@ -36,6 +49,9 @@ export function useUsers() {
     loading,
     updateRole: async (uid: string, role: 'teacher' | 'student') => {
       await updateRoleMutation.mutateAsync({ uid, role })
+    },
+    updateName: async (uid: string, name: string) => {
+      await updateNameMutation.mutateAsync({ uid, name })
     },
     deleteUser: async (uid: string) => {
       await deleteUserMutation.mutateAsync(uid)

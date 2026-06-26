@@ -61,7 +61,7 @@ export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
 
-  const { users, loading: usersLoading, updateRole, deleteUser } = useUsers()
+  const { users, loading: usersLoading, updateRole, updateName, deleteUser } = useUsers()
   const { data: upcomingAulas = [], isLoading: aulasLoading } = useAdminUpcomingAulas()
   const {
     allowlist,
@@ -591,6 +591,10 @@ export default function AdminDashboard() {
             turmasLoading={turmasLoading}
             onClose={() => setDetailUser(null)}
             onRoleUpdate={updateRole}
+            onNameUpdate={async (uid, name) => {
+              await updateName(uid, name)
+              setDetailUser((prev) => prev ? { ...prev, name } : prev)
+            }}
             onDelete={deleteUser}
             onAddToTurma={handleAddToTurma}
             onRemoveFromTurma={handleRemoveFromTurma}

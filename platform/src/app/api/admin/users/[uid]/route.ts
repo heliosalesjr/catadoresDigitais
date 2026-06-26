@@ -12,11 +12,7 @@ export async function PATCH(
   if (result instanceof Response) return result
 
   const { uid } = await params
-  const { role } = await req.json() as { role: Role }
-
-  if (!ALLOWED_ROLES.includes(role)) {
-    return Response.json({ error: 'Invalid role' }, { status: 400 })
-  }
+  const body = await req.json() as { role?: Role; name?: string }
 
   const ref = adminDb.collection('users').doc(uid)
   const snap = await ref.get()
@@ -26,10 +22,29 @@ export async function PATCH(
   }
 
   if (snap.data()?.role === 'admin') {
-    return Response.json({ error: 'Cannot change admin role' }, { status: 403 })
+    return Response.json({ error: 'Cannot change admin' }, { status: 403 })
   }
 
-  await ref.update({ role })
+  const update: Record<string, string> = {}
+
+  if (body.role !== undefined) {
+    if (!ALLOWED_ROLES.includes(body.role)) {
+      return Response.json({ error: 'Invalid role' }, { status: 400 })
+    }
+    update.role = body.role
+  }
+
+  if (body.name !== undefined) {
+    const trimmed = body.name.trim()
+    if (!trimmed) return Response.json({ error: 'Name cannot be empty' }, { status: 400 })
+    update.name = trimmed
+  }
+
+  if (Object.keys(update).length === 0) {
+    return Response.json({ error: 'Nothing to update' }, { status: 400 })
+  }
+
+  await ref.update(update)
   return Response.json({ ok: true })
 }
 

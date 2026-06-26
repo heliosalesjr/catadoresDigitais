@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { HiXMark, HiTrash } from 'react-icons/hi2'
+import { HiXMark, HiTrash, HiPencil, HiCheck } from 'react-icons/hi2'
 import type { UserProfile, Turma } from '@/types'
 
 const ROLE_LABEL = { admin: 'Admin', teacher: 'Professor', student: 'Aluno' }
@@ -19,12 +19,13 @@ interface Props {
   turmasLoading: boolean
   onClose: () => void
   onRoleUpdate: (uid: string, role: 'student' | 'teacher') => Promise<void>
+  onNameUpdate: (uid: string, name: string) => Promise<void>
   onDelete: (uid: string) => Promise<void>
   onAddToTurma: (turmaId: string, user: UserProfile) => Promise<void>
   onRemoveFromTurma: (turmaId: string, user: UserProfile) => Promise<void>
 }
 
-export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUpdate, onDelete, onAddToTurma, onRemoveFromTurma }: Props) {
+export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUpdate, onNameUpdate, onDelete, onAddToTurma, onRemoveFromTurma }: Props) {
   const [currentRole, setCurrentRole] = useState(user.role)
   const [updatingRole, setUpdatingRole] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -32,6 +33,10 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
   const [addingToTurma, setAddingToTurma] = useState(false)
   const [removingTurmaId, setRemovingTurmaId] = useState<string | null>(null)
   const [selectedTurmaId, setSelectedTurmaId] = useState('')
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(user.name)
+  const [savingName, setSavingName] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   const isTeacher = currentRole === 'teacher'
   const enrolledTurmas = isTeacher
@@ -67,6 +72,21 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
     setRemovingTurmaId(turmaId)
     await onRemoveFromTurma(turmaId, { ...user, role: currentRole })
     setRemovingTurmaId(null)
+  }
+
+  function startEditingName() {
+    setNameInput(user.name)
+    setEditingName(true)
+    setTimeout(() => nameInputRef.current?.select(), 0)
+  }
+
+  async function handleSaveName() {
+    const trimmed = nameInput.trim()
+    if (!trimmed || trimmed === user.name) { setEditingName(false); return }
+    setSavingName(true)
+    await onNameUpdate(user.uid, trimmed)
+    setSavingName(false)
+    setEditingName(false)
   }
 
   return (
@@ -116,9 +136,45 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
                 {user.name?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
-            <div className="min-w-0">
-              <p className="font-semibold truncate" style={{ color: 'var(--c-text)' }}>{user.name}</p>
-              <p className="text-sm truncate" style={{ color: 'var(--c-subtle)' }}>{user.email}</p>
+            <div className="min-w-0 flex-1">
+              {editingName ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    ref={nameInputRef}
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false) }}
+                    className="flex-1 min-w-0 rounded-lg px-2 py-1 text-sm font-semibold border outline-none"
+                    style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }}
+                    disabled={savingName}
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    disabled={savingName || !nameInput.trim()}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
+                    style={{ background: 'var(--c-success)', color: '#fff' }}
+                  >
+                    <HiCheck className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setEditingName(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg transition-opacity hover:opacity-60"
+                    style={{ color: 'var(--c-faint)' }}
+                  >
+                    <HiXMark className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={startEditingName}
+                  className="flex items-center gap-1.5 group max-w-full"
+                  title="Editar nome"
+                >
+                  <p className="font-semibold truncate" style={{ color: 'var(--c-text)' }}>{user.name}</p>
+                  <HiPencil className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--c-subtle)' }} />
+                </button>
+              )}
+              <p className="text-sm truncate mt-0.5" style={{ color: 'var(--c-subtle)' }}>{user.email}</p>
               <span
                 className="inline-block mt-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
                 style={{ color: ROLE_COLORS[currentRole], background: ROLE_BG_COLORS[currentRole] }}
