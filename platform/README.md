@@ -75,8 +75,13 @@ users/{uid}/notas/{id}
 | `/api/admin/allowlist` | GET, POST | admin | Lista e adiciona emails |
 | `/api/admin/allowlist/[email]` | DELETE | admin | Remove email |
 | `/api/admin/upcoming-aulas` | GET | editor | Próximas aulas (todas as turmas) |
+| `/api/admin/users` | GET | admin | Lista todos os usuários |
+| `/api/admin/users/[uid]` | PATCH | admin | Atualiza `role` e/ou `name` do usuário |
+| `/api/admin/users/[uid]` | DELETE | admin | Remove usuário |
+| `/api/admin/turmas/[id]/relatorio` | GET | admin | Relatório de presença e conclusão por turma (`?from=&to=` opcional) |
 | `/api/student/turmas` | GET | any | Turmas do aluno logado |
 | `/api/student/upcoming-aulas` | GET | any | Aulas da semana atual + futuras |
+| `/api/turmas/[id]/students` | GET | editor | Retorna `{ email, name }[]` dos alunos da turma |
 | `/api/turmas/[id]/aulas` | GET, POST | any/editor | Lista e cria aulas |
 | `/api/turmas/[id]/aulas/[aulaId]` | PATCH, DELETE | editor | Edita ou remove aula |
 | `/api/turmas/[id]/aulas/[aulaId]/chamada` | POST | any | Aluno responde chamada com código |

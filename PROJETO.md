@@ -69,6 +69,7 @@
 | Allowlist mostra a turma vinculada a cada convite na lista | ✅ |
 | UserDetailPanel (slide-over de detalhes do usuário) | ✅ |
 | UserDetailPanel: adicionar / remover de turmas (aluno e professor) | ✅ |
+| UserDetailPanel: editar nome do usuário (inline, salvo no Firestore) | ✅ |
 
 ---
 
@@ -175,8 +176,9 @@
 | API `/api/turmas/[id]/aulas/[aulaId]/chamada` (POST) | ✅ |
 | API `/api/student/frequencia` — percentual de presença do aluno | ✅ |
 | Edição manual de presença (Presente/Falta) pelo professor — botão "Mostrar alunos (N)" na aba Presenças abre `ChamadaEditModal`, com salvamento em tempo real por aluno (PATCH a cada clique) | ✅ |
+| `ChamadaEditModal` mostra nome do aluno (buscado via `/api/turmas/[id]/students`) | ✅ |
 | Status "Atrasado" (`late`) — ainda existe no schema/legado (frequência conta como presença), mas não é mais oferecido na UI manual, só Presente/Falta | ℹ️ |
-| Relatório de frequência por aluno (visão admin/teacher) | ❌ |
+| Relatório por turma (`/dashboard/admin/turmas/[id]/relatorio`): tabela aluno × aula com presença e conclusão, card de presença média, filtro por período, download CSV | ✅ |
 
 ---
 
@@ -206,7 +208,9 @@
 | `/api/turmas/[id]/banco` | GET, POST | editor |
 | `/api/turmas/[id]/banco/[bancoId]` | GET, PATCH, DELETE | editor |
 | `/api/turmas/[id]/banco/[bancoId]/agendar` | POST | editor |
+| `/api/turmas/[id]/students` | GET | editor |
 | `/api/users/teachers` | GET | editor |
+| `/api/admin/turmas/[id]/relatorio` | GET | admin |
 
 ---
 
@@ -223,8 +227,7 @@
 
 ## Prioridades sugeridas
 
-1. **Relatório de frequência** — visão admin/teacher com tabela por aluno
-2. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
-3. **Remover material** individual de uma aula / banco
-4. **Formulário de inscrição** da landing page
-5. **Deploy** — landing + platform em produção
+1. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
+2. **Remover material** individual de uma aula / banco
+3. **Formulário de inscrição** da landing page
+4. **Deploy** — landing + platform em produção
