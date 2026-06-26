@@ -438,6 +438,16 @@ function AulaCard({
     onRefresh()
   }
 
+  async function deleteMaterial(index: number) {
+    const updated = aula.driveLinks.filter((_, i) => i !== index)
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driveLinks: updated }),
+    })
+    onRefresh()
+  }
+
   return (
     <motion.div
       layout
@@ -531,18 +541,33 @@ function AulaCard({
         {!materialsLocked && aula.driveLinks.map((link, i) => {
           const type = detectType(link.url)
           return (
-            <button
+            <div
               key={i}
-              onClick={() => setViewingLink(link)}
-              className="flex items-center gap-2 text-xs rounded-lg px-2.5 py-1.5 transition-opacity hover:opacity-75 text-left w-full"
-              style={{ background: 'var(--c-bg)', color: 'var(--c-text)' }}
+              className="flex items-center gap-1 rounded-lg text-xs"
+              style={{ background: 'var(--c-bg)' }}
             >
-              {type === 'video'
-                ? <HiVideoCamera className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
-                : <HiArrowTopRightOnSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
-              }
-              <span className="truncate">{link.label || link.url}</span>
-            </button>
+              <button
+                onClick={() => setViewingLink(link)}
+                className="flex items-center gap-2 flex-1 min-w-0 px-2.5 py-1.5 transition-opacity hover:opacity-75 text-left"
+                style={{ color: 'var(--c-text)' }}
+              >
+                {type === 'video'
+                  ? <HiVideoCamera className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
+                  : <HiArrowTopRightOnSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
+                }
+                <span className="truncate">{link.label || link.url}</span>
+              </button>
+              {canEdit && (
+                <button
+                  onClick={() => deleteMaterial(i)}
+                  className="w-6 h-6 flex items-center justify-center flex-shrink-0 mr-1 rounded transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--c-faint)' }}
+                  title="Remover material"
+                >
+                  <HiTrash className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           )
         })}
 

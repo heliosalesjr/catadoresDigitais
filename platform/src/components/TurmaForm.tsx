@@ -7,7 +7,7 @@ import { IconPicker } from '@/components/IconPicker'
 import { HiArrowLeft, HiXMark, HiPlus, HiTrash } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 
-type FormData = Pick<Turma, 'name' | 'icon' | 'iconColor' | 'startDate' | 'endDate' | 'students'> & { calendarId?: string }
+type FormData = Pick<Turma, 'name' | 'icon' | 'iconColor' | 'startDate' | 'endDate' | 'students'>
 
 interface Props {
   mode: 'create' | 'edit'
@@ -34,7 +34,6 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
   const [iconColor, setIconColor] = useState(initialData?.iconColor ?? '#FFC530')
   const [startDate, setStartDate] = useState(initialData?.startDate ?? '')
   const [endDate, setEndDate] = useState(initialData?.endDate ?? '')
-  const [calendarId, setCalendarId] = useState(initialData?.calendarId ?? '')
   const [students, setStudents] = useState<string[]>(initialData?.students ?? [])
   const [studentInput, setStudentInput] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +72,6 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
       iconColor,
       startDate,
       endDate,
-      calendarId: calendarId.trim() || undefined,
       students,
       ...(isEdit ? {} : { createdBy: '' }),
     }
@@ -168,22 +166,6 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
             </div>
           </div>
 
-          <div className={card} style={cardStyle}>
-            <div>
-              <label className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Google Calendar ID</label>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--c-subtle)' }}>
-                Opcional. Google Calendar → Configurações da agenda → ID da agenda.
-              </p>
-            </div>
-            <input
-              type="text"
-              value={calendarId}
-              onChange={(e) => setCalendarId(e.target.value)}
-              placeholder="xxxxx@group.calendar.google.com"
-              className={inputClass}
-              style={inputStyle}
-            />
-          </div>
 
           <div className={card} style={cardStyle}>
             <div>

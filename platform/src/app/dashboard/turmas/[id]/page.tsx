@@ -140,7 +140,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {isAdmin && (
+        {canEdit && (
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               href={`/dashboard/admin/turmas/${id}/relatorio`}
@@ -150,14 +150,16 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
             >
               <HiChartBarSquare className="w-4 h-4" />
             </Link>
-            <Link
-              href={`/dashboard/admin/turmas/${id}/editar`}
-              className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-              title="Editar turma"
-            >
-              <HiPencilSquare className="w-4 h-4" />
-            </Link>
+            {isAdmin && (
+              <Link
+                href={`/dashboard/admin/turmas/${id}/editar`}
+                className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+                style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                title="Editar turma"
+              >
+                <HiPencilSquare className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         )}
       </header>

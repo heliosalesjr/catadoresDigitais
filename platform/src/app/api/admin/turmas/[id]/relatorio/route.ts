@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireEditor } from '@/lib/require-editor'
 import type { Aula, Turma } from '@/types'
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -26,7 +26,7 @@ async function getNamesByEmail(emails: string[]): Promise<Record<string, string>
 }
 
 export async function GET(req: NextRequest, { params }: Ctx) {
-  const auth = await requireAdmin()
+  const auth = await requireEditor()
   if (auth instanceof Response) return auth
 
   const { id } = await params
