@@ -28,8 +28,10 @@ interface Props {
   onChange: () => void
 }
 
-function initials(email: string) {
-  return email.slice(0, 2).toUpperCase()
+function initials(nameOrEmail: string) {
+  const parts = nameOrEmail.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return nameOrEmail.slice(0, 2).toUpperCase()
 }
 
 export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onClose, onChange }: Props) {
@@ -38,9 +40,22 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
   const [responses, setResponses] = useState<Record<string, RespostaDoc>>({})
   const [loadingResponses, setLoadingResponses] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [studentNames, setStudentNames] = useState<Record<string, string>>({})
 
   const avaliacoes = aula.avaliacoes ?? []
   const hasAvaliacoes = avaliacoes.length > 0
+
+  useEffect(() => {
+    fetch(`/api/turmas/${turmaId}/students`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: { email: string; name: string | null }[]) => {
+        const map: Record<string, string> = {}
+        for (const { email, name } of data) if (name) map[email] = name
+        setStudentNames(map)
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turmaId])
 
   useEffect(() => {
     if (!hasAvaliacoes) return
@@ -128,6 +143,8 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
               const response = responses[email]
               const isOpen = !!expanded[email]
 
+              const displayName = studentNames[email] ?? response?.studentName ?? null
+
               return (
                 <div
                   key={email}
@@ -140,13 +157,13 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
                       className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
                       style={{ background: `${turmaIconColor}18`, color: turmaIconColor }}
                     >
-                      {initials(response?.studentName ?? email)}
+                      {initials(displayName ?? email)}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold truncate" style={{ color: 'var(--c-text)' }}>
-                        {response?.studentName ?? email}
+                        {displayName ?? email}
                       </p>
-                      {response?.studentName && (
+                      {displayName && (
                         <p className="text-[11px] truncate" style={{ color: 'var(--c-faint)' }}>{email}</p>
                       )}
                     </div>
