@@ -2,7 +2,7 @@
 
 import { Fragment, use, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark } from 'react-icons/hi2'
+import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark, HiArrowDownTray } from 'react-icons/hi2'
 import { TECH_ICONS } from '@/lib/icons'
 import type { Turma, AttendanceStatus } from '@/types'
 
@@ -50,6 +50,41 @@ function fmtDuracao(min: number) {
   if (h === 0) return `${m}min`
   if (m === 0) return `${h}h`
   return `${h}h ${m}min`
+}
+
+const ATTENDANCE_FULL: Record<string, string> = { present: 'Presente', absent: 'Falta', late: 'Atrasado' }
+
+function downloadCSV(turma: Turma, relatorio: Relatorio) {
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+
+  const aulaHeaders = relatorio.aulas.flatMap((a) => [
+    escape(`${fmtDateShort(a.date)} ${a.title} - Presença`),
+    ...(a.totalAvaliacoes > 0 ? [escape(`${fmtDateShort(a.date)} ${a.title} - Conclusão`)] : []),
+  ])
+
+  const header = ['Aluno', 'Email', ...aulaHeaders].map(escape).join(',')
+
+  const rows = relatorio.students.map((email) => {
+    const name = relatorio.studentNames[email] ?? ''
+    const cells = relatorio.aulas.flatMap((a) => {
+      const status = a.attendance[email]
+      const presenca = status ? ATTENDANCE_FULL[status] ?? status : ''
+      if (a.totalAvaliacoes === 0) return [escape(presenca)]
+      const concluiu = a.completed.includes(email) ? 'Concluiu' : 'Não concluiu'
+      return [escape(presenca), escape(concluiu)]
+    })
+    return [escape(name), escape(email), ...cells].join(',')
+  })
+
+  const periodo = `${relatorio.periodo.from}_${relatorio.periodo.to}`
+  const csv = [header, ...rows].join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `relatorio_${turma.name.replace(/\s+/g, '_')}_${periodo}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -119,12 +154,23 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
               <Icon className="w-5 h-5" style={{ color: turma.iconColor }} />
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="text-xl font-bold truncate" style={{ color: 'var(--c-text)' }}>Relatório · {turma.name}</h2>
             <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>
               {fmtDate(turma.startDate)} → {fmtDate(turma.endDate)}
             </p>
           </div>
+          {relatorio && (
+            <button
+              onClick={() => downloadCSV(turma, relatorio)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors flex-shrink-0"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)', background: 'transparent' }}
+              title="Baixar relatório CSV"
+            >
+              <HiArrowDownTray className="w-4 h-4" />
+              <span className="hidden sm:inline">Baixar CSV</span>
+            </button>
+          )}
         </div>
 
         {/* Mode toggle */}
