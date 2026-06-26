@@ -91,11 +91,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     })
   }
 
-  const aulasComAvaliacao = aulas.filter((a) => a.totalAvaliacoes > 0)
-  const mediaConclusao = aulasComAvaliacao.length > 0
-    ? Math.round(
-        aulasComAvaliacao.reduce((sum, a) => sum + (a.percentualConclusao ?? 0), 0) / aulasComAvaliacao.length
-      )
+  const totalPresencas = aulas.reduce((sum, a) => {
+    return sum + students.filter((email) => {
+      const s = (a.attendance as Record<string, string>)[email]
+      return s === 'present' || s === 'late'
+    }).length
+  }, 0)
+  const percentualPresenca = aulas.length > 0 && totalAlunos > 0
+    ? Math.round((totalPresencas / (aulas.length * totalAlunos)) * 100)
     : null
 
   return Response.json({
@@ -105,7 +108,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     totalAlunos,
     totalAulas: aulas.length,
     totalDuracaoMinutos,
-    mediaConclusao,
+    percentualPresenca,
     aulas,
   })
 }

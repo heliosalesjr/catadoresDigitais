@@ -27,7 +27,7 @@ interface Relatorio {
   totalAlunos: number
   totalAulas: number
   totalDuracaoMinutos: number
-  mediaConclusao: number | null
+  percentualPresenca: number | null
   aulas: RelatorioAula[]
 }
 
@@ -233,8 +233,8 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                 { icon: HiUserGroup, label: 'Alunos matriculados', value: String(relatorio.totalAlunos) },
                 {
                   icon: HiAcademicCap,
-                  label: 'Conclusão média',
-                  value: relatorio.mediaConclusao === null ? '—' : `${relatorio.mediaConclusao}%`,
+                  label: 'Presença média',
+                  value: relatorio.percentualPresenca === null ? '—' : `${relatorio.percentualPresenca}%`,
                 },
               ]).map(({ icon: CardIcon, label, value }) => (
                 <div
