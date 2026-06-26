@@ -371,7 +371,7 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
               )}
 
               <div className="flex items-center gap-4 px-4 py-2.5 border-t text-[11px]" style={{ borderColor: 'var(--c-border)', color: 'var(--c-faint)' }}>
-                <span><b style={{ color: 'var(--c-success)' }}>P</b> presente · <b style={{ color: 'var(--c-danger)' }}>F</b> falta · <b style={{ color: 'var(--c-warning)' }}>A</b> atrasado</span>
+                <span><b style={{ color: 'var(--c-success)' }}>P</b> presente · <b style={{ color: 'var(--c-danger)' }}>F</b> falta</span>
                 <span><HiCheck className="w-3 h-3 inline" style={{ color: 'var(--c-success)' }} /> concluiu todas as atividades · <HiXMark className="w-3 h-3 inline" style={{ color: 'var(--c-danger)' }} /> não concluiu</span>
               </div>
             </div>
