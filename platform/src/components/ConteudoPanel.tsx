@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
   HiPlus, HiXMark, HiTrash, HiPencilSquare, HiListBullet,
@@ -10,6 +10,7 @@ import {
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
   HiEye, HiEyeSlash, HiChevronDown, HiArrowPath,
 } from 'react-icons/hi2'
+import type { IconType } from 'react-icons'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { parseLocalDate, dateToISO, getWeekISO } from '@/lib/date-utils'
 import { inputStyle } from '@/lib/styles'
@@ -47,6 +48,7 @@ interface Props {
   onRefresh: () => void
   onRefreshTurma: () => void
   initialTab?: string
+  isMobile?: boolean
 }
 
 interface AddState {
@@ -58,7 +60,16 @@ interface AddState {
 
 type Tab = 'estatisticas' | 'conteudo' | 'presencas' | 'professores' | 'banco' | 'anotacoes'
 
-export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma, initialTab }: Props) {
+const TAB_CONFIG: Record<Tab, { Icon: IconType; label: string }> = {
+  estatisticas: { Icon: HiPresentationChartBar, label: 'Visão geral' },
+  conteudo:     { Icon: HiDocumentText,          label: 'Conteúdo' },
+  presencas:    { Icon: HiClipboardDocumentCheck, label: 'Presenças' },
+  professores:  { Icon: HiUserGroup,             label: 'Professores' },
+  banco:        { Icon: HiListBullet,            label: 'Banco de Aulas' },
+  anotacoes:    { Icon: HiPencilSquare,          label: 'Anotações' },
+}
+
+export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUser, onRefresh, onRefreshTurma, initialTab, isMobile }: Props) {
   const [adding, setAdding] = useState<AddState | null>(null)
   const [creatingAula, setCreatingAula] = useState(false)
 
@@ -122,38 +133,57 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
             {MONTHS_PT[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
           </span>
         </div>
-        <div className="flex gap-1 mt-2 overflow-x-auto">
-          {((['estatisticas', 'conteudo', 'presencas', 'professores', 'banco', 'anotacoes'] as Tab[]).filter(
-            (t) =>
-              (t !== 'estatisticas' || canEdit) &&
-              (t !== 'presencas' || canEdit) &&
-              (t !== 'banco' || canEdit) &&
-              (t !== 'anotacoes' || !canEdit)
-          )).map((t) => {
-            const active = tab === t
-            const tabLabel = {
-              estatisticas: <><HiPresentationChartBar className="w-3.5 h-3.5" /> Visão geral</>,
-              conteudo:     <><HiDocumentText className="w-3.5 h-3.5" /> Conteúdo</>,
-              presencas:    <><HiClipboardDocumentCheck className="w-3.5 h-3.5" /> Presenças</>,
-              professores:  <><HiUserGroup className="w-3.5 h-3.5" /> Professores</>,
-              banco:        <><HiListBullet className="w-3.5 h-3.5" /> Banco de Aulas</>,
-              anotacoes:    <><HiPencilSquare className="w-3.5 h-3.5" /> Anotações</>,
-            }[t]
-            return (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-                style={{
-                  borderColor: active ? turma.iconColor : 'transparent',
-                  color: active ? turma.iconColor : 'var(--c-subtle)',
-                }}
-              >
-                {tabLabel}
-              </button>
-            )
-          })}
-        </div>
+        <LayoutGroup id={`tabs-${turma.id}`}>
+          <div
+            className="flex mt-2"
+            style={isMobile ? undefined : { gap: 2, overflowX: 'auto', overflowY: 'hidden' }}
+          >
+            {((['estatisticas', 'conteudo', 'presencas', 'professores', 'banco', 'anotacoes'] as Tab[]).filter(
+              (t) =>
+                (t !== 'estatisticas' || canEdit) &&
+                (t !== 'presencas' || canEdit) &&
+                (t !== 'banco' || canEdit) &&
+                (t !== 'anotacoes' || !canEdit)
+            )).map((t) => {
+              const active = tab === t
+              const { Icon, label } = TAB_CONFIG[t]
+              const showLabel = !isMobile || active
+              return (
+                <motion.button
+                  key={t}
+                  layout
+                  onClick={() => setTab(t)}
+                  className="relative flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 overflow-hidden"
+                  style={{
+                    flex: isMobile ? '1 1 0' : '0 0 auto',
+                    borderColor: active ? turma.iconColor : 'transparent',
+                    color: active ? turma.iconColor : 'var(--c-subtle)',
+                    transition: 'color 0.2s, border-color 0.2s',
+                    minWidth: 0,
+                  }}
+                  transition={{ duration: 0.3, ease }}
+                  title={isMobile && !active ? label : undefined}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <AnimatePresence>
+                    {showLabel && (
+                      <motion.span
+                        key="lbl"
+                        initial={{ opacity: 0, maxWidth: 0 }}
+                        animate={{ opacity: 1, maxWidth: 160 }}
+                        exit={{ opacity: 0, maxWidth: 0 }}
+                        transition={{ duration: 0.25, ease }}
+                        className="whitespace-nowrap overflow-hidden block"
+                      >
+                        {label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              )
+            })}
+          </div>
+        </LayoutGroup>
       </div>
 
       {/* Estatísticas tab */}

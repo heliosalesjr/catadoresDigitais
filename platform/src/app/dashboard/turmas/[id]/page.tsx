@@ -36,6 +36,11 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
   const [loading, setLoading] = useState(true)
   const [calendarOpen, setCalendarOpen] = useState(true)
   const [aulas, setAulas] = useState<Aula[]>([])
+
+  // Collapse calendar on mobile on first mount
+  useEffect(() => {
+    if (window.innerWidth < 768) setCalendarOpen(false)
+  }, [])
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null)
   const isMobile = useIsMobile()
 
@@ -181,6 +186,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               onRefresh={fetchAulas}
               onRefreshTurma={fetchTurma}
               initialTab={initialTab}
+              isMobile={isMobile}
             />
           )}
         </div>
