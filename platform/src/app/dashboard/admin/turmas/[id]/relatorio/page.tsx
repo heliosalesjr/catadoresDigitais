@@ -1,8 +1,8 @@
 'use client'
 
-import { Fragment, use, useCallback, useEffect, useState } from 'react'
+import { Fragment, use, useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark, HiArrowDownTray } from 'react-icons/hi2'
+import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark, HiArrowDownTray, HiChevronLeft, HiChevronRight } from 'react-icons/hi2'
 import { TECH_ICONS } from '@/lib/icons'
 import type { Turma, AttendanceStatus } from '@/types'
 
@@ -87,6 +87,8 @@ function downloadCSV(turma: Turma, relatorio: Relatorio) {
   URL.revokeObjectURL(url)
 }
 
+const STUDENTS_PER_PAGE = 20
+
 export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [turma, setTurma] = useState<Turma | null>(null)
@@ -95,6 +97,7 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
   const [to, setTo] = useState('')
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null)
   const [loading, setLoading] = useState(true)
+  const [studentPage, setStudentPage] = useState(1)
 
   useEffect(() => {
     fetch(`/api/admin/turmas/${id}`)
@@ -122,6 +125,18 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
       fetchRelatorio(`?from=${from}&to=${to}`)
     }
   }, [turma, modo, from, to, fetchRelatorio])
+
+  useEffect(() => { setStudentPage(1) }, [relatorio])
+
+  const totalStudentPages = relatorio
+    ? Math.max(1, Math.ceil(relatorio.students.length / STUDENTS_PER_PAGE))
+    : 1
+
+  const pagedStudents = useMemo(() => {
+    if (!relatorio) return []
+    const start = (studentPage - 1) * STUDENTS_PER_PAGE
+    return relatorio.students.slice(start, start + STUDENTS_PER_PAGE)
+  }, [relatorio, studentPage])
 
   if (!turma) {
     return (
@@ -308,7 +323,7 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                       </tr>
                     </thead>
                     <tbody>
-                      {relatorio.students.map((email, i) => {
+                      {pagedStudents.map((email, i) => {
                         const name = relatorio.studentNames[email]
                         return (
                         <tr key={email}>
@@ -367,6 +382,52 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Paginação de alunos */}
+              {relatorio && relatorio.students.length > STUDENTS_PER_PAGE && (
+                <div
+                  className="flex items-center justify-between px-4 py-2.5 border-t"
+                  style={{ borderColor: 'var(--c-border)' }}
+                >
+                  <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+                    {(studentPage - 1) * STUDENTS_PER_PAGE + 1}–
+                    {Math.min(studentPage * STUDENTS_PER_PAGE, relatorio.students.length)} de{' '}
+                    {relatorio.students.length} alunos
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+                      disabled={studentPage === 1}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
+                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                    >
+                      <HiChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalStudentPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setStudentPage(p)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold border transition-colors"
+                        style={{
+                          borderColor: p === studentPage ? turma.iconColor : 'var(--c-border-md)',
+                          background: p === studentPage ? turma.iconColor : 'transparent',
+                          color: p === studentPage ? '#fff' : 'var(--c-subtle)',
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setStudentPage((p) => Math.min(totalStudentPages, p + 1))}
+                      disabled={studentPage === totalStudentPages}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
+                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                    >
+                      <HiChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               )}
 
