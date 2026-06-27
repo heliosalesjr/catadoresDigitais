@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsers } from '@/hooks/useUsers'
-import { useAdminUpcomingAulas } from '@/hooks/useAdminUpcomingAulas'
+import { useUpcomingAulas } from '@/hooks/useUpcomingAulas'
 import { useAdminAllowlist } from '@/hooks/useAdminAllowlist'
 import { useAdminTurmas } from '@/hooks/useAdminTurmas'
 import { useQueryClient } from '@tanstack/react-query'
@@ -16,23 +16,14 @@ import { UserListModal, type CardFilter } from '@/components/UserListModal'
 import { UserDetailPanel } from '@/components/UserDetailPanel'
 import { formatDateLabel } from '@/lib/date-utils'
 import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
-
-function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
-  const map = new Map<string, UpcomingAula[]>()
-  for (const a of aulas) {
-    const existing = map.get(a.date) ?? []
-    existing.push(a)
-    map.set(a.date, existing)
-  }
-  return Array.from(map.entries())
-}
+import { groupByDate } from '@/lib/utils'
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
 
   const { users, loading: usersLoading, updateRole, updateName, deleteUser } = useUsers()
-  const { data: upcomingAulas = [], isLoading: aulasLoading } = useAdminUpcomingAulas()
+  const { data: upcomingAulas = [], isLoading: aulasLoading } = useUpcomingAulas('admin')
   const {
     allowlist,
     allowlistLoading,

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useTeacherTurmas } from '@/hooks/useTeacherTurmas'
-import { useTeacherUpcomingAulas } from '@/hooks/useTeacherUpcomingAulas'
+import { useUpcomingAulas } from '@/hooks/useUpcomingAulas'
 import { TECH_ICONS } from '@/lib/icons'
 import {
   HiAcademicCap, HiUsers, HiCalendarDays, HiClock,
@@ -11,20 +11,13 @@ import {
 } from 'react-icons/hi2'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { parseLocalDate, formatDateLabel, getWeekISO } from '@/lib/date-utils'
-
-function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
-  const map = new Map<string, UpcomingAula[]>()
-  for (const a of aulas) {
-    ;(map.get(a.date) ?? map.set(a.date, []).get(a.date)!).push(a)
-  }
-  return Array.from(map.entries())
-}
+import { groupByDate } from '@/lib/utils'
 
 export default function TeacherDashboard() {
   const { user, loading: authLoading } = useAuth()
 
   const { data: turmas = [], isLoading: turmasQueryLoading } = useTeacherTurmas(!authLoading)
-  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useTeacherUpcomingAulas(!authLoading)
+  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useUpcomingAulas('teacher', !authLoading)
 
   const turmasLoading = authLoading || turmasQueryLoading
   const aulasLoading = authLoading || aulasQueryLoading

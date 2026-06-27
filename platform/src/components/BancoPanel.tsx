@@ -4,31 +4,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiArchiveBox, HiPlus, HiPencilSquare, HiTrash, HiCalendarDays,
-  HiLink, HiListBullet, HiCheckCircle,
+  HiCheckCircle,
 } from 'react-icons/hi2'
 import type { BancoAula, Aula, Turma, UserProfile, Avaliacao } from '@/types'
 import { BancoAulaModal } from './BancoAulaModal'
 import { AgendarBancoModal } from './AgendarBancoModal'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
+import { AVALIACAO_ICON, AVALIACAO_LABEL } from '@/lib/constants'
+import { genId } from '@/lib/utils'
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-const AVALIACAO_ICON = {
-  link: HiLink,
-  text: HiPencilSquare,
-  quiz: HiListBullet,
-} as const
-
-const AVALIACAO_LABEL = {
-  link: 'Link',
-  text: 'Texto',
-  quiz: 'Quiz',
-} as const
-
-function genId() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
-}
 
 interface PanelProps {
   turma: Turma

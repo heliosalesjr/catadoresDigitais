@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
-  HiPlus, HiXMark, HiTrash, HiLink, HiPencilSquare, HiListBullet,
+  HiPlus, HiXMark, HiTrash, HiPencilSquare, HiListBullet,
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
@@ -13,6 +13,8 @@ import {
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { parseLocalDate, dateToISO, getWeekISO } from '@/lib/date-utils'
 import { inputStyle } from '@/lib/styles'
+import { AVALIACAO_ICON, AVALIACAO_LABEL } from '@/lib/constants'
+import { genId } from '@/lib/utils'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -28,28 +30,12 @@ const MONTHS_PT = [
 
 const ease = [0.32, 0.72, 0, 1] as const
 
-const AVALIACAO_ICON = {
-  link: HiLink,
-  text: HiPencilSquare,
-  quiz: HiListBullet,
-} as const
-
-const AVALIACAO_LABEL = {
-  link: 'Link',
-  text: 'Texto',
-  quiz: 'Quiz',
-} as const
-
 function detectType(url: string): 'video' | 'file' {
   try {
     const h = new URL(url).hostname
     if (h.includes('youtube.com') || h.includes('youtu.be') || h.includes('vimeo.com')) return 'video'
   } catch {}
   return 'file'
-}
-
-function genId() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 }
 
 interface Props {

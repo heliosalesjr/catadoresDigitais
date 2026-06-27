@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudentTurmas } from '@/hooks/useStudentTurmas'
-import { useStudentUpcomingAulas } from '@/hooks/useStudentUpcomingAulas'
+import { useUpcomingAulas } from '@/hooks/useUpcomingAulas'
 import { useStudentFrequencia } from '@/hooks/useStudentFrequencia'
 import { useStudentLastNota } from '@/hooks/useStudentLastNota'
 import { TECH_ICONS } from '@/lib/icons'
@@ -13,6 +13,7 @@ import {
 } from 'react-icons/hi2'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { parseLocalDate, formatDateLabel, getWeekISO, todayISO } from '@/lib/date-utils'
+import { groupByDate } from '@/lib/utils'
 
 function Sk({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
   return (
@@ -21,14 +22,6 @@ function Sk({ className = '', style }: { className?: string; style?: React.CSSPr
       style={style}
     />
   )
-}
-
-function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
-  const map = new Map<string, UpcomingAula[]>()
-  for (const a of aulas) {
-    ;(map.get(a.date) ?? map.set(a.date, []).get(a.date)!).push(a)
-  }
-  return Array.from(map.entries())
 }
 
 function isAulaActiveNow(aula: UpcomingAula): boolean {
@@ -44,7 +37,7 @@ export default function StudentDashboard() {
   const { user, loading: authLoading } = useAuth()
 
   const { data: turmas = [], isLoading: turmasQueryLoading } = useStudentTurmas(!authLoading)
-  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useStudentUpcomingAulas(!authLoading)
+  const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useUpcomingAulas('student', !authLoading)
   const { data: frequencia, isLoading: frequenciaQueryLoading } = useStudentFrequencia(!authLoading)
   const { data: lastNota } = useStudentLastNota(!authLoading && !!user ? user.uid : null)
 
