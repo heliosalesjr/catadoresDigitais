@@ -10,31 +10,7 @@ import {
   HiChevronRight, HiArrowTopRightOnSquare,
 } from 'react-icons/hi2'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
-
-function parseLocalDate(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-function formatDateLabel(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
-  if (date.getTime() === today.getTime()) return 'Hoje'
-  if (date.getTime() === tomorrow.getTime()) return 'Amanhã'
-  return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-}
-
-function getWeekISO(): { mon: string; sun: string } {
-  const today = new Date()
-  const dow = today.getDay()
-  const mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  return { mon: fmt(mon), sun: fmt(sun) }
-}
+import { parseLocalDate, formatDateLabel, getWeekISO } from '@/lib/date-utils'
 
 function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
   const map = new Map<string, UpcomingAula[]>()

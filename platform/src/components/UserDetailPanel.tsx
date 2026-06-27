@@ -5,9 +5,7 @@ import { motion } from 'framer-motion'
 import { HiXMark, HiTrash, HiPencil, HiCheck } from 'react-icons/hi2'
 import type { UserProfile, Turma } from '@/types'
 
-const ROLE_LABEL = { admin: 'Admin', teacher: 'Professor', student: 'Aluno' }
-const ROLE_COLORS = { admin: 'var(--c-gold)', teacher: 'var(--c-purple)', student: 'var(--c-info)' }
-const ROLE_BG_COLORS = { admin: 'var(--c-gold-soft)', teacher: 'var(--c-purple-soft)', student: 'var(--c-info-soft)' }
+import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })

@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, use, useCallback, useEffect, useMemo, useState } from 'react'
+import { fmtDate, fmtDateShort } from '@/lib/date-utils'
 import Link from 'next/link'
 import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark, HiArrowDownTray, HiChevronLeft, HiChevronRight } from 'react-icons/hi2'
 import { TECH_ICONS } from '@/lib/icons'
@@ -34,14 +35,6 @@ interface Relatorio {
 const ATTENDANCE_LABEL: Record<string, string> = { present: 'P', absent: 'F', late: 'A' }
 const ATTENDANCE_COLOR: Record<string, string> = {
   present: 'var(--c-success)', absent: 'var(--c-danger)', late: 'var(--c-warning)',
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function fmtDateShort(iso: string) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
 function fmtDuracao(min: number) {

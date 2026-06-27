@@ -4,14 +4,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiPlus, HiTrash } from 'react-icons/hi2'
 import type { BancoAula, AulaTeacher, DriveLink, UserProfile } from '@/types'
+import { inputStyle } from '@/lib/styles'
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-const inputStyle = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border-md)',
-  color: 'var(--c-text)',
-} as const
 
 interface Props {
   turmaId: string

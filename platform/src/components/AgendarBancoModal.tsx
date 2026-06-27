@@ -4,19 +4,10 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiCalendarDays } from 'react-icons/hi2'
 import type { BancoAula } from '@/types'
+import { todayISO } from '@/lib/date-utils'
+import { inputStyle } from '@/lib/styles'
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-const inputStyle = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border-md)',
-  color: 'var(--c-text)',
-} as const
 
 interface Props {
   turmaId: string

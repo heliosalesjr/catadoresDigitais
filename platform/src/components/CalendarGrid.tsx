@@ -7,6 +7,7 @@ import {
 } from 'react-icons/hi2'
 import type { Turma, Aula } from '@/types'
 import { AulaModal } from './AulaModal'
+import { parseLocalDate, dateToISO } from '@/lib/date-utils'
 
 const MONTHS_PT = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -15,15 +16,6 @@ const MONTHS_PT = [
 const DAYS_SHORT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-function parseLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-function toISO(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -116,7 +108,7 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, i
   }
 
   function handleDayClick(day: Date) {
-    const iso = toISO(day)
+    const iso = dateToISO(day)
     const dayAulas = aulasByDate[iso] ?? []
     if (dayAulas.length > 0) {
       openModal(iso, dayAulas[0])
@@ -125,7 +117,7 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, i
     }
   }
 
-  const today = toISO(new Date())
+  const today = dateToISO(new Date())
   const days = getDaysInGrid(currentMonth)
 
   return (
@@ -232,7 +224,7 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, i
             {days.map((day, i) => {
               if (!day) return <div key={i} />
 
-              const iso = toISO(day)
+              const iso = dateToISO(day)
               const dayAulas = aulasByDate[iso] ?? []
               const isToday = iso === today
               const inCurrentMonth = day.getMonth() === currentMonth.getMonth()

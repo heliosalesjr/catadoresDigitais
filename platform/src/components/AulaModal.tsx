@@ -4,19 +4,10 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiPencilSquare, HiTrash } from 'react-icons/hi2'
 import type { Aula, AulaTeacher } from '@/types'
+import { todayISO, fmtFullDate } from '@/lib/date-utils'
+import { inputStyle } from '@/lib/styles'
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
-  })
-}
 
 interface Props {
   turmaId: string
@@ -41,12 +32,6 @@ interface FormState {
   startTime: string
   endTime: string
 }
-
-const inputStyle = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border-md)',
-  color: 'var(--c-text)',
-} as const
 
 export function AulaModal({
   turmaId, turmaIconColor, date, turmaStartDate, turmaEndDate,
@@ -219,7 +204,7 @@ export function AulaModal({
               />
             ) : (
               <p className="text-xs mt-1 capitalize" style={{ color: 'var(--c-subtle)' }}>
-                {fmtDate(aula?.date ?? date)}
+                {fmtFullDate(aula?.date ?? date)}
               </p>
             )}
           </div>

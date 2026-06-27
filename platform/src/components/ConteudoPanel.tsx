@@ -11,6 +11,8 @@ import {
   HiEye, HiEyeSlash, HiChevronDown, HiArrowPath,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
+import { parseLocalDate, dateToISO, getWeekISO } from '@/lib/date-utils'
+import { inputStyle } from '@/lib/styles'
 import { MaterialViewer } from './MaterialViewer'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
@@ -25,12 +27,6 @@ const MONTHS_PT = [
 ]
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-const inputStyle = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border-md)',
-  color: 'var(--c-text)',
-} as const
 
 const AVALIACAO_ICON = {
   link: HiLink,
@@ -50,11 +46,6 @@ function detectType(url: string): 'video' | 'file' {
     if (h.includes('youtube.com') || h.includes('youtu.be') || h.includes('vimeo.com')) return 'video'
   } catch {}
   return 'file'
-}
-
-function parseLocalDate(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
 }
 
 function genId() {
@@ -1291,19 +1282,6 @@ function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelPro
 
 // ─── EstatisticasPanel ────────────────────────────────────────────────────────
 
-function dateToISO(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function getWeekBounds(): { mon: string; sun: string } {
-  const today = new Date()
-  const dow = today.getDay()
-  const mon = new Date(today)
-  mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-  const sun = new Date(mon)
-  sun.setDate(mon.getDate() + 6)
-  return { mon: dateToISO(mon), sun: dateToISO(sun) }
-}
 
 interface EstatisticasPanelProps {
   turma: Turma
@@ -1323,7 +1301,7 @@ function EstatisticasPanel({ turma, aulas }: EstatisticasPanelProps) {
   const hasStarted = today >= start
   const hasEnded = today > end
 
-  const { mon, sun } = getWeekBounds()
+  const { mon, sun } = getWeekISO()
   const aulasThisWeek = aulas.filter((a) => a.date >= mon && a.date <= sun)
 
   const totalStudents = turma.students.length

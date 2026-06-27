@@ -4,14 +4,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiLink, HiPencilSquare, HiListBullet } from 'react-icons/hi2'
 import type { AvaliacaoType, Avaliacao } from '@/types'
+import { inputStyle } from '@/lib/styles'
 
 const ease = [0.32, 0.72, 0, 1] as const
-
-const inputStyle = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border-md)',
-  color: 'var(--c-text)',
-} as const
 
 const TYPE_OPTIONS = [
   {

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { IconPicker } from '@/components/IconPicker'
 import { HiArrowLeft, HiXMark, HiPlus, HiTrash } from 'react-icons/hi2'
 import type { Turma } from '@/types'
+import { inputStyle } from '@/lib/styles'
 
 type FormData = Pick<Turma, 'name' | 'icon' | 'iconColor' | 'startDate' | 'endDate' | 'students'>
 
@@ -95,7 +96,6 @@ export function TurmaForm({ mode, turmaId, initialData, backHref }: Props) {
 
   const card = 'rounded-2xl border p-6 flex flex-col gap-3'
   const cardStyle = { background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }
-  const inputStyle = { background: 'var(--c-bg)', borderColor: 'var(--c-border-md)', color: 'var(--c-text)' }
   const inputClass = 'w-full rounded-xl px-4 py-3 text-sm border outline-none transition-colors'
 
   return (

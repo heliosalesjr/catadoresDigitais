@@ -15,23 +15,7 @@ const FILTER_LABEL: Record<CardFilter, string> = {
   all: 'Total de usuários',
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  admin: 'var(--c-gold)',
-  teacher: 'var(--c-purple)',
-  student: 'var(--c-info)',
-}
-
-const ROLE_BG_COLORS: Record<string, string> = {
-  admin: 'var(--c-gold-soft)',
-  teacher: 'var(--c-purple-soft)',
-  student: 'var(--c-info-soft)',
-}
-
-const ROLE_LABEL: Record<string, string> = {
-  admin: 'Admin',
-  teacher: 'Professor',
-  student: 'Aluno',
-}
+import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
 
 interface Props {
   filter: CardFilter

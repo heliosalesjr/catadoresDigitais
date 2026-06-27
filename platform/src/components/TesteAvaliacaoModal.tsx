@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiCheckCircle, HiXCircle } from 'react-icons/hi2'
 import type { Avaliacao } from '@/types'
+import { inputStyle } from '@/lib/styles'
 
 const ease = [0.32, 0.72, 0, 1] as const
 const TEXT_LIMIT = 404
@@ -84,12 +85,6 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
     if (submitted && isStudentMode) onSubmitted?.()
     onClose()
   }
-
-  const inputStyle = {
-    background: 'var(--c-bg)',
-    borderColor: 'var(--c-border-md)',
-    color: 'var(--c-text)',
-  } as const
 
   return (
     <motion.div

@@ -11,11 +11,7 @@ import { HiArrowLeft, HiCalendarDays, HiPencilSquare, HiChartBarSquare } from 'r
 import { CalendarGrid } from '@/components/CalendarGrid'
 import { ConteudoPanel } from '@/components/ConteudoPanel'
 import type { Turma, Aula } from '@/types'
-
-function parseLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
+import { parseLocalDate } from '@/lib/date-utils'
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false)

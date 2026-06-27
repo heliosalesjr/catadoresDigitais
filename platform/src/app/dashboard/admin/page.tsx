@@ -14,38 +14,8 @@ import type { UserProfile, Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { UserListModal, type CardFilter } from '@/components/UserListModal'
 import { UserDetailPanel } from '@/components/UserDetailPanel'
-
-const ROLE_LABEL: Record<string, string> = {
-  admin: 'Admin',
-  teacher: 'Professor',
-  student: 'Aluno',
-}
-
-const ROLE_COLORS: Record<string, string> = {
-  admin: 'var(--c-gold)',
-  teacher: 'var(--c-purple)',
-  student: 'var(--c-info)',
-}
-
-const ROLE_BG_COLORS: Record<string, string> = {
-  admin: 'var(--c-gold-soft)',
-  teacher: 'var(--c-purple-soft)',
-  student: 'var(--c-info-soft)',
-}
-
-function formatDateLabel(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
-
-  if (date.getTime() === today.getTime()) return 'Hoje'
-  if (date.getTime() === tomorrow.getTime()) return 'Amanhã'
-
-  return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-}
+import { formatDateLabel } from '@/lib/date-utils'
+import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
 
 function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
   const map = new Map<string, UpcomingAula[]>()

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { HiArrowLeft, HiArrowTopRightOnSquare, HiCheckCircle } from 'react-icons/hi2'
 import type { Aula, Avaliacao, DriveLink, Turma } from '@/types'
+import { parseLocalDate, fmtFullDate } from '@/lib/date-utils'
 
 const TEXT_LIMIT = 404
 
@@ -28,20 +29,6 @@ function useShuffledOptions(avaliacoes: Avaliacao[]) {
     }
     return out
   }, [avaliacoes])
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function parseLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-function fmtFullDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
-  })
 }
 
 function isAulaActive(aula: Aula): boolean {
