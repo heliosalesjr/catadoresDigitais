@@ -145,7 +145,7 @@
 | Detecção automática de tipo (vídeo vs documento) | ✅ |
 | Visualizador inline com iframe (MaterialViewer) | ✅ |
 | "Abrir em nova aba" | ✅ |
-| Remover material | ❌ |
+| Remover material | ✅ |
 | Reordenar materiais | ❌ |
 
 ---
@@ -179,6 +179,7 @@
 | `ChamadaEditModal` mostra nome do aluno (buscado via `/api/turmas/[id]/students`) | ✅ |
 | Status "Atrasado" (`late`) — ainda existe no schema/legado (frequência conta como presença), mas não é mais oferecido na UI manual, só Presente/Falta | ℹ️ |
 | Relatório por turma (`/dashboard/admin/turmas/[id]/relatorio`): tabela aluno × aula com presença e conclusão, card de presença média, filtro por período, download CSV | ✅ |
+| Relatório acessível ao professor (além do admin) | ✅ |
 
 ---
 
@@ -228,6 +229,5 @@
 ## Prioridades sugeridas
 
 1. **Gerenciar matrículas na tela de edição da turma** — adicionar / remover alunos e professores direto na turma (hoje só dá pra fazer pelo perfil do usuário)
-2. **Remover material** individual de uma aula / banco
-3. **Formulário de inscrição** da landing page
-4. **Deploy** — landing + platform em produção
+2. **Formulário de inscrição** da landing page
+3. **Deploy** — landing + platform em produção

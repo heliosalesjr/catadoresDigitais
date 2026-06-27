@@ -189,32 +189,37 @@ export default function StudentDashboard() {
         </div>
 
         {/* Aula ativa agora */}
-        {!aulasLoading && activeAula && (
-          <Link
-            href={`/dashboard/aula/${activeAula.turmaId}/${activeAula.id}`}
-            className="flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-opacity hover:opacity-85"
-            style={{ background: `${activeAula.turmaIconColor}12`, borderColor: `${activeAula.turmaIconColor}50` }}
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: activeAula.turmaIconColor, color: '#fff' }}
+        {!aulasLoading && activeAula && (() => {
+          const userEmail = user?.email ?? ''
+          const status = activeAula.attendance?.[userEmail]
+          const alreadyPresent = status === 'present' || status === 'late'
+          return (
+            <Link
+              href={`/dashboard/aula/${activeAula.turmaId}/${activeAula.id}`}
+              className="flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-opacity hover:opacity-85"
+              style={{ background: `${activeAula.turmaIconColor}12`, borderColor: `${activeAula.turmaIconColor}50` }}
             >
-              <HiBolt className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold" style={{ color: 'var(--c-text)' }}>Aula em andamento</p>
-              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
-                {activeAula.title} · {activeAula.startTime} – {activeAula.endTime}
-              </p>
-            </div>
-            <span
-              className="text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0"
-              style={{ background: activeAula.turmaIconColor, color: '#fff' }}
-            >
-              Registrar presença
-            </span>
-          </Link>
-        )}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: activeAula.turmaIconColor, color: '#fff' }}
+              >
+                <HiBolt className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: 'var(--c-text)' }}>Aula em andamento</p>
+                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-subtle)' }}>
+                  {activeAula.title} · {activeAula.startTime} – {activeAula.endTime}
+                </p>
+              </div>
+              <span
+                className="text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0"
+                style={{ background: activeAula.turmaIconColor, color: '#fff' }}
+              >
+                {alreadyPresent ? 'Acesse a aula' : 'Registrar presença'}
+              </span>
+            </Link>
+          )
+        })()}
 
         {/* Minha turma */}
         <section>
