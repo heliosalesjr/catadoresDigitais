@@ -8,7 +8,7 @@ import {
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
-  HiEye, HiEyeSlash, HiChevronDown,
+  HiEye, HiEyeSlash, HiChevronDown, HiArrowPath,
 } from 'react-icons/hi2'
 import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { MaterialViewer } from './MaterialViewer'
@@ -825,6 +825,20 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefres
   const [showCode, setShowCode] = useState(false)
   const [editingChamada, setEditingChamada] = useState(false)
   const [showStudents, setShowStudents] = useState(false)
+  const [regenLoading, setRegenLoading] = useState(false)
+
+  async function handleRegenCode() {
+    setRegenLoading(true)
+    const newCode = String(Math.floor(1000 + Math.random() * 9000))
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attendanceCode: newCode }),
+    })
+    setRegenLoading(false)
+    setShowCode(true)
+    onRefresh()
+  }
 
   const date = parseLocalDate(aula.date)
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
@@ -998,6 +1012,21 @@ function PresencaAulaRow({ aula, turma, canEdit, studentList, todayISO, onRefres
                 ? <><HiEyeSlash className="w-3.5 h-3.5" /> Ocultar código</>
                 : <><HiEye className="w-3.5 h-3.5" /> Código de chamada</>
               }
+            </button>
+            <button
+              onClick={handleRegenCode}
+              disabled={isPast || regenLoading}
+              title={isPast ? 'Aula já aconteceu' : 'Gerar novo código de chamada'}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity ${
+                isPast ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'
+              }`}
+              style={{
+                borderColor: 'var(--c-border-md)',
+                color: isPast ? 'var(--c-subtle)' : 'var(--c-muted)',
+              }}
+            >
+              <HiArrowPath className={`w-3.5 h-3.5 ${regenLoading ? 'animate-spin' : ''}`} />
+              {regenLoading ? 'Gerando...' : 'Novo código'}
             </button>
           </div>
         </>
