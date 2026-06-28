@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import {
   HiDocumentText, HiVideoCamera, HiArrowTopRightOnSquare,
@@ -8,7 +9,7 @@ import {
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
-  HiEye, HiEyeSlash, HiChevronDown, HiChevronUp, HiArrowPath, HiBars3BottomLeft,
+  HiEye, HiEyeSlash, HiChevronDown, HiChevronUp, HiChevronRight, HiArrowPath, HiBars3BottomLeft,
 } from 'react-icons/hi2'
 import type { IconType } from 'react-icons'
 import type { Turma, Aula, Material, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
@@ -490,25 +491,25 @@ function AulaCard({
       transition={{ duration: 0.25, ease }}
     >
       {/* Aula info */}
-      <div
-        className="px-4 pt-3.5 pb-3"
-        style={{ borderLeft: `3px solid ${turma.iconColor}` }}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-            <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
-              {aula.title}
-            </p>
-            {aula.status === 'pending' && (
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
-              >
-                Pendente
-              </span>
-            )}
-          </div>
-          {canEdit && (
+      {canEdit ? (
+        <div
+          className="px-4 pt-3.5 pb-3"
+          style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+              <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
+                {aula.title}
+              </p>
+              {aula.status === 'pending' && (
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
+                >
+                  Pendente
+                </span>
+              )}
+            </div>
             <button
               onClick={() => setEditingAula(true)}
               className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
@@ -517,32 +518,74 @@ function AulaCard({
             >
               <HiPencilSquare className="w-3.5 h-3.5" />
             </button>
+          </div>
+          <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
+            {dateStr} · {aula.startTime} – {aula.endTime}
+          </p>
+          {aula.teachers.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {aula.teachers.map((t) => (
+                <span
+                  key={t.uid}
+                  className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                  style={{ background: `${turma.iconColor}12`, color: turma.iconColor }}
+                >
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          )}
+          {aula.description && (
+            <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+              {aula.description}
+            </p>
           )}
         </div>
-        <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
-          {dateStr} · {aula.startTime} – {aula.endTime}
-        </p>
-
-        {aula.teachers.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {aula.teachers.map((t) => (
-              <span
-                key={t.uid}
-                className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                style={{ background: `${turma.iconColor}12`, color: turma.iconColor }}
-              >
-                {t.name}
-              </span>
-            ))}
+      ) : (
+        <Link
+          href={`/dashboard/aula/${turma.id}/${aula.id}`}
+          className="block px-4 pt-3.5 pb-3 transition-opacity hover:opacity-75"
+          style={{ borderLeft: `3px solid ${turma.iconColor}` }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+              <p className="text-sm font-semibold leading-snug truncate" style={{ color: 'var(--c-text)' }}>
+                {aula.title}
+              </p>
+              {aula.status === 'pending' && (
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  style={{ background: 'var(--c-warning-soft)', color: 'var(--c-warning)' }}
+                >
+                  Pendente
+                </span>
+              )}
+            </div>
+            <HiChevronRight className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--c-faint)' }} />
           </div>
-        )}
-
-        {aula.description && (
-          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
-            {aula.description}
+          <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
+            {dateStr} · {aula.startTime} – {aula.endTime}
           </p>
-        )}
-      </div>
+          {aula.teachers.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {aula.teachers.map((t) => (
+                <span
+                  key={t.uid}
+                  className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                  style={{ background: `${turma.iconColor}12`, color: turma.iconColor }}
+                >
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          )}
+          {aula.description && (
+            <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+              {aula.description}
+            </p>
+          )}
+        </Link>
+      )}
 
       {/* ── Materiais ── */}
       <div
