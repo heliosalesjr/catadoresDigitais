@@ -94,11 +94,11 @@ function MaterialBlock({ link, accentColor }: { link: Material; accentColor: str
         style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
       >
         {link.label && link.label !== 'Bloco de texto' && (
-          <p className="text-sm font-semibold mb-2" style={{ color: 'var(--c-subtle)' }}>
+          <p className="text-base font-semibold mb-2" style={{ color: 'var(--c-subtle)' }}>
             {link.label}
           </p>
         )}
-        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
+        <p className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
           {link.content}
         </p>
       </div>
@@ -112,7 +112,7 @@ function MaterialBlock({ link, accentColor }: { link: Material; accentColor: str
     return (
       <div className="flex flex-col gap-2">
         {link.label && (
-          <p className="text-sm font-semibold" style={{ color: 'var(--c-subtle)' }}>
+          <p className="text-base font-semibold" style={{ color: 'var(--c-subtle)' }}>
             {link.label}
           </p>
         )}
@@ -146,7 +146,7 @@ function MaterialBlock({ link, accentColor }: { link: Material; accentColor: str
         <HiArrowTopRightOnSquare className="w-[1.125rem] h-[1.125rem]" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>
+        <p className="text-base font-semibold truncate" style={{ color: 'var(--c-text)' }}>
           {link.label || link.url}
         </p>
         <p className="text-xs truncate mt-0.5" style={{ color: 'var(--c-faint)' }}>
@@ -304,7 +304,7 @@ export default function ModoAulaPage({
         <h1 className="text-3xl font-bold leading-tight" style={{ color: 'var(--c-text)' }}>
           {aula.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm" style={{ color: 'var(--c-subtle)' }}>
+        <div className="flex flex-wrap items-center gap-2 text-base" style={{ color: 'var(--c-subtle)' }}>
           <span className="capitalize">{fmtFullDate(aula.date)}</span>
           {aula.startTime && (
             <>
@@ -336,7 +336,7 @@ export default function ModoAulaPage({
           <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--c-subtle)' }}>
             Sobre esta aula
           </p>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
+          <p className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
             {aula.description}
           </p>
         </div>
@@ -393,7 +393,7 @@ export default function ModoAulaPage({
                     >
                       {i + 1}
                     </span>
-                    <p className="text-sm font-semibold leading-snug pt-0.5" style={{ color: 'var(--c-text)' }}>
+                    <p className="text-base font-semibold leading-snug pt-0.5" style={{ color: 'var(--c-text)' }}>
                       {av.question}
                     </p>
                   </div>
@@ -406,7 +406,7 @@ export default function ModoAulaPage({
                       onChange={(e) => !avalSubmitted && setAnswers((p) => ({ ...p, [av.id]: e.target.value }))}
                       placeholder="https://..."
                       disabled={avalSubmitted}
-                      className="rounded-xl px-3 py-2.5 text-sm border outline-none disabled:opacity-60"
+                      className="rounded-xl px-3 py-2.5 text-base border outline-none disabled:opacity-60"
                       style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
                     />
                   )}
@@ -423,7 +423,7 @@ export default function ModoAulaPage({
                         placeholder="Digite sua resposta..."
                         rows={4}
                         disabled={avalSubmitted}
-                        className="rounded-xl px-3 py-2.5 text-sm border outline-none resize-none disabled:opacity-60"
+                        className="rounded-xl px-3 py-2.5 text-base border outline-none resize-none disabled:opacity-60"
                         style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
                       />
                       <div className="flex justify-between px-1">
@@ -445,7 +445,7 @@ export default function ModoAulaPage({
                             key={j}
                             onClick={() => !avalSubmitted && setAnswers((p) => ({ ...p, [av.id]: opt }))}
                             disabled={avalSubmitted}
-                            className="text-left px-3.5 py-2.5 rounded-xl border text-sm transition-colors disabled:cursor-default"
+                            className="text-left px-3.5 py-2.5 rounded-xl border text-base transition-colors disabled:cursor-default"
                             style={{
                               borderColor: selected ? accentColor : 'var(--c-border)',
                               background: selected ? `${accentColor}12` : 'transparent',
