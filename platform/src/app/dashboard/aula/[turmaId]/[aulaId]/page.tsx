@@ -5,7 +5,7 @@ import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { HiArrowLeft, HiArrowTopRightOnSquare, HiCheckCircle } from 'react-icons/hi2'
-import type { Aula, Avaliacao, DriveLink, Turma } from '@/types'
+import type { Aula, Avaliacao, Material, Turma } from '@/types'
 import { parseLocalDate, fmtFullDate } from '@/lib/date-utils'
 
 const TEXT_LIMIT = 404
@@ -86,8 +86,26 @@ function resolveEmbed(url: string): { kind: EmbedKind; embedUrl: string | null }
 
 // ── MaterialBlock ─────────────────────────────────────────────────────────────
 
-function MaterialBlock({ link, accentColor }: { link: DriveLink; accentColor: string }) {
-  const { kind, embedUrl } = resolveEmbed(link.url)
+function MaterialBlock({ link, accentColor }: { link: Material; accentColor: string }) {
+  if (link.type === 'text') {
+    return (
+      <div
+        className="rounded-2xl border px-4 py-3.5"
+        style={{ background: 'var(--c-bg-alt)', borderColor: 'var(--c-border)' }}
+      >
+        {link.label && link.label !== 'Bloco de texto' && (
+          <p className="text-sm font-semibold mb-2" style={{ color: 'var(--c-subtle)' }}>
+            {link.label}
+          </p>
+        )}
+        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--c-text)' }}>
+          {link.content}
+        </p>
+      </div>
+    )
+  }
+
+  const { kind, embedUrl } = resolveEmbed(link.url ?? '')
 
   if (embedUrl) {
     const isVideo = kind === 'youtube'
@@ -115,7 +133,7 @@ function MaterialBlock({ link, accentColor }: { link: DriveLink; accentColor: st
 
   return (
     <a
-      href={link.url}
+      href={link.url ?? '#'}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-opacity hover:opacity-75"

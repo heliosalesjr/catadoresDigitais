@@ -50,6 +50,14 @@ export interface DriveLink {
   url: string
 }
 
+export interface Material {
+  id?: string
+  type?: 'link' | 'text'  // undefined treated as 'link' for legacy DriveLink items
+  label: string
+  url?: string      // link type
+  content?: string  // text type
+}
+
 export type AttendanceStatus = 'present' | 'absent' | 'late' | null
 
 export interface AulaTeacher {
@@ -72,7 +80,7 @@ export interface Aula {
   title: string
   description: string
   teachers: AulaTeacher[]
-  driveLinks: DriveLink[]
+  driveLinks: Material[]
   date: string       // "YYYY-MM-DD"
   startTime: string  // "19:00"
   endTime: string    // "22:00"

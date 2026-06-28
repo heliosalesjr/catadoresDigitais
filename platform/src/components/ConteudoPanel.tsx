@@ -8,10 +8,10 @@ import {
   HiClipboardDocumentCheck, HiCheckCircle, HiUserGroup, HiEnvelope, HiPhone,
   HiPresentationChartBar, HiUsers, HiAcademicCap, HiCalendarDays,
   HiLightBulb, HiClock, HiArrowTrendingUp, HiArrowTrendingDown,
-  HiEye, HiEyeSlash, HiChevronDown, HiArrowPath,
+  HiEye, HiEyeSlash, HiChevronDown, HiChevronUp, HiArrowPath, HiBars3BottomLeft,
 } from 'react-icons/hi2'
 import type { IconType } from 'react-icons'
-import type { Turma, Aula, DriveLink, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
+import type { Turma, Aula, Material, Avaliacao, UserProfile, TurmaTeacher } from '@/types'
 import { parseLocalDate, dateToISO, getWeekISO } from '@/lib/date-utils'
 import { inputStyle } from '@/lib/styles'
 import { AVALIACAO_ICON, AVALIACAO_LABEL } from '@/lib/constants'
@@ -53,8 +53,10 @@ interface Props {
 
 interface AddState {
   aulaId: string
+  type: 'link' | 'text'
   label: string
   url: string
+  content: string
   saving: boolean
 }
 
@@ -103,12 +105,14 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
     .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))
 
   async function submitMaterial(aula: Aula) {
-    if (!adding || !adding.url.trim()) return
+    if (!adding) return
+    if (adding.type === 'link' && !adding.url.trim()) return
+    if (adding.type === 'text' && !adding.content.trim()) return
     setAdding((s) => s ? { ...s, saving: true } : null)
-    const newLinks: DriveLink[] = [
-      ...aula.driveLinks,
-      { label: adding.label.trim() || adding.url.trim(), url: adding.url.trim() },
-    ]
+    const newMaterial: Material = adding.type === 'text'
+      ? { id: genId(), type: 'text', label: adding.label.trim() || 'Bloco de texto', content: adding.content.trim() }
+      : { id: genId(), type: 'link', label: adding.label.trim() || adding.url.trim(), url: adding.url.trim() }
+    const newLinks: Material[] = [...aula.driveLinks, newMaterial]
     await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -264,7 +268,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
                       canEdit={canEdit}
                       currentUser={currentUser}
                       adding={adding?.aulaId === aula.id ? adding : null}
-                      onStart={() => setAdding({ aulaId: aula.id, label: '', url: '', saving: false })}
+                      onStart={(type) => setAdding({ aulaId: aula.id, type, label: '', url: '', content: '', saving: false })}
                       onCancel={() => setAdding(null)}
                       onChange={(f, v) => setAdding((s) => s ? { ...s, [f]: v } : null)}
                       onSubmit={() => submitMaterial(aula)}
@@ -377,9 +381,9 @@ interface CardProps {
   canEdit: boolean
   currentUser: UserProfile | null
   adding: AddState | null
-  onStart: () => void
+  onStart: (type: 'link' | 'text') => void
   onCancel: () => void
-  onChange: (field: 'label' | 'url', value: string) => void
+  onChange: (field: 'label' | 'url' | 'content' | 'type', value: string) => void
   onSubmit: () => void
   onRefresh: () => void
 }
@@ -398,7 +402,8 @@ function AulaCard({
   aula, turma, canEdit, currentUser, adding,
   onStart, onCancel, onChange, onSubmit, onRefresh,
 }: CardProps) {
-  const [viewingLink, setViewingLink] = useState<DriveLink | null>(null)
+  const [viewingLink, setViewingLink] = useState<Material | null>(null)
+  const [expandedTexts, setExpandedTexts] = useState<Set<number>>(new Set())
   const [editingAula, setEditingAula] = useState(false)
   const [creatingAvaliacao, setCreatingAvaliacao] = useState(false)
   const [testingAvaliacao, setTestingAvaliacao] = useState(false)
@@ -453,6 +458,28 @@ function AulaCard({
       body: JSON.stringify({ driveLinks: updated }),
     })
     onRefresh()
+  }
+
+  async function reorderMaterial(fromIdx: number, direction: 'up' | 'down') {
+    const toIdx = direction === 'up' ? fromIdx - 1 : fromIdx + 1
+    if (toIdx < 0 || toIdx >= aula.driveLinks.length) return
+    const updated = [...aula.driveLinks]
+    ;[updated[fromIdx], updated[toIdx]] = [updated[toIdx], updated[fromIdx]]
+    await fetch(`/api/turmas/${turma.id}/aulas/${aula.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driveLinks: updated }),
+    })
+    onRefresh()
+  }
+
+  function toggleText(index: number) {
+    setExpandedTexts(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      return next
+    })
   }
 
   return (
@@ -527,13 +554,24 @@ function AulaCard({
             Materiais
           </span>
           {canEdit && !adding && (
-            <button
-              onClick={onStart}
-              className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border transition-opacity hover:opacity-80"
-              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
-            >
-              <HiPlus className="w-3 h-3" /> Adicionar
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onStart('link')}
+                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border transition-opacity hover:opacity-80"
+                style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+                title="Adicionar link ou vídeo"
+              >
+                <HiPlus className="w-3 h-3" /> Link
+              </button>
+              <button
+                onClick={() => onStart('text')}
+                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border transition-opacity hover:opacity-80"
+                style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+                title="Adicionar bloco de texto"
+              >
+                <HiPlus className="w-3 h-3" /> Texto
+              </button>
+            </div>
           )}
         </div>
 
@@ -545,16 +583,93 @@ function AulaCard({
           <p className="text-xs py-0.5" style={{ color: 'var(--c-faint)' }}>Nenhum material.</p>
         ) : null}
 
-        {!materialsLocked && aula.driveLinks.map((link, i) => {
-          const type = detectType(link.url)
+        {!materialsLocked && aula.driveLinks.map((material, i) => {
+          const isText = material.type === 'text'
+          const isExpanded = expandedTexts.has(i)
+          const total = aula.driveLinks.length
+
+          if (isText) {
+            return (
+              <div
+                key={material.id ?? i}
+                className="rounded-lg text-xs overflow-hidden"
+                style={{ background: 'var(--c-bg)' }}
+              >
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => toggleText(i)}
+                    className="flex items-center gap-2 flex-1 min-w-0 px-2.5 py-1.5 transition-opacity hover:opacity-75 text-left"
+                    style={{ color: 'var(--c-text)' }}
+                  >
+                    <HiBars3BottomLeft className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
+                    <span className="truncate">{material.label || 'Bloco de texto'}</span>
+                    <HiChevronDown
+                      className="w-3 h-3 flex-shrink-0 ml-auto transition-transform"
+                      style={{ color: 'var(--c-faint)', transform: isExpanded ? 'rotate(180deg)' : 'none' }}
+                    />
+                  </button>
+                  {canEdit && (
+                    <div className="flex items-center flex-shrink-0 mr-1 gap-0.5">
+                      <button
+                        onClick={() => reorderMaterial(i, 'up')}
+                        disabled={i === 0}
+                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                        style={{ color: 'var(--c-faint)' }}
+                        title="Mover para cima"
+                      >
+                        <HiChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => reorderMaterial(i, 'down')}
+                        disabled={i === total - 1}
+                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                        style={{ color: 'var(--c-faint)' }}
+                        title="Mover para baixo"
+                      >
+                        <HiChevronDown className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => deleteMaterial(i)}
+                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+                        style={{ color: 'var(--c-faint)' }}
+                        title="Remover material"
+                      >
+                        <HiTrash className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease }}
+                      className="overflow-hidden"
+                    >
+                      <div
+                        className="px-3 py-2.5 text-xs leading-relaxed whitespace-pre-wrap border-t"
+                        style={{ color: 'var(--c-text)', borderColor: 'var(--c-border)' }}
+                      >
+                        {material.content}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          }
+
+          const type = detectType(material.url ?? '')
           return (
             <div
-              key={i}
+              key={material.id ?? i}
               className="flex items-center gap-1 rounded-lg text-xs"
               style={{ background: 'var(--c-bg)' }}
             >
               <button
-                onClick={() => setViewingLink(link)}
+                onClick={() => setViewingLink(material)}
                 className="flex items-center gap-2 flex-1 min-w-0 px-2.5 py-1.5 transition-opacity hover:opacity-75 text-left"
                 style={{ color: 'var(--c-text)' }}
               >
@@ -562,17 +677,37 @@ function AulaCard({
                   ? <HiVideoCamera className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
                   : <HiArrowTopRightOnSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: turma.iconColor }} />
                 }
-                <span className="truncate">{link.label || link.url}</span>
+                <span className="truncate">{material.label || material.url}</span>
               </button>
               {canEdit && (
-                <button
-                  onClick={() => deleteMaterial(i)}
-                  className="w-6 h-6 flex items-center justify-center flex-shrink-0 mr-1 rounded transition-opacity hover:opacity-70"
-                  style={{ color: 'var(--c-faint)' }}
-                  title="Remover material"
-                >
-                  <HiTrash className="w-3 h-3" />
-                </button>
+                <div className="flex items-center flex-shrink-0 mr-1 gap-0.5">
+                  <button
+                    onClick={() => reorderMaterial(i, 'up')}
+                    disabled={i === 0}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                    style={{ color: 'var(--c-faint)' }}
+                    title="Mover para cima"
+                  >
+                    <HiChevronUp className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => reorderMaterial(i, 'down')}
+                    disabled={i === total - 1}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                    style={{ color: 'var(--c-faint)' }}
+                    title="Mover para baixo"
+                  >
+                    <HiChevronDown className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => deleteMaterial(i)}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+                    style={{ color: 'var(--c-faint)' }}
+                    title="Remover material"
+                  >
+                    <HiTrash className="w-3 h-3" />
+                  </button>
+                </div>
               )}
             </div>
           )
@@ -591,9 +726,9 @@ function AulaCard({
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium" style={{ color: 'var(--c-subtle)' }}>
-                    Novo material
+                    {adding.type === 'text' ? 'Bloco de texto' : 'Novo link'}
                   </span>
-                  {detectedType === 'video' && (
+                  {adding.type === 'link' && detectedType === 'video' && (
                     <span
                       className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium"
                       style={{ background: `${turma.iconColor}18`, color: turma.iconColor }}
@@ -602,25 +737,49 @@ function AulaCard({
                     </span>
                   )}
                 </div>
-                <input
-                  type="url"
-                  value={adding.url}
-                  onChange={(e) => onChange('url', e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-                  placeholder="URL (YouTube, Vimeo, Drive...)"
-                  className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
-                  style={inputStyle}
-                  autoFocus
-                />
-                <input
-                  type="text"
-                  value={adding.label}
-                  onChange={(e) => onChange('label', e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-                  placeholder="Nome do material (opcional)"
-                  className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
-                  style={inputStyle}
-                />
+                {adding.type === 'link' ? (
+                  <>
+                    <input
+                      type="url"
+                      value={adding.url}
+                      onChange={(e) => onChange('url', e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+                      placeholder="URL (YouTube, Vimeo, Drive...)"
+                      className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
+                      style={inputStyle}
+                      autoFocus
+                    />
+                    <input
+                      type="text"
+                      value={adding.label}
+                      onChange={(e) => onChange('label', e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+                      placeholder="Nome do material (opcional)"
+                      className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
+                      style={inputStyle}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      value={adding.label}
+                      onChange={(e) => onChange('label', e.target.value)}
+                      placeholder="Título (opcional)"
+                      className="rounded-lg px-2.5 py-1.5 text-xs border outline-none"
+                      style={inputStyle}
+                      autoFocus
+                    />
+                    <textarea
+                      value={adding.content}
+                      onChange={(e) => onChange('content', e.target.value)}
+                      placeholder="Conteúdo do texto..."
+                      rows={5}
+                      className="rounded-lg px-2.5 py-1.5 text-xs border outline-none resize-y"
+                      style={inputStyle}
+                    />
+                  </>
+                )}
                 <div className="flex gap-2">
                   <button
                     onClick={onCancel}
@@ -631,7 +790,7 @@ function AulaCard({
                   </button>
                   <button
                     onClick={onSubmit}
-                    disabled={!adding.url.trim() || adding.saving}
+                    disabled={adding.type === 'link' ? (!adding.url.trim() || adding.saving) : (!adding.content.trim() || adding.saving)}
                     className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-opacity disabled:opacity-40"
                     style={{ background: turma.iconColor, color: '#fff' }}
                   >

@@ -2,11 +2,12 @@
 
 import { motion } from 'framer-motion'
 import { HiXMark, HiArrowTopRightOnSquare } from 'react-icons/hi2'
-import type { DriveLink } from '@/types'
+import type { Material } from '@/types'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
-function toEmbedUrl(url: string): string {
+function toEmbedUrl(url: string | undefined): string {
+  if (!url) return ''
   try {
     const u = new URL(url)
 
@@ -49,7 +50,8 @@ function toEmbedUrl(url: string): string {
   return url
 }
 
-function isWidescreen(url: string): boolean {
+function isWidescreen(url: string | undefined): boolean {
+  if (!url) return false
   try {
     const u = new URL(url)
     if (
@@ -64,7 +66,7 @@ function isWidescreen(url: string): boolean {
 }
 
 interface Props {
-  link: DriveLink
+  link: Material
   accentColor: string
   onClose: () => void
 }
@@ -106,7 +108,7 @@ export function MaterialViewer({ link, accentColor, onClose }: Props) {
           </p>
           <div className="flex items-center gap-2 flex-shrink-0">
             <a
-              href={link.url}
+              href={link.url ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-opacity hover:opacity-85"
