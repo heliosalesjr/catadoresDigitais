@@ -92,6 +92,7 @@
 | Minha turma com barra de progresso temporal | ✅ |
 | Próximas aulas agrupadas por data com tag da turma e professor | ✅ |
 | Link direto para página da aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
+| Clique em qualquer AulaCard dentro da turma (passada ou futura) navega para a página da aula | ✅ |
 
 ---
 
@@ -142,11 +143,19 @@
 | Feature | Status |
 |---------|--------|
 | Adicionar link (Drive, YouTube, Vimeo, Docs, Slides) | ✅ |
-| Detecção automática de tipo (vídeo vs documento) | ✅ |
-| Visualizador inline com iframe (MaterialViewer) | ✅ |
+| Adicionar bloco de texto (`type: 'text'`) com título opcional e conteúdo livre | ✅ |
+| Detecção automática de tipo de link (vídeo vs documento) | ✅ |
+| Bloco de texto expande/recolhe inline no card da aula (sem abrir modal) | ✅ |
+| Visualizador inline com iframe para links (MaterialViewer) | ✅ |
 | "Abrir em nova aba" | ✅ |
 | Remover material | ✅ |
-| Reordenar materiais | ❌ |
+| Reordenar materiais com botões ↑ / ↓ (salva imediatamente) | ✅ |
+| Botões de adição separados: "+ Link" e "+ Texto" | ✅ |
+| Retrocompatibilidade: itens antigos sem `type` tratados como `'link'` | ✅ |
+
+> O tipo `Material` (substitui `DriveLink` nas aulas) aceita `{ id?, type?, label, url?, content? }`. `BancoAula` ainda usa `DriveLink` legado.
+
+> Na página individual da aula (`/dashboard/aula/…`), textos de conteúdo, descrição, perguntas e opções de avaliação usam `text-base` para melhor legibilidade.
 
 ---
 
@@ -220,7 +229,7 @@
 - `users/{uid}` — `{ uid, email, name, photoURL, role, createdAt }`
 - `allowlist/{email}` — `{ email, role, turmaId, createdAt }`
 - `turmas/{id}` — `{ name, icon, iconColor, startDate, endDate, students: string[], professors?: TurmaTeacher[], createdBy, createdAt }`
-- `turmas/{id}/aulas/{id}` — `{ title, description, date, startTime, endTime, status, teachers: AulaTeacher[], driveLinks, attendance: { [email]: 'present'|'absent'|'late'|null }, attendanceCode?, avaliacoes?, bancoAulaId?, createdAt }`
+- `turmas/{id}/aulas/{id}` — `{ title, description, date, startTime, endTime, status, teachers: AulaTeacher[], driveLinks: Material[], attendance: { [email]: 'present'|'absent'|'late'|null }, attendanceCode?, avaliacoes?, bancoAulaId?, createdAt }` onde `Material = { id?, type?: 'link'|'text', label, url?, content? }`
 - `turmas/{id}/aulas/{id}/respostas/{email}` — `{ studentEmail, studentName, answers: Record<avaliacaoId, string>, submittedAt }`
 - `turmas/{id}/banco/{id}` — `{ title, description, teachers: AulaTeacher[], driveLinks, avaliacoes?, createdBy, createdAt }`
 
