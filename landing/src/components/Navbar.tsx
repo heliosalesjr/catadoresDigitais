@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { HiArrowRightOnRectangle, HiOutlineSun, HiOutlineMoon } from 'react-icons/hi2';
+import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi2';
 import { Logo } from './Logo';
 import { useTheme } from '../context/ThemeContext';
 
@@ -67,13 +67,6 @@ export function Navbar() {
             >
               Em breve
             </a>
-            <a
-              href={`${import.meta.env.VITE_PLATFORM_URL}/login`}
-              className="flex items-center gap-2 font-dm font-medium text-sm text-[var(--c-muted)] border border-[var(--c-border)] hover:border-brand-yellow/40 hover:text-brand-yellow px-4 py-2 rounded-full transition-colors duration-200"
-            >
-              <HiArrowRightOnRectangle className="w-4 h-4" />
-              Login
-            </a>
           </div>
 
           {/* Mobile: theme toggle + hamburger */}
@@ -124,14 +117,6 @@ export function Navbar() {
                   className="text-center font-dm font-semibold text-dark-950 bg-brand-yellow py-3 rounded-xl"
                 >
                   Em breve — Inscrições
-                </a>
-                <a
-                  href={`${import.meta.env.VITE_PLATFORM_URL}/login`}
-                  onClick={() => setMenuOpen(false)}
-                  className="font-dm font-medium text-[var(--c-muted)] border border-[var(--c-border)] py-3 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <HiArrowRightOnRectangle className="w-4 h-4" />
-                  Login
                 </a>
               </div>
             </nav>

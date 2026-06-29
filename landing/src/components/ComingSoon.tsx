@@ -1,6 +1,6 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { HiOutlineMapPin, HiOutlineUserGroup, HiOutlineCalendar } from 'react-icons/hi2';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { HiOutlineMapPin, HiOutlineUserGroup, HiOutlineCalendar, HiCheckCircle } from 'react-icons/hi2';
 import { HiSparkles } from 'react-icons/hi';
 import { useTheme } from '../context/ThemeContext';
 
@@ -32,6 +32,14 @@ export function ComingSoon() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const { isDark } = useTheme();
+  const [phone, setPhone] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    setSubmitted(true);
+  }
 
   return (
     <section id="inscricoes" className="relative py-24 md:py-32 overflow-hidden">
@@ -137,27 +145,51 @@ export function ComingSoon() {
             — quem chega primeiro garante sua vaga.
           </p>
 
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-          >
-            <input
-              type="tel"
-              placeholder="Seu WhatsApp com DDD"
-              className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-border)] text-[var(--c-text)] placeholder-[var(--c-subtle)] font-dm text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-brand-yellow/50 transition-colors"
-            />
-            <button
-              type="submit"
-              className="font-syne font-bold text-dark-950 px-6 py-3 rounded-xl whitespace-nowrap transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #FFC530, #FF6B35)' }}
-            >
-              Avisar quando abrir
-            </button>
-          </form>
-
-          <p className="font-dm text-xs text-[var(--c-subtle)] mt-4">
-            Seus dados não serão compartilhados. Apenas um aviso quando as inscrições abrirem.
-          </p>
+          <AnimatePresence mode="wait">
+            {submitted ? (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-center gap-3"
+              >
+                <HiCheckCircle className="w-10 h-10 text-[var(--c-accent-yellow)]" />
+                <p className="font-syne font-bold text-xl text-[var(--c-text)]">
+                  Recebemos!
+                </p>
+                <p className="font-dm text-sm text-[var(--c-muted)] max-w-xs text-center">
+                  Assim que as inscrições abrirem, você será um dos primeiros a saber.
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+                >
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Seu WhatsApp com DDD"
+                    className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-border)] text-[var(--c-text)] placeholder-[var(--c-subtle)] font-dm text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-brand-yellow/50 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    className="font-syne font-bold text-dark-950 px-6 py-3 rounded-xl whitespace-nowrap transition-opacity hover:opacity-90 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #FFC530, #FF6B35)' }}
+                    disabled={!phone.trim()}
+                  >
+                    Avisar quando abrir
+                  </button>
+                </form>
+                <p className="font-dm text-xs text-[var(--c-subtle)] mt-4">
+                  Seus dados não serão compartilhados. Apenas um aviso quando as inscrições abrirem.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </section>

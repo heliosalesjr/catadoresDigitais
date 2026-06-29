@@ -14,8 +14,8 @@ export function Sponsors() {
         className="absolute inset-0 transition-colors duration-500"
         style={{
           background: isDark
-            ? 'linear-gradient(to bottom, #06030F, #0F0A1E, #06030F)'
-            : 'linear-gradient(to bottom, #FFFBF0, #FFF5E3, #FFFBF0)',
+            ? 'linear-gradient(to bottom, #1f1b33, #26223f, #1f1b33)'
+            : 'linear-gradient(to bottom, #FFF8EE 0%, #FFF4E0 30%, #ffffff 58%, #ffffff 100%)',
         }}
       />
       <div className="absolute top-0 left-0 right-0 section-divider" />
@@ -52,7 +52,12 @@ export function Sponsors() {
             Realização
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <img src="/ipes-logo.webp" alt="Instituto Ipês" className="h-24 w-auto object-contain" />
+            <img
+              src="/ipes-logo.webp"
+              alt="Instituto Ipês"
+              className="h-24 w-auto object-contain"
+              style={{ filter: isDark ? 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' : 'none' }}
+            />
           </div>
         </motion.div>
 
@@ -66,7 +71,12 @@ export function Sponsors() {
             Patrocínio
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <img src="/CAIXA_2cores_positiva.png" alt="Caixa Econômica Federal" className="h-24 w-auto object-contain" />
+            <img
+              src="/CAIXA_2cores_positiva.png"
+              alt="Caixa Econômica Federal"
+              className="h-24 w-auto object-contain"
+              style={{ filter: isDark ? 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' : 'none' }}
+            />
           </div>
         </motion.div>
 
@@ -77,7 +87,12 @@ export function Sponsors() {
           className="rounded-2xl p-7 md:p-10 glass-card border-brand-yellow/10"
         >
           <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="/ipes-logo.webp" alt="Instituto Ipês" className="w-16 h-16 object-contain flex-shrink-0" />
+            <img
+              src="/ipes-logo.webp"
+              alt="Instituto Ipês"
+              className="w-16 h-16 object-contain flex-shrink-0"
+              style={{ filter: isDark ? 'brightness(1.1)' : 'none' }}
+            />
             <div>
               <h3 className="font-syne font-bold text-xl text-[var(--c-text)] mb-2">
                 Instituto Ipês
