@@ -166,32 +166,9 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
       </header>
 
       {/* Split layout */}
-      <div className="relative flex flex-1 min-h-0 flex-col md:flex-row">
+      <div className="relative flex flex-1 min-h-0 flex-col-reverse md:flex-row-reverse">
 
-        {/* Content panel */}
-        <div
-          className="flex-1 min-w-0 min-h-0 overflow-y-auto"
-          style={{
-            borderRight: !isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
-            borderBottom: isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
-          }}
-        >
-          {selectedMonth && (
-            <ConteudoPanel
-              turma={turma}
-              aulas={aulas}
-              selectedMonth={selectedMonth}
-              canEdit={canEdit}
-              currentUser={user}
-              onRefresh={fetchAulas}
-              onRefreshTurma={fetchTurma}
-              initialTab={initialTab}
-              isMobile={isMobile}
-            />
-          )}
-        </div>
-
-        {/* Calendar panel */}
+        {/* Calendar panel — first in DOM so flex-col-reverse places it at bottom on mobile */}
         <motion.div
           initial={false}
           animate={
@@ -217,6 +194,29 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
             />
           )}
         </motion.div>
+
+        {/* Content panel */}
+        <div
+          className="flex-1 min-w-0 min-h-0 overflow-y-auto"
+          style={{
+            borderRight: !isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
+            borderBottom: isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
+          }}
+        >
+          {selectedMonth && (
+            <ConteudoPanel
+              turma={turma}
+              aulas={aulas}
+              selectedMonth={selectedMonth}
+              canEdit={canEdit}
+              currentUser={user}
+              onRefresh={fetchAulas}
+              onRefreshTurma={fetchTurma}
+              initialTab={initialTab}
+              isMobile={isMobile}
+            />
+          )}
+        </div>
 
         {/* FAB */}
         <AnimatePresence>
