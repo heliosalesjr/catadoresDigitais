@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { HiXMark, HiPencilSquare, HiTrash } from 'react-icons/hi2'
+import { HiXMark, HiPencilSquare, HiTrash, HiArrowTopRightOnSquare } from 'react-icons/hi2'
 import type { Aula, AulaTeacher } from '@/types'
 import { todayISO, fmtFullDate } from '@/lib/date-utils'
 import { inputStyle } from '@/lib/styles'
@@ -406,6 +407,18 @@ export function AulaModal({
           )}
 
           {error && <p className="text-sm text-red-400">{error}</p>}
+
+          {/* Ver aula */}
+          {mode === 'view' && aula && (
+            <Link
+              href={`/dashboard/aula/${turmaId}/${aula.id}`}
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85"
+              style={{ background: turmaIconColor, color: '#fff' }}
+            >
+              <HiArrowTopRightOnSquare className="w-4 h-4" />
+              Ver aula
+            </Link>
+          )}
 
           {/* Actions */}
           {mode === 'edit' && (
