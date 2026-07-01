@@ -118,6 +118,9 @@
 | Bloqueio de data passada ao criar aula (calendário não deixa clicar em dia passado; campo de data com `min`; validação também na API) | ✅ |
 | Calendário colapsável com FAB para reabrir | ✅ |
 | Página individual de aula (`/dashboard/aula/[turmaId]/[aulaId]`) | ✅ |
+| Botão "Ver aula" no `AulaModal` (modo view) navega para a página da aula | ✅ |
+| Layout da turma com scroll de página unificado — sem scroll individual por coluna | ✅ |
+| Mobile: conteúdo acima, calendário abaixo; desktop: calendário sticky à direita | ✅ |
 | CTA "Criar primeira aula" no estado vazio da aba Conteúdo (abre `AulaModal` com data padrão = hoje, se dentro do período da turma) | ✅ |
 | CTA "Agendar nova aula" (borda tracejada) abaixo da lista, quando já existem aulas | ✅ |
 | Badge do mês/ano no topo da aba Conteúdo com cor saturada da turma, sincronizado com o calendário ao lado | ✅ |
