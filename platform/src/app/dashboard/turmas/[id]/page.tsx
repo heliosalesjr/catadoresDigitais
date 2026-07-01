@@ -102,14 +102,14 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <motion.div
-      className="flex flex-col flex-1 min-h-0"
+      className="flex flex-col flex-1"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease }}
     >
       {/* Sub-header: turma info */}
       <header
-        className="flex items-center justify-between px-4 md:px-6 py-3 border-b flex-shrink-0"
+        className="flex items-center justify-between px-4 md:px-6 py-3 border-b flex-shrink-0 sticky top-14 z-10"
         style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -166,7 +166,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
       </header>
 
       {/* Split layout */}
-      <div className="relative flex flex-1 min-h-0 flex-col-reverse md:flex-row-reverse">
+      <div className="flex flex-col-reverse md:flex-row-reverse">
 
         {/* Calendar panel — first in DOM so flex-col-reverse places it at bottom on mobile */}
         <motion.div
@@ -177,8 +177,8 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               : isMobile ? { height: 0, opacity: 0 }               : { width: 0, opacity: 0 }
           }
           transition={{ duration: 0.5, ease }}
-          className="flex flex-col overflow-hidden flex-shrink-0"
-          style={isMobile ? { width: '100%' } : { height: '100%' }}
+          className="flex flex-col overflow-hidden flex-shrink-0 md:sticky md:self-start md:top-28"
+          style={isMobile ? { width: '100%' } : {}}
         >
           {user && turma && (
             <CalendarGrid
@@ -197,9 +197,8 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
         {/* Content panel */}
         <div
-          className="flex-1 min-w-0 min-h-0 overflow-y-auto"
+          className="flex-1 min-w-0"
           style={{
-            borderRight: !isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
             borderBottom: isMobile && calendarOpen ? `1px solid var(--c-border)` : 'none',
           }}
         >

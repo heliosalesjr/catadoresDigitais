@@ -127,7 +127,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
     <>
       {/* Panel header */}
       <div
-        className="sticky top-0 z-10 px-5 border-b flex-shrink-0"
+        className="sticky top-28 z-10 px-5 border-b flex-shrink-0"
         style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
         <div className="flex items-center gap-2 pt-3 pb-0">
