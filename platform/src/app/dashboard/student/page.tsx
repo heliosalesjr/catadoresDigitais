@@ -517,10 +517,8 @@ export default function StudentDashboard() {
                   animate={{ opacity: 1, y: 0, flexGrow: isActive ? 1.6 : isInactive ? 0.7 : 1 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.38, ease }}
-                  className="rounded-2xl p-6 flex flex-col gap-4 cursor-default select-none relative overflow-hidden"
+                  className="rounded-2xl p-6 flex flex-col gap-4 cursor-default select-none relative overflow-hidden md:basis-0 md:h-72"
                   style={{
-                    flexBasis: 0,
-                    flexShrink: 1,
                     minWidth: 0,
                     background: `linear-gradient(135deg, ${tip.from}, ${tip.to})`,
                     boxShadow: `0 8px 32px ${tip.from}${isDark ? '28' : '40'}`,
