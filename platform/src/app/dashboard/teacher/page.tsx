@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/context/ThemeContext'
 import { useTeacherTurmas } from '@/hooks/useTeacherTurmas'
 import { useUpcomingAulas } from '@/hooks/useUpcomingAulas'
 import { TECH_ICONS } from '@/lib/icons'
@@ -42,7 +44,9 @@ const TIPS = [
 const ease = [0.32, 0.72, 0, 1] as const
 
 export default function TeacherDashboard() {
+  const { isDark } = useTheme()
   const { user, loading: authLoading } = useAuth()
+  const [hoveredTip, setHoveredTip] = useState<number | null>(null)
 
   const { data: turmas = [], isLoading: turmasQueryLoading } = useTeacherTurmas(!authLoading)
   const { data: upcomingAulas = [], isLoading: aulasQueryLoading } = useUpcomingAulas('teacher', !authLoading)
@@ -275,41 +279,66 @@ export default function TeacherDashboard() {
         {/* Dicas para aulas mais relevantes */}
         <section>
           <h2 className="font-semibold mb-3" style={{ color: 'var(--c-text)' }}>Dicas para aulas mais relevantes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {TIPS.map((tip, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 28 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: 0.1 + i * 0.12, ease }}
-                whileHover={{ scale: 1.03, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                className="rounded-2xl p-6 flex flex-col gap-4 cursor-default select-none"
-                style={{
-                  background: `linear-gradient(135deg, ${tip.from}, ${tip.to})`,
-                  boxShadow: `0 8px 32px ${tip.from}40`,
-                }}
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          <div className="flex flex-col md:flex-row gap-4">
+            {TIPS.map((tip, i) => {
+              const TipIcon = tip.Icon
+              const isActive = hoveredTip === i
+              const isInactive = hoveredTip !== null && hoveredTip !== i
+              return (
+                <motion.div
+                  key={i}
+                  onHoverStart={() => setHoveredTip(i)}
+                  onHoverEnd={() => setHoveredTip(null)}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0, flexGrow: isActive ? 1.6 : isInactive ? 0.7 : 1 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.38, ease }}
+                  className="rounded-2xl p-6 flex flex-col gap-4 cursor-default select-none relative overflow-hidden"
                   style={{
-                    background: 'rgba(255,255,255,0.18)',
-                    border: '1px solid rgba(255,255,255,0.32)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.25)',
+                    flexBasis: 0,
+                    flexShrink: 1,
+                    minWidth: 0,
+                    background: `linear-gradient(135deg, ${tip.from}, ${tip.to})`,
+                    boxShadow: `0 8px 32px ${tip.from}${isDark ? '28' : '40'}`,
                   }}
                 >
-                  <tip.Icon className="w-6 h-6" style={{ color: '#fff' }} />
-                </div>
-                <p className="text-lg font-bold leading-snug" style={{ color: '#fff' }}>
-                  {tip.headline}
-                </p>
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                  {tip.body}
-                </p>
-              </motion.div>
-            ))}
+                  {isDark && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'rgba(0,0,0,0.28)', zIndex: -1 }}
+                    />
+                  )}
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: 'rgba(255,255,255,0.18)',
+                      border: '1px solid rgba(255,255,255,0.32)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.25)',
+                    }}
+                  >
+                    <TipIcon className="w-6 h-6" style={{ color: '#fff' }} />
+                  </div>
+                  <motion.p
+                    animate={{ fontSize: isActive ? '1.25rem' : isInactive ? '0.875rem' : '1.125rem' }}
+                    transition={{ duration: 0.38, ease }}
+                    className="font-bold leading-snug"
+                    style={{ color: '#fff' }}
+                  >
+                    {tip.headline}
+                  </motion.p>
+                  <motion.p
+                    animate={{ fontSize: isActive ? '0.9rem' : isInactive ? '0.7rem' : '0.875rem' }}
+                    transition={{ duration: 0.38, ease }}
+                    className="leading-relaxed"
+                    style={{ color: 'rgba(255,255,255,0.82)' }}
+                  >
+                    {tip.body}
+                  </motion.p>
+                </motion.div>
+              )
+            })}
           </div>
         </section>
 
