@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useTeacherTurmas } from '@/hooks/useTeacherTurmas'
 import { useUpcomingAulas } from '@/hooks/useUpcomingAulas'
@@ -8,10 +9,37 @@ import { TECH_ICONS } from '@/lib/icons'
 import {
   HiAcademicCap, HiUsers, HiCalendarDays, HiClock,
   HiChevronRight, HiArrowTopRightOnSquare,
+  HiQuestionMarkCircle, HiGlobeAlt, HiClipboardDocumentCheck,
 } from 'react-icons/hi2'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { parseLocalDate, formatDateLabel, getWeekISO } from '@/lib/date-utils'
 import { groupByDate } from '@/lib/utils'
+
+const TIPS = [
+  {
+    Icon: HiQuestionMarkCircle,
+    headline: 'Comece com uma pergunta',
+    body: 'Uma pergunta instigante no início ativa a curiosidade e prepara o cérebro para aprender antes de qualquer explicação.',
+    from: '#0EA5E9',
+    to: '#6366F1',
+  },
+  {
+    Icon: HiGlobeAlt,
+    headline: 'Use exemplos do mundo real',
+    body: 'Conteúdo abstrato faz sentido quando conectado ao cotidiano. O aluno aprende de verdade quando vê o propósito.',
+    from: '#F59E0B',
+    to: '#EF4444',
+  },
+  {
+    Icon: HiClipboardDocumentCheck,
+    headline: 'Feche com uma síntese',
+    body: 'Reserve 5 minutos no fim para revisar os pontos principais. Encerrar com clareza consolida tudo o que foi ensinado.',
+    from: '#10B981',
+    to: '#14B8A6',
+  },
+]
+
+const ease = [0.32, 0.72, 0, 1] as const
 
 export default function TeacherDashboard() {
   const { user, loading: authLoading } = useAuth()
@@ -241,6 +269,47 @@ export default function TeacherDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Dicas para aulas mais relevantes */}
+        <section>
+          <h2 className="font-semibold mb-3" style={{ color: 'var(--c-text)' }}>Dicas para aulas mais relevantes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {TIPS.map((tip, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.1 + i * 0.12, ease }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                className="rounded-2xl p-6 flex flex-col gap-4 cursor-default select-none"
+                style={{
+                  background: `linear-gradient(135deg, ${tip.from}, ${tip.to})`,
+                  boxShadow: `0 8px 32px ${tip.from}40`,
+                }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: 'rgba(255,255,255,0.18)',
+                    border: '1px solid rgba(255,255,255,0.32)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  }}
+                >
+                  <tip.Icon className="w-6 h-6" style={{ color: '#fff' }} />
+                </div>
+                <p className="text-lg font-bold leading-snug" style={{ color: '#fff' }}>
+                  {tip.headline}
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                  {tip.body}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </section>
 
