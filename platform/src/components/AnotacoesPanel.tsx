@@ -16,35 +16,35 @@ import type { Nota } from '@/types'
 
 const mdComponents: Components = {
   h1: ({ children }) => (
-    <h1 className="text-base font-bold mb-2 mt-4 first:mt-0" style={{ color: 'var(--c-text)' }}>{children}</h1>
+    <h1 className="text-2xl font-bold mb-3 mt-5 first:mt-0" style={{ color: 'var(--c-text)' }}>{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-sm font-semibold mb-2 mt-3 first:mt-0" style={{ color: 'var(--c-text)' }}>{children}</h2>
+    <h2 className="text-xl font-bold mb-2 mt-4 first:mt-0" style={{ color: 'var(--c-text)' }}>{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0" style={{ color: 'var(--c-subtle)' }}>{children}</h3>
+    <h3 className="text-lg font-semibold mb-1 mt-3 first:mt-0" style={{ color: 'var(--c-subtle)' }}>{children}</h3>
   ),
   p: ({ children }) => (
-    <p className="mb-2 last:mb-0 leading-relaxed" style={{ color: 'var(--c-text)' }}>{children}</p>
+    <p className="text-base mb-3 last:mb-0 leading-relaxed" style={{ color: 'var(--c-text)' }}>{children}</p>
   ),
   ul: ({ children }) => (
-    <ul className="list-disc list-inside mb-2 space-y-0.5" style={{ color: 'var(--c-text)' }}>{children}</ul>
+    <ul className="text-base list-disc list-inside mb-3 space-y-1" style={{ color: 'var(--c-text)' }}>{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal list-inside mb-2 space-y-0.5" style={{ color: 'var(--c-text)' }}>{children}</ol>
+    <ol className="text-base list-decimal list-inside mb-3 space-y-1" style={{ color: 'var(--c-text)' }}>{children}</ol>
   ),
   li: ({ children }) => (
-    <li className="leading-relaxed" style={{ color: 'var(--c-text)' }}>{children}</li>
+    <li className="text-base leading-relaxed" style={{ color: 'var(--c-text)' }}>{children}</li>
   ),
   strong: ({ children }) => (
-    <strong className="font-semibold" style={{ color: 'var(--c-text)' }}>{children}</strong>
+    <strong className="font-bold" style={{ color: 'var(--c-text)' }}>{children}</strong>
   ),
   em: ({ children }) => (
     <em style={{ color: 'var(--c-subtle)' }}>{children}</em>
   ),
   code: ({ children }) => (
     <code
-      className="px-1.5 py-0.5 rounded text-xs font-mono"
+      className="px-1.5 py-0.5 rounded text-sm font-mono"
       style={{ background: 'var(--c-border)', color: 'var(--c-text)' }}
     >
       {children}
@@ -52,13 +52,13 @@ const mdComponents: Components = {
   ),
   blockquote: ({ children }) => (
     <blockquote
-      className="border-l-2 pl-3 my-2 italic"
+      className="border-l-4 pl-4 my-3 italic"
       style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
     >
       {children}
     </blockquote>
   ),
-  hr: () => <hr className="my-3" style={{ borderColor: 'var(--c-border)' }} />,
+  hr: () => <hr className="my-4" style={{ borderColor: 'var(--c-border)' }} />,
 }
 
 function formatDate(iso: string): string {
@@ -229,18 +229,18 @@ export function AnotacoesPanel({ uid, turmaId, accentColor }: Props) {
         </div>
 
         {/* Title */}
-        <div className="px-4 pt-4">
+        <div className="px-5 pt-5">
           {editing ? (
             <input
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Título da nota"
-              className="w-full text-base font-semibold outline-none bg-transparent border-b pb-2"
+              className="w-full text-2xl font-bold outline-none bg-transparent border-b pb-3"
               style={{ color: 'var(--c-text)', borderColor: 'var(--c-border)' }}
             />
           ) : (
             <h3
-              className="text-base font-semibold pb-2 border-b"
+              className="text-2xl font-bold pb-3 border-b"
               style={{ color: 'var(--c-text)', borderColor: 'var(--c-border)' }}
             >
               {title || 'Sem título'}
@@ -249,22 +249,20 @@ export function AnotacoesPanel({ uid, turmaId, accentColor }: Props) {
         </div>
 
         {/* Content */}
-        <div className="px-4 pt-3 pb-6">
+        <div className="px-5 pt-4 pb-8">
           {editing ? (
             <textarea
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder={'Escreva em Markdown...\n\n# Título\n- item\n**negrito**, *itálico*'}
-              className="w-full text-sm leading-relaxed resize-none outline-none font-mono bg-transparent"
-              style={{ color: 'var(--c-text)', minHeight: '240px' }}
+              className="w-full text-base leading-relaxed resize-none outline-none font-mono bg-transparent"
+              style={{ color: 'var(--c-text)', minHeight: '300px' }}
               autoFocus
             />
           ) : content.trim() ? (
-            <div className="text-sm">
-              <ReactMarkdown components={mdComponents}>{content}</ReactMarkdown>
-            </div>
+            <ReactMarkdown components={mdComponents}>{content}</ReactMarkdown>
           ) : (
-            <p className="text-sm" style={{ color: 'var(--c-faint)' }}>
+            <p className="text-base" style={{ color: 'var(--c-faint)' }}>
               Nota vazia.{' '}
               <button
                 onClick={() => setEditing(true)}
@@ -289,15 +287,15 @@ export function AnotacoesPanel({ uid, turmaId, accentColor }: Props) {
         className="flex items-center justify-between px-4 py-3 border-b"
         style={{ borderColor: 'var(--c-border)' }}
       >
-        <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>
+        <span className="text-sm font-medium" style={{ color: 'var(--c-subtle)' }}>
           {notas.length} nota{notas.length !== 1 ? 's' : ''}
         </span>
         <button
           onClick={createNota}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-75"
+          className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border transition-opacity hover:opacity-75"
           style={{ borderColor: accentColor, color: accentColor }}
         >
-          <HiPlus className="w-3.5 h-3.5" /> Nova nota
+          <HiPlus className="w-4 h-4" /> Nova nota
         </button>
       </div>
 
@@ -323,19 +321,19 @@ export function AnotacoesPanel({ uid, turmaId, accentColor }: Props) {
             <button
               key={nota.id}
               onClick={() => openNota(nota)}
-              className="w-full flex flex-col gap-1 px-4 py-3.5 text-left transition-opacity hover:opacity-75 border-b"
+              className="w-full flex flex-col gap-1.5 px-5 py-4 text-left transition-opacity hover:opacity-75 border-b"
               style={{ borderColor: 'var(--c-border)' }}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>
+                <span className="text-base font-semibold truncate" style={{ color: 'var(--c-text)' }}>
                   {nota.title || 'Sem título'}
                 </span>
-                <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--c-faint)' }}>
+                <span className="text-xs flex-shrink-0" style={{ color: 'var(--c-faint)' }}>
                   {formatDate(nota.updatedAt)}
                 </span>
               </div>
               {nota.content && (
-                <span className="text-xs truncate" style={{ color: 'var(--c-subtle)' }}>
+                <span className="text-sm truncate" style={{ color: 'var(--c-subtle)' }}>
                   {stripMarkdown(nota.content).slice(0, 80)}
                 </span>
               )}
