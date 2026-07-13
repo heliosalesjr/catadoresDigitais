@@ -175,6 +175,23 @@ Uma turma pode ser arquivada manualmente por um admin (`PATCH /api/admin/turmas/
 - **Somente admin edita turma arquivada**: rotas de escrita em `turmas/{id}/aulas`, `banco` e `banco/{id}/agendar` chamam `assertTurmaEditable(turmaId, role)`, que retorna 403 se a turma estiver arquivada e quem pediu não for admin. `chamada` (check-in do aluno) e `respostas` (envio de avaliação) bloqueiam incondicionalmente quando arquivada, pois não têm caso de uso admin. No client, `canEdit` na página da turma (`/dashboard/turmas/[id]`) já é `false` para professores em turma arquivada, então a maior parte da UI de edição já nem aparece.
 - **Visibilidade**: turmas arquivadas somem do dropdown de turma na Lista de acesso (`/dashboard/admin`), mas continuam aparecendo normalmente na busca de Usuários cadastrados (que não filtra por turma) e nas listagens/relatórios do admin.
 
+### Tooltip em botões só-ícone
+
+`src/components/Tooltip.tsx` envolve qualquer botão/link só-ícone e mostra um rótulo flutuante no hover/focus — CSS-only (`group-hover`/`group-focus-within` do Tailwind com grupo nomeado `group/tooltip`, sem JS/estado), usado no lugar do `title` nativo do navegador (que é lento e não estilizável).
+
+```tsx
+<Tooltip label="Arquivar turma">
+  <button onClick={...} aria-label="Arquivar turma">
+    <HiArchiveBox className="w-4 h-4" />
+  </button>
+</Tooltip>
+```
+
+- Sempre passar `aria-label` no elemento filho também — o `Tooltip` só cuida do visual, não da acessibilidade do botão em si.
+- **Não envolver elementos com `position: fixed`** (ex.: o FAB de abrir calendário em `dashboard/turmas/[id]/page.tsx`): o wrapper (`<span className="relative inline-flex">`) fica no fluxo normal do documento, então a tooltip apareceria na posição errada. Nesses casos, manter o `title` nativo.
+- **Cuidado com botões que têm `flex: 1 1 0` (ou similar) dentro de uma linha flex** — como as abas do `ConteudoPanel`, que usam `layout` do Framer Motion + largura dinâmica por aba. O wrapper do Tooltip vira o item flex real da linha, e o `flex` no botão filho deixa de fazer efeito na distribuição de largura. Nesse caso também é melhor manter o `title` nativo (ou passar `className`/`style` no próprio `Tooltip` para repassar o `flex` ao wrapper).
+- Botões que já têm texto visível (ex. "Baixar CSV", "Nova aula") não precisam do `Tooltip` — o rótulo já está na tela.
+
 ### Datas não podem ser no passado
 Criar aula (calendário) e agendar aula do banco compartilham a mesma regra: a data não pode ser anterior a hoje, dentro da janela `startDate`/`endDate` da turma. A validação existe em duas camadas — client (atributo `min` do `<input type="date">`, calculado como `max(turmaStartDate, hoje)`) e servidor (`POST /api/turmas/[id]/aulas` e `POST /api/turmas/[id]/banco/[bancoId]/agendar` comparam `body.date` com a data atual). Editar uma aula já existente no passado continua permitido — a regra vale só para criar/agendar.
 
