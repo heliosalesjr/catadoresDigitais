@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { HiXMark, HiExclamationTriangle } from 'react-icons/hi2'
+import { Tooltip } from './Tooltip'
 import type { UserProfile, Turma } from '@/types'
 
 const ease = [0.32, 0.72, 0, 1] as const
@@ -68,13 +69,16 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
               {filtered.length} {filtered.length === 1 ? 'usuário' : 'usuários'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-          >
-            <HiXMark className="w-4 h-4" />
-          </button>
+          <Tooltip label="Fechar">
+            <button
+              onClick={onClose}
+              aria-label="Fechar"
+              className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              <HiXMark className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Body */}

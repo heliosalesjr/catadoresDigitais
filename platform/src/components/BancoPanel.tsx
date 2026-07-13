@@ -13,6 +13,7 @@ import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 import { AVALIACAO_ICON, AVALIACAO_LABEL } from '@/lib/constants'
 import { genId } from '@/lib/utils'
+import { Tooltip } from './Tooltip'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -123,14 +124,16 @@ function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRe
               </p>
             )}
           </div>
-          <button
-            onClick={() => setEditingBanco(true)}
-            className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
-            style={{ color: 'var(--c-subtle)' }}
-            title="Editar aula"
-          >
-            <HiPencilSquare className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip label="Editar aula">
+            <button
+              onClick={() => setEditingBanco(true)}
+              aria-label="Editar aula"
+              className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
+              style={{ color: 'var(--c-subtle)' }}
+            >
+              <HiPencilSquare className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -176,14 +179,16 @@ function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRe
                       {AVALIACAO_LABEL[av.type]}
                     </span>
                   </div>
-                  <button
-                    onClick={() => deleteAvaliacao(av.id)}
-                    className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 transition-opacity hover:opacity-80"
-                    style={{ color: 'var(--c-faint)' }}
-                    title="Excluir avaliação"
-                  >
-                    <HiTrash className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip label="Excluir avaliação">
+                    <button
+                      onClick={() => deleteAvaliacao(av.id)}
+                      aria-label="Excluir avaliação"
+                      className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--c-faint)' }}
+                    >
+                      <HiTrash className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               )
             })}
@@ -211,14 +216,16 @@ function BancoCard({ b, turma, currentUser, isApplied, onDelete, onRefresh, onRe
           <HiCalendarDays className="w-3.5 h-3.5" /> {isApplied ? 'Agendar novamente' : 'Agendar'}
         </button>
         {canDelete && (
-          <button
-            onClick={onDelete}
-            className="ml-auto flex items-center justify-center w-7 h-7 rounded-lg border transition-opacity hover:opacity-80"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
-            title="Excluir"
-          >
-            <HiTrash className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip label="Excluir">
+            <button
+              onClick={onDelete}
+              aria-label="Excluir"
+              className="ml-auto flex items-center justify-center w-7 h-7 rounded-lg border transition-opacity hover:opacity-80"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
+            >
+              <HiTrash className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         )}
       </div>
 

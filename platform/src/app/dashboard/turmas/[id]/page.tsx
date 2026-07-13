@@ -10,6 +10,7 @@ import { TECH_ICONS } from '@/lib/icons'
 import { HiArrowLeft, HiCalendarDays, HiPencilSquare, HiChartBarSquare } from 'react-icons/hi2'
 import { CalendarGrid } from '@/components/CalendarGrid'
 import { ConteudoPanel } from '@/components/ConteudoPanel'
+import { Tooltip } from '@/components/Tooltip'
 import type { Turma, Aula } from '@/types'
 import { parseLocalDate, isTurmaExpired } from '@/lib/date-utils'
 
@@ -115,13 +116,16 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
         style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg-alt)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <Link
-            href={isAdmin ? '/dashboard/admin/turmas' : '/dashboard'}
-            className="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-          >
-            <HiArrowLeft className="w-4 h-4" />
-          </Link>
+          <Tooltip label="Voltar">
+            <Link
+              href={isAdmin ? '/dashboard/admin/turmas' : '/dashboard'}
+              aria-label="Voltar"
+              className="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              <HiArrowLeft className="w-4 h-4" />
+            </Link>
+          </Tooltip>
           <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
               <div
@@ -155,23 +159,27 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
 
         {canView && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Link
-              href={`/dashboard/admin/turmas/${id}/relatorio`}
-              className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-              title="Relatório da turma"
-            >
-              <HiChartBarSquare className="w-4 h-4" />
-            </Link>
-            {isAdmin && (
+            <Tooltip label="Relatório da turma">
               <Link
-                href={`/dashboard/admin/turmas/${id}/editar`}
+                href={`/dashboard/admin/turmas/${id}/relatorio`}
+                aria-label="Relatório da turma"
                 className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
                 style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-                title="Editar turma"
               >
-                <HiPencilSquare className="w-4 h-4" />
+                <HiChartBarSquare className="w-4 h-4" />
               </Link>
+            </Tooltip>
+            {isAdmin && (
+              <Tooltip label="Editar turma">
+                <Link
+                  href={`/dashboard/admin/turmas/${id}/editar`}
+                  aria-label="Editar turma"
+                  className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+                  style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                >
+                  <HiPencilSquare className="w-4 h-4" />
+                </Link>
+              </Tooltip>
             )}
           </div>
         )}

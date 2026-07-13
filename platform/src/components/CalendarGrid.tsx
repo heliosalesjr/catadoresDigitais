@@ -7,6 +7,7 @@ import {
 } from 'react-icons/hi2'
 import type { Turma, Aula } from '@/types'
 import { AulaModal } from './AulaModal'
+import { Tooltip } from './Tooltip'
 import { parseLocalDate, dateToISO } from '@/lib/date-utils'
 
 const MONTHS_PT = [
@@ -152,47 +153,57 @@ export function CalendarGrid({ turma, aulas, canEdit, isAdmin, currentUserUid, i
 
         <div className="flex items-center gap-1">
           {canEdit && (
+            <Tooltip label="Nova aula">
+              <motion.button
+                onClick={() => openModal(today >= turma.startDate && today <= turma.endDate ? today : turma.startDate, null)}
+                aria-label="Nova aula"
+                className="w-7 h-7 rounded-lg flex items-center justify-center border mr-1"
+                style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <HiPlus className="w-4 h-4" />
+              </motion.button>
+            </Tooltip>
+          )}
+          <Tooltip label="Mês anterior">
             <motion.button
-              onClick={() => openModal(today >= turma.startDate && today <= turma.endDate ? today : turma.startDate, null)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center border mr-1"
-              style={{ borderColor: turma.iconColor, color: turma.iconColor }}
+              onClick={prevMonth}
+              disabled={!canPrev}
+              aria-label="Mês anterior"
+              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
+              style={{ color: 'var(--c-muted)' }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              title="Nova aula"
             >
-              <HiPlus className="w-4 h-4" />
+              <HiChevronLeft className="w-4 h-4" />
             </motion.button>
-          )}
-          <motion.button
-            onClick={prevMonth}
-            disabled={!canPrev}
-            className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
-            style={{ color: 'var(--c-muted)' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <HiChevronLeft className="w-4 h-4" />
-          </motion.button>
-          <motion.button
-            onClick={nextMonth}
-            disabled={!canNext}
-            className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
-            style={{ color: 'var(--c-muted)' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <HiChevronRight className="w-4 h-4" />
-          </motion.button>
-          <motion.button
-            onClick={onCollapse}
-            className="w-7 h-7 rounded-lg flex items-center justify-center ml-1 border"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="Ocultar calendário"
-          >
-            {isMobile ? <HiChevronDown className="w-4 h-4" /> : <HiChevronRight className="w-4 h-4" />}
-          </motion.button>
+          </Tooltip>
+          <Tooltip label="Próximo mês">
+            <motion.button
+              onClick={nextMonth}
+              disabled={!canNext}
+              aria-label="Próximo mês"
+              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
+              style={{ color: 'var(--c-muted)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <HiChevronRight className="w-4 h-4" />
+            </motion.button>
+          </Tooltip>
+          <Tooltip label="Ocultar calendário">
+            <motion.button
+              onClick={onCollapse}
+              aria-label="Ocultar calendário"
+              className="w-7 h-7 rounded-lg flex items-center justify-center ml-1 border"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {isMobile ? <HiChevronDown className="w-4 h-4" /> : <HiChevronRight className="w-4 h-4" />}
+            </motion.button>
+          </Tooltip>
         </div>
       </div>
 

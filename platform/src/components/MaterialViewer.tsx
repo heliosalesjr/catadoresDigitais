@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { HiXMark, HiArrowTopRightOnSquare } from 'react-icons/hi2'
 import type { Material } from '@/types'
+import { Tooltip } from './Tooltip'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -117,13 +118,16 @@ export function MaterialViewer({ link, accentColor, onClose }: Props) {
               <HiArrowTopRightOnSquare className="w-3.5 h-3.5" />
               Abrir em nova aba
             </a>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg transition-opacity hover:opacity-85"
-              style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
-            >
-              <HiXMark className="w-4 h-4" />
-            </button>
+            <Tooltip label="Fechar">
+              <button
+                onClick={onClose}
+                aria-label="Fechar"
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-opacity hover:opacity-85"
+                style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
+              >
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

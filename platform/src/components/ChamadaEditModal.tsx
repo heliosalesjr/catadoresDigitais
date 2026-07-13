@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HiXMark, HiChevronDown, HiCheckCircle, HiXCircle, HiLink } from 'react-icons/hi2'
 import type { Aula, AttendanceStatus } from '@/types'
+import { Tooltip } from './Tooltip'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -121,13 +122,16 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
               {aula.title}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-          >
-            <HiXMark className="w-4 h-4" />
-          </button>
+          <Tooltip label="Fechar">
+            <button
+              onClick={onClose}
+              aria-label="Fechar"
+              className="w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              <HiXMark className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Student list */}
@@ -171,20 +175,21 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
                       {STATUS_OPTIONS.map((opt) => {
                         const active = status === opt.value
                         return (
-                          <button
-                            key={opt.value}
-                            onClick={() => setStatus(email, opt.value)}
-                            disabled={saving}
-                            title={opt.label}
-                            className="text-xs font-bold w-7 h-7 rounded-lg flex items-center justify-center border transition-opacity disabled:opacity-50"
-                            style={{
-                              borderColor: active ? opt.color : 'var(--c-border-md)',
-                              color: active ? '#fff' : opt.color,
-                              background: active ? opt.color : 'transparent',
-                            }}
-                          >
-                            {opt.letter}
-                          </button>
+                          <Tooltip key={opt.value} label={opt.label}>
+                            <button
+                              onClick={() => setStatus(email, opt.value)}
+                              disabled={saving}
+                              aria-label={opt.label}
+                              className="text-xs font-bold w-7 h-7 rounded-lg flex items-center justify-center border transition-opacity disabled:opacity-50"
+                              style={{
+                                borderColor: active ? opt.color : 'var(--c-border-md)',
+                                color: active ? '#fff' : opt.color,
+                                background: active ? opt.color : 'transparent',
+                              }}
+                            >
+                              {opt.letter}
+                            </button>
+                          </Tooltip>
                         )
                       })}
                     </div>

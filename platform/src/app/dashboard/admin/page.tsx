@@ -14,6 +14,7 @@ import type { UserProfile, Turma } from '@/types'
 import type { UpcomingAula } from '@/app/api/admin/upcoming-aulas/route'
 import { UserListModal, type CardFilter } from '@/components/UserListModal'
 import { UserDetailPanel } from '@/components/UserDetailPanel'
+import { Tooltip } from '@/components/Tooltip'
 import { formatDateLabel } from '@/lib/date-utils'
 import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
 import { groupByDate } from '@/lib/utils'
@@ -409,19 +410,21 @@ export default function AdminDashboard() {
                   >
                     {entry.role === 'teacher' ? 'Professor' : 'Aluno'}
                   </span>
-                  <button
-                    onClick={() => removeFromAllowlist(entry.email)}
-                    disabled={removingFromAllowlist === entry.email}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0 disabled:opacity-50"
-                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
-                    title="Remover da lista"
-                  >
-                    {removingFromAllowlist === entry.email ? (
-                      <span className="text-xs">...</span>
-                    ) : (
-                      <HiTrash className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                  <Tooltip label="Remover da lista">
+                    <button
+                      onClick={() => removeFromAllowlist(entry.email)}
+                      disabled={removingFromAllowlist === entry.email}
+                      aria-label="Remover da lista"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors flex-shrink-0 disabled:opacity-50"
+                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-faint)' }}
+                    >
+                      {removingFromAllowlist === entry.email ? (
+                        <span className="text-xs">...</span>
+                      ) : (
+                        <HiTrash className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </Tooltip>
                 </li>
                 )
               })}

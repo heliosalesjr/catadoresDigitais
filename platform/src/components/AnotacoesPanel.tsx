@@ -13,6 +13,7 @@ import {
   HiCheckCircle, HiDocumentText,
 } from 'react-icons/hi2'
 import type { Nota } from '@/types'
+import { Tooltip } from './Tooltip'
 
 const mdComponents: Components = {
   h1: ({ children }) => (
@@ -218,14 +219,16 @@ export function AnotacoesPanel({ uid, turmaId, accentColor }: Props) {
             }
           </button>
 
-          <button
-            onClick={deleteNota}
-            className="w-7 h-7 flex items-center justify-center rounded-lg transition-opacity hover:opacity-75"
-            style={{ color: 'var(--c-faint)' }}
-            title="Excluir nota"
-          >
-            <HiTrash className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip label="Excluir nota">
+            <button
+              onClick={deleteNota}
+              aria-label="Excluir nota"
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-opacity hover:opacity-75"
+              style={{ color: 'var(--c-faint)' }}
+            >
+              <HiTrash className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Title */}

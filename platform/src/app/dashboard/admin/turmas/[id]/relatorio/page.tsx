@@ -5,6 +5,7 @@ import { fmtDate, fmtDateShort } from '@/lib/date-utils'
 import Link from 'next/link'
 import { HiArrowLeft, HiClipboardDocumentCheck, HiClock, HiAcademicCap, HiUserGroup, HiCheck, HiXMark, HiArrowDownTray, HiChevronLeft, HiChevronRight } from 'react-icons/hi2'
 import { TECH_ICONS } from '@/lib/icons'
+import { Tooltip } from '@/components/Tooltip'
 import type { Turma, AttendanceStatus } from '@/types'
 
 type Modo = 'geral' | 'periodo'
@@ -147,13 +148,16 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Link
-            href={`/dashboard/turmas/${id}`}
-            className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors flex-shrink-0"
-            style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-          >
-            <HiArrowLeft className="w-4 h-4" />
-          </Link>
+          <Tooltip label="Voltar">
+            <Link
+              href={`/dashboard/turmas/${id}`}
+              aria-label="Voltar"
+              className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors flex-shrink-0"
+              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+            >
+              <HiArrowLeft className="w-4 h-4" />
+            </Link>
+          </Tooltip>
           {Icon && (
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -169,15 +173,17 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
             </p>
           </div>
           {relatorio && (
-            <button
-              onClick={() => downloadCSV(turma, relatorio)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors flex-shrink-0"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)', background: 'transparent' }}
-              title="Baixar relatório CSV"
-            >
-              <HiArrowDownTray className="w-4 h-4" />
-              <span className="hidden sm:inline">Baixar CSV</span>
-            </button>
+            <Tooltip label="Baixar relatório CSV">
+              <button
+                onClick={() => downloadCSV(turma, relatorio)}
+                aria-label="Baixar relatório CSV"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors flex-shrink-0"
+                style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)', background: 'transparent' }}
+              >
+                <HiArrowDownTray className="w-4 h-4" />
+                <span className="hidden sm:inline">Baixar CSV</span>
+              </button>
+            </Tooltip>
           )}
         </div>
 
@@ -390,14 +396,17 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                     {relatorio.students.length} alunos
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
-                      disabled={studentPage === 1}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
-                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-                    >
-                      <HiChevronLeft className="w-4 h-4" />
-                    </button>
+                    <Tooltip label="Página anterior">
+                      <button
+                        onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+                        disabled={studentPage === 1}
+                        aria-label="Página anterior"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
+                        style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                      >
+                        <HiChevronLeft className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
                     {Array.from({ length: totalStudentPages }, (_, i) => i + 1).map((p) => (
                       <button
                         key={p}
@@ -412,14 +421,17 @@ export default function RelatorioTurmaPage({ params }: { params: Promise<{ id: s
                         {p}
                       </button>
                     ))}
-                    <button
-                      onClick={() => setStudentPage((p) => Math.min(totalStudentPages, p + 1))}
-                      disabled={studentPage === totalStudentPages}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
-                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-                    >
-                      <HiChevronRight className="w-4 h-4" />
-                    </button>
+                    <Tooltip label="Próxima página">
+                      <button
+                        onClick={() => setStudentPage((p) => Math.min(totalStudentPages, p + 1))}
+                        disabled={studentPage === totalStudentPages}
+                        aria-label="Próxima página"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border transition-opacity disabled:opacity-30"
+                        style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                      >
+                        <HiChevronRight className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               )}

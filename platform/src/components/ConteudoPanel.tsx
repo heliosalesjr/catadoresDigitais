@@ -18,6 +18,7 @@ import { inputStyle } from '@/lib/styles'
 import { AVALIACAO_ICON, AVALIACAO_LABEL } from '@/lib/constants'
 import { genId } from '@/lib/utils'
 import { MaterialViewer } from './MaterialViewer'
+import { Tooltip } from './Tooltip'
 import { AvaliacaoFormModal } from './AvaliacaoFormModal'
 import { TesteAvaliacaoModal } from './TesteAvaliacaoModal'
 import { BancoPanel } from './BancoPanel'
@@ -158,6 +159,7 @@ export function ConteudoPanel({ turma, aulas, selectedMonth, canEdit, currentUse
                   key={t}
                   layout
                   onClick={() => setTab(t)}
+                  aria-label={label}
                   className="relative flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 overflow-hidden"
                   style={{
                     flex: isMobile ? '1 1 0' : '0 0 auto',
@@ -510,14 +512,16 @@ function AulaCard({
                 </span>
               )}
             </div>
-            <button
-              onClick={() => setEditingAula(true)}
-              className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
-              style={{ color: 'var(--c-subtle)' }}
-              title="Editar aula"
-            >
-              <HiPencilSquare className="w-3.5 h-3.5" />
-            </button>
+            <Tooltip label="Editar aula">
+              <button
+                onClick={() => setEditingAula(true)}
+                aria-label="Editar aula"
+                className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80 mt-0.5"
+                style={{ color: 'var(--c-subtle)' }}
+              >
+                <HiPencilSquare className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
           </div>
           <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--c-subtle)' }}>
             {dateStr} · {aula.startTime} – {aula.endTime}
@@ -653,32 +657,38 @@ function AulaCard({
                   </button>
                   {canEdit && (
                     <div className="flex items-center flex-shrink-0 mr-1 gap-0.5">
-                      <button
-                        onClick={() => reorderMaterial(i, 'up')}
-                        disabled={i === 0}
-                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
-                        style={{ color: 'var(--c-faint)' }}
-                        title="Mover para cima"
-                      >
-                        <HiChevronUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => reorderMaterial(i, 'down')}
-                        disabled={i === total - 1}
-                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
-                        style={{ color: 'var(--c-faint)' }}
-                        title="Mover para baixo"
-                      >
-                        <HiChevronDown className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => deleteMaterial(i)}
-                        className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
-                        style={{ color: 'var(--c-faint)' }}
-                        title="Remover material"
-                      >
-                        <HiTrash className="w-3 h-3" />
-                      </button>
+                      <Tooltip label="Mover para cima">
+                        <button
+                          onClick={() => reorderMaterial(i, 'up')}
+                          disabled={i === 0}
+                          aria-label="Mover para cima"
+                          className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                          style={{ color: 'var(--c-faint)' }}
+                        >
+                          <HiChevronUp className="w-3 h-3" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Mover para baixo">
+                        <button
+                          onClick={() => reorderMaterial(i, 'down')}
+                          disabled={i === total - 1}
+                          aria-label="Mover para baixo"
+                          className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                          style={{ color: 'var(--c-faint)' }}
+                        >
+                          <HiChevronDown className="w-3 h-3" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Remover material">
+                        <button
+                          onClick={() => deleteMaterial(i)}
+                          aria-label="Remover material"
+                          className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+                          style={{ color: 'var(--c-faint)' }}
+                        >
+                          <HiTrash className="w-3 h-3" />
+                        </button>
+                      </Tooltip>
                     </div>
                   )}
                 </div>
@@ -724,32 +734,38 @@ function AulaCard({
               </button>
               {canEdit && (
                 <div className="flex items-center flex-shrink-0 mr-1 gap-0.5">
-                  <button
-                    onClick={() => reorderMaterial(i, 'up')}
-                    disabled={i === 0}
-                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
-                    style={{ color: 'var(--c-faint)' }}
-                    title="Mover para cima"
-                  >
-                    <HiChevronUp className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => reorderMaterial(i, 'down')}
-                    disabled={i === total - 1}
-                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
-                    style={{ color: 'var(--c-faint)' }}
-                    title="Mover para baixo"
-                  >
-                    <HiChevronDown className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => deleteMaterial(i)}
-                    className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
-                    style={{ color: 'var(--c-faint)' }}
-                    title="Remover material"
-                  >
-                    <HiTrash className="w-3 h-3" />
-                  </button>
+                  <Tooltip label="Mover para cima">
+                    <button
+                      onClick={() => reorderMaterial(i, 'up')}
+                      disabled={i === 0}
+                      aria-label="Mover para cima"
+                      className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                      style={{ color: 'var(--c-faint)' }}
+                    >
+                      <HiChevronUp className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Mover para baixo">
+                    <button
+                      onClick={() => reorderMaterial(i, 'down')}
+                      disabled={i === total - 1}
+                      aria-label="Mover para baixo"
+                      className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70 disabled:opacity-20"
+                      style={{ color: 'var(--c-faint)' }}
+                    >
+                      <HiChevronDown className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Remover material">
+                    <button
+                      onClick={() => deleteMaterial(i)}
+                      aria-label="Remover material"
+                      className="w-5 h-5 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+                      style={{ color: 'var(--c-faint)' }}
+                    >
+                      <HiTrash className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
                 </div>
               )}
             </div>
@@ -913,14 +929,16 @@ function AulaCard({
                     </span>
                   </div>
                   {canEdit && (
-                    <button
-                      onClick={() => deleteAvaliacao(av.id)}
-                      className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 transition-opacity hover:opacity-80"
-                      style={{ color: 'var(--c-faint)' }}
-                      title="Excluir avaliação"
-                    >
-                      <HiTrash className="w-3.5 h-3.5" />
-                    </button>
+                    <Tooltip label="Excluir avaliação">
+                      <button
+                        onClick={() => deleteAvaliacao(av.id)}
+                        aria-label="Excluir avaliação"
+                        className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 transition-opacity hover:opacity-80"
+                        style={{ color: 'var(--c-faint)' }}
+                      >
+                        <HiTrash className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
               )
@@ -1480,14 +1498,16 @@ function ProfessoresPanel({ turma, currentUser, onRefresh }: ProfessoresPanelPro
 
                 {/* Remove (admin only) */}
                 {isAdmin && (
-                  <button
-                    onClick={() => removeProfessor(prof.uid)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
-                    style={{ color: 'var(--c-faint)' }}
-                    title="Remover professor"
-                  >
-                    <HiTrash className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip label="Remover professor">
+                    <button
+                      onClick={() => removeProfessor(prof.uid)}
+                      aria-label="Remover professor"
+                      className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--c-faint)' }}
+                    >
+                      <HiTrash className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 )}
               </div>
             </div>

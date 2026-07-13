@@ -1,6 +1,7 @@
 'use client'
 
 import { TECH_ICONS, ICON_COLORS } from '@/lib/icons'
+import { Tooltip } from './Tooltip'
 
 interface Props {
   selectedIcon: string
@@ -42,18 +43,20 @@ export function IconPicker({ selectedIcon, selectedColor, onIconChange, onColorC
         <p className="text-xs mb-2" style={{ color: 'var(--c-subtle)' }}>Cor do ícone</p>
         <div className="flex gap-2 flex-wrap">
           {ICON_COLORS.map((color) => (
-            <button
-              key={color}
-              type="button"
-              onClick={() => onColorChange(color)}
-              className="w-7 h-7 rounded-full transition-transform duration-150"
-              style={{
-                background: color,
-                transform: selectedColor === color ? 'scale(1.25)' : 'scale(1)',
-                outline: selectedColor === color ? `2px solid ${color}` : 'none',
-                outlineOffset: '2px',
-              }}
-            />
+            <Tooltip key={color} label={color}>
+              <button
+                type="button"
+                onClick={() => onColorChange(color)}
+                aria-label={color}
+                className="w-7 h-7 rounded-full transition-transform duration-150"
+                style={{
+                  background: color,
+                  transform: selectedColor === color ? 'scale(1.25)' : 'scale(1)',
+                  outline: selectedColor === color ? `2px solid ${color}` : 'none',
+                  outlineOffset: '2px',
+                }}
+              />
+            </Tooltip>
           ))}
           {/* Custom color */}
           <label className="w-7 h-7 rounded-full overflow-hidden cursor-pointer border" style={{ borderColor: 'var(--c-border-md)' }}>

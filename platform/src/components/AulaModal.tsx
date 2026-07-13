@@ -7,6 +7,7 @@ import { HiXMark, HiPencilSquare, HiTrash, HiArrowTopRightOnSquare } from 'react
 import type { Aula, AulaTeacher } from '@/types'
 import { todayISO, fmtFullDate } from '@/lib/date-utils'
 import { inputStyle } from '@/lib/styles'
+import { Tooltip } from './Tooltip'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -213,34 +214,41 @@ export function AulaModal({
           <div className="flex items-center gap-1 flex-shrink-0">
             {mode === 'view' && canEdit && (
               <>
-                <button
-                  onClick={() => setMode('edit')}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-                  style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-                  title="Editar"
-                >
-                  <HiPencilSquare className="w-4 h-4" />
-                </button>
-                {isAdmin && (
+                <Tooltip label="Editar">
                   <button
-                    onClick={handleDelete}
-                    disabled={deleting}
+                    onClick={() => setMode('edit')}
+                    aria-label="Editar"
                     className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
-                    title="Excluir"
+                    style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
                   >
-                    <HiTrash className="w-4 h-4" />
+                    <HiPencilSquare className="w-4 h-4" />
                   </button>
+                </Tooltip>
+                {isAdmin && (
+                  <Tooltip label="Excluir">
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      aria-label="Excluir"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+                      style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-danger-strong)' }}
+                    >
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
                 )}
               </>
             )}
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            >
-              <HiXMark className="w-4 h-4" />
-            </button>
+            <Tooltip label="Fechar">
+              <button
+                onClick={onClose}
+                aria-label="Fechar"
+                className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors"
+                style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+              >
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 
@@ -301,13 +309,16 @@ export function AulaModal({
                         }}
                       >
                         {t.name}
-                        <button
-                          type="button"
-                          onClick={() => removeTeacher(t.uid)}
-                          className="opacity-70 hover:opacity-100"
-                        >
-                          <HiXMark className="w-3 h-3" />
-                        </button>
+                        <Tooltip label="Remover professor">
+                          <button
+                            type="button"
+                            onClick={() => removeTeacher(t.uid)}
+                            aria-label="Remover professor"
+                            className="opacity-70 hover:opacity-100"
+                          >
+                            <HiXMark className="w-3 h-3" />
+                          </button>
+                        </Tooltip>
                       </span>
                     ))}
                   </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IconPicker } from '@/components/IconPicker'
+import { Tooltip } from '@/components/Tooltip'
 import { HiArrowLeft, HiXMark, HiPlus, HiTrash, HiArchiveBox, HiArchiveBoxXMark } from 'react-icons/hi2'
 import type { Turma } from '@/types'
 import { inputStyle } from '@/lib/styles'
@@ -118,13 +119,16 @@ export function TurmaForm({ mode, turmaId, initialData, archived: initialArchive
       <div className="max-w-2xl mx-auto">
         <header className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <Link
-              href={backHref}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
-            >
-              <HiArrowLeft className="w-4 h-4" />
-            </Link>
+            <Tooltip label="Voltar">
+              <Link
+                href={backHref}
+                aria-label="Voltar"
+                className="w-9 h-9 rounded-full flex items-center justify-center border"
+                style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+              >
+                <HiArrowLeft className="w-4 h-4" />
+              </Link>
+            </Tooltip>
             <h1 className="text-3xl font-bold" style={{ color: 'var(--c-text)' }}>{title}</h1>
             {isEdit && archived && (
               <span
@@ -220,9 +224,11 @@ export function TurmaForm({ mode, turmaId, initialData, archived: initialArchive
                 {students.map((email) => (
                   <li key={email} className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: 'var(--c-bg)', color: 'var(--c-muted)' }}>
                     <span className="text-sm">{email}</span>
-                    <button type="button" onClick={() => removeStudent(email)} style={{ color: 'var(--c-faint)' }}>
-                      <HiXMark className="w-4 h-4" />
-                    </button>
+                    <Tooltip label="Remover aluno">
+                      <button type="button" onClick={() => removeStudent(email)} aria-label="Remover aluno" style={{ color: 'var(--c-faint)' }}>
+                        <HiXMark className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
                   </li>
                 ))}
               </ul>
