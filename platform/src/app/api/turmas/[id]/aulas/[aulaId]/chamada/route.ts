@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireAuthAny } from '@/lib/require-auth-any'
+import { isTurmaArchived } from '@/lib/turma-archive'
 
 type Ctx = { params: Promise<{ id: string; aulaId: string }> }
 
@@ -28,9 +29,13 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!turmaDoc.exists) {
     return Response.json({ error: 'Turma não encontrada.' }, { status: 404 })
   }
-  const turmaStudents: string[] = turmaDoc.data()!.students ?? []
+  const turmaData = turmaDoc.data()!
+  const turmaStudents: string[] = turmaData.students ?? []
   if (!turmaStudents.includes(email)) {
     return Response.json({ error: 'Você não está matriculado nesta turma.' }, { status: 403 })
+  }
+  if (isTurmaArchived({ archived: turmaData.archived, endDate: turmaData.endDate })) {
+    return Response.json({ error: 'Turma arquivada. Chamada indisponível.' }, { status: 403 })
   }
 
   // Get aula

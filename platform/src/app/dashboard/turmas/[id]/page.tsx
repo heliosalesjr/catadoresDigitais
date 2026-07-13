@@ -11,7 +11,7 @@ import { HiArrowLeft, HiCalendarDays, HiPencilSquare, HiChartBarSquare } from 'r
 import { CalendarGrid } from '@/components/CalendarGrid'
 import { ConteudoPanel } from '@/components/ConteudoPanel'
 import type { Turma, Aula } from '@/types'
-import { parseLocalDate } from '@/lib/date-utils'
+import { parseLocalDate, isTurmaExpired } from '@/lib/date-utils'
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false)
@@ -98,7 +98,9 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
   const iconEntry = TECH_ICONS[turma.icon]
   const Icon = iconEntry?.icon
   const isAdmin = user?.role === 'admin'
-  const canEdit = user?.role === 'admin' || user?.role === 'teacher'
+  const isArchived = turma.archived === true || isTurmaExpired(turma.endDate)
+  const canView = isAdmin || user?.role === 'teacher'
+  const canEdit = isAdmin || (user?.role === 'teacher' && !isArchived)
 
   return (
     <motion.div
@@ -130,9 +132,19 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--c-text)' }}>
-                {turma.name}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--c-text)' }}>
+                  {turma.name}
+                </p>
+                {isArchived && (
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{ background: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+                  >
+                    Arquivada
+                  </span>
+                )}
+              </div>
               <p className="text-xs" style={{ color: 'var(--c-subtle)' }}>
                 {parseLocalDate(turma.startDate).toLocaleDateString('pt-BR')} →{' '}
                 {parseLocalDate(turma.endDate).toLocaleDateString('pt-BR')}
@@ -141,7 +153,7 @@ export default function TurmaPage({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {canEdit && (
+        {canView && (
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               href={`/dashboard/admin/turmas/${id}/relatorio`}

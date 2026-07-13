@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/require-admin'
 import { adminDb } from '@/lib/firebase-admin'
+import { isTurmaExpired } from '@/lib/turma-archive'
 import type { Turma } from '@/types'
 
 export async function GET() {
@@ -7,7 +8,22 @@ export async function GET() {
   if (result instanceof Response) return result
 
   const snap = await adminDb.collection('turmas').orderBy('createdAt', 'desc').get()
-  const turmas = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  const now = new Date()
+  const batch = adminDb.batch()
+  let hasUpdates = false
+
+  const turmas = snap.docs.map((d) => {
+    const data = d.data() as Omit<Turma, 'id'>
+    if (data.archived !== true && isTurmaExpired(data.endDate, now)) {
+      const archivedAt = now.toISOString()
+      batch.update(d.ref, { archived: true, archivedAt, archivedBy: 'system' })
+      hasUpdates = true
+      return { id: d.id, ...data, archived: true, archivedAt, archivedBy: 'system' }
+    }
+    return { id: d.id, ...data }
+  })
+
+  if (hasUpdates) await batch.commit()
   return Response.json(turmas)
 }
 

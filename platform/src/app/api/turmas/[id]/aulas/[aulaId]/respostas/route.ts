@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireAuthAny } from '@/lib/require-auth-any'
 import { requireEditor } from '@/lib/require-editor'
+import { isTurmaArchived } from '@/lib/turma-archive'
 
 type Ctx = { params: Promise<{ id: string; aulaId: string }> }
 
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const userData = userSnap.data()
   const email = userData?.email as string | undefined
   if (!email) return Response.json({ error: 'User not found' }, { status: 404 })
+
+  const turmaDoc = await adminDb.collection('turmas').doc(id).get()
+  if (!turmaDoc.exists) return Response.json({ error: 'Turma não encontrada.' }, { status: 404 })
+  const turmaData = turmaDoc.data()!
+  if (isTurmaArchived({ archived: turmaData.archived, endDate: turmaData.endDate })) {
+    return Response.json({ error: 'Turma arquivada. Não é possível enviar respostas.' }, { status: 403 })
+  }
 
   await adminDb
     .collection('turmas').doc(id)

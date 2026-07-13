@@ -36,6 +36,7 @@ export default function AdminDashboard() {
 
   const [turmasEnabled, setTurmasEnabled] = useState(true)
   const { data: turmas = [], isLoading: turmasLoading } = useAdminTurmas(turmasEnabled)
+  const activeTurmas = turmas.filter((t) => !t.archived)
 
   const [detailUser, setDetailUser] = useState<UserProfile | null>(null)
   const [search, setSearch] = useState('')
@@ -319,7 +320,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {!turmasLoading && turmas.length === 0 ? (
+          {!turmasLoading && activeTurmas.length === 0 ? (
             <div className="px-6 py-5 border-b text-sm" style={{ borderColor: 'var(--c-border)', color: 'var(--c-subtle)' }}>
               Crie uma turma antes de adicionar alguém à lista de acesso.{' '}
               <Link href="/dashboard/admin/turmas" className="font-semibold underline" style={{ color: 'var(--c-text)' }}>
@@ -357,7 +358,7 @@ export default function AdminDashboard() {
                 <option value="" disabled>
                   {turmasLoading ? 'Carregando turmas...' : 'Selecione a turma'}
                 </option>
-                {turmas.map((t) => (
+                {activeTurmas.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
+import { assertTurmaEditable } from '@/lib/turma-archive'
 import type { BancoAula } from '@/types'
 
 export async function GET(
@@ -41,8 +42,8 @@ export async function POST(
     return Response.json({ error: 'O título é obrigatório.' }, { status: 400 })
   }
 
-  const turmaDoc = await adminDb.collection('turmas').doc(id).get()
-  if (!turmaDoc.exists) return Response.json({ error: 'Turma não encontrada.' }, { status: 404 })
+  const turmaResult = await assertTurmaEditable(id, auth.role)
+  if (turmaResult instanceof Response) return turmaResult
 
   let teachers = body.teachers ?? []
   if (auth.role === 'teacher') {

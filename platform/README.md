@@ -27,6 +27,7 @@ NEXT_PUBLIC_ADMIN_EMAIL=          # email do admin hardcoded
 NEXT_PUBLIC_OPEN_SIGNUP=true      # true = qualquer Google login aceito (dev); false = usa allowlist
 NEXT_PUBLIC_FIREBASE_*            # config do Firebase client
 FIREBASE_ADMIN_*                  # credenciais do Firebase Admin SDK
+CRON_SECRET=                      # protege /api/cron/archive-turmas (header Authorization: Bearer <valor>)
 ```
 
 ## Controle de acesso
@@ -47,6 +48,9 @@ allowlist/{email}
 turmas/{id}
   name, icon, iconColor, startDate, endDate
   students: string[]   // emails matriculados
+  archived?: boolean
+  archivedAt?: string | null   // ISO datetime, ou null quando desarquivada
+  archivedBy?: string | null   // uid do admin, ou 'system' quando auto-arquivada
 
 turmas/{id}/aulas/{id}
   title, description, date, startTime, endTime
@@ -87,6 +91,7 @@ users/{uid}/notas/{id}
 | `/api/turmas/[id]/aulas/[aulaId]/chamada` | POST | any | Aluno responde chamada com código |
 | `/api/turmas/[id]/aulas/[aulaId]/respostas` | GET | any | Editor recebe todas as respostas; aluno recebe só a sua (ou `null`) |
 | `/api/turmas/[id]/aulas/[aulaId]/respostas` | POST | any | Aluno envia respostas da avaliação (salva em `respostas/{email}`) |
+| `/api/cron/archive-turmas` | GET | `CRON_SECRET` (header `Authorization: Bearer`) | Varre todas as turmas e arquiva as expiradas (Vercel Cron, diário) |
 
 ## Permissões do aluno
 
@@ -158,6 +163,17 @@ var(--c-gold)    / --c-gold-soft    / --c-gold-strong       /* badge "admin" */
 ```
 
 Para usar uma cor semântica como fundo sólido com texto legível em ambos os temas, use `color: var(--c-bg)` no texto em vez de um branco fixo — `--c-bg` é escuro no dark mode e claro no light mode, então o contraste se resolve automaticamente.
+
+### Arquivamento de turmas
+
+Uma turma pode ser arquivada manualmente por um admin (`PATCH /api/admin/turmas/[id]` com `{ archived: true }`, disponível em `TurmaForm` e na listagem `/dashboard/admin/turmas`) ou automaticamente, a partir de 1 dia após o `endDate`.
+
+- **Estado efetivo vs. flag persistida**: `isTurmaArchived()` (`src/lib/turma-archive.ts`) considera uma turma arquivada se `archived === true` **ou** se `isTurmaExpired(endDate)` já for verdade — mesmo que o job ainda não tenha rodado. Isso garante que o bloqueio de escrita (ver abaixo) funciona no dia certo independentemente de cron ou lazy-check terem rodado. `isTurmaExpired` mora em `src/lib/date-utils.ts` (client-safe, sem `firebase-admin`) e é reexportada por `turma-archive.ts` para uso server-side.
+- **Persistência da flag** acontece em três lugares (redundantes de propósito, já que o projeto não tinha nenhuma infra de cron antes desta feature):
+  1. `GET /api/admin/turmas` e `GET /api/admin/turmas/[id]` — lazy-check: ao listar/buscar, qualquer turma expirada e ainda não marcada é arquivada antes da resposta.
+  2. `GET /api/cron/archive-turmas` — Vercel Cron diário (`vercel.json`), protegido por `CRON_SECRET`, varre a coleção inteira via `autoArchiveExpiredTurmas()`.
+- **Somente admin edita turma arquivada**: rotas de escrita em `turmas/{id}/aulas`, `banco` e `banco/{id}/agendar` chamam `assertTurmaEditable(turmaId, role)`, que retorna 403 se a turma estiver arquivada e quem pediu não for admin. `chamada` (check-in do aluno) e `respostas` (envio de avaliação) bloqueiam incondicionalmente quando arquivada, pois não têm caso de uso admin. No client, `canEdit` na página da turma (`/dashboard/turmas/[id]`) já é `false` para professores em turma arquivada, então a maior parte da UI de edição já nem aparece.
+- **Visibilidade**: turmas arquivadas somem do dropdown de turma na Lista de acesso (`/dashboard/admin`), mas continuam aparecendo normalmente na busca de Usuários cadastrados (que não filtra por turma) e nas listagens/relatórios do admin.
 
 ### Datas não podem ser no passado
 Criar aula (calendário) e agendar aula do banco compartilham a mesma regra: a data não pode ser anterior a hoje, dentro da janela `startDate`/`endDate` da turma. A validação existe em duas camadas — client (atributo `min` do `<input type="date">`, calculado como `max(turmaStartDate, hoje)`) e servidor (`POST /api/turmas/[id]/aulas` e `POST /api/turmas/[id]/banco/[bancoId]/agendar` comparam `body.date` com a data atual). Editar uma aula já existente no passado continua permitido — a regra vale só para criar/agendar.

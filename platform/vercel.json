@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/archive-turmas",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

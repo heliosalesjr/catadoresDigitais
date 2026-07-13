@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
+import { assertTurmaEditable } from '@/lib/turma-archive'
 
 type Ctx = { params: Promise<{ id: string; bancoId: string }> }
 
@@ -10,6 +11,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
   const { id, bancoId } = await params
   const body = await req.json()
+
+  const turmaResult = await assertTurmaEditable(id, auth.role)
+  if (turmaResult instanceof Response) return turmaResult
 
   const ref = adminDb.collection('turmas').doc(id).collection('banco').doc(bancoId)
   const doc = await ref.get()
@@ -30,6 +34,9 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   if (auth instanceof Response) return auth
 
   const { id, bancoId } = await params
+
+  const turmaResult = await assertTurmaEditable(id, auth.role)
+  if (turmaResult instanceof Response) return turmaResult
 
   const ref = adminDb.collection('turmas').doc(id).collection('banco').doc(bancoId)
   const doc = await ref.get()

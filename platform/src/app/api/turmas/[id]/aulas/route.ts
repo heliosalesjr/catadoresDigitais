@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
 import { requireAuthAny } from '@/lib/require-auth-any'
+import { assertTurmaEditable } from '@/lib/turma-archive'
 import type { Aula } from '@/types'
 
 export async function GET(
@@ -47,10 +48,10 @@ export async function POST(
     return Response.json({ error: 'Título, data, início e fim são obrigatórios.' }, { status: 400 })
   }
 
-  const turmaDoc = await adminDb.collection('turmas').doc(id).get()
-  if (!turmaDoc.exists) return Response.json({ error: 'Turma não encontrada.' }, { status: 404 })
+  const turmaResult = await assertTurmaEditable(id, auth.role)
+  if (turmaResult instanceof Response) return turmaResult
 
-  const { startDate, endDate } = turmaDoc.data()!
+  const { startDate, endDate } = turmaResult.turma
   if (body.date < startDate || body.date > endDate) {
     return Response.json({ error: 'Data fora do período da turma.' }, { status: 400 })
   }

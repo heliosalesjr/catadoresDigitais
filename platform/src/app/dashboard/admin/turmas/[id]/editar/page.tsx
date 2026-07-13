@@ -27,6 +27,7 @@ export default function EditarTurmaPage({ params }: { params: Promise<{ id: stri
       mode="edit"
       turmaId={id}
       backHref={`/dashboard/turmas/${id}`}
+      archived={turma.archived ?? false}
       initialData={{
         name: turma.name,
         icon: turma.icon,

@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase-admin'
 import { requireEditor } from '@/lib/require-editor'
 import { requireAdmin } from '@/lib/require-admin'
 import { requireAuthAny } from '@/lib/require-auth-any'
+import { assertTurmaEditable } from '@/lib/turma-archive'
 
 type Ctx = { params: Promise<{ id: string; aulaId: string }> }
 
@@ -23,6 +24,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
   const { id, aulaId } = await params
   const body = await req.json()
+
+  const turmaResult = await assertTurmaEditable(id, auth.role)
+  if (turmaResult instanceof Response) return turmaResult
 
   const ref = adminDb.collection('turmas').doc(id).collection('aulas').doc(aulaId)
   const doc = await ref.get()

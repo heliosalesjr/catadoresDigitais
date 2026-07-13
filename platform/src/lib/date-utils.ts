@@ -43,3 +43,14 @@ export function fmtFullDate(iso: string): string {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
   })
 }
+
+/**
+ * Uma turma vira elegível para arquivamento automático a partir de 1 dia
+ * após o `endDate` (data-only, sem considerar horário/timezone).
+ */
+export function isTurmaExpired(endDate: string, now: Date = new Date()): boolean {
+  const threshold = parseLocalDate(endDate)
+  threshold.setDate(threshold.getDate() + 1)
+  const today = parseLocalDate(dateToISO(now))
+  return today >= threshold
+}
