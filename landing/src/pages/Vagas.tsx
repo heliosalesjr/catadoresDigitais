@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
-import { HiOutlineArrowRight, HiOutlineEnvelope, HiOutlineHeart } from 'react-icons/hi2';
 import {
   HiOutlineAcademicCap,
+  HiOutlineArrowRight,
   HiOutlineChatBubbleBottomCenterText,
   HiOutlineClock,
+  HiOutlineCommandLine,
+  HiOutlineEnvelope,
+  HiOutlineHeart,
+  HiOutlineMegaphone,
   HiOutlineSparkles,
   HiOutlineUserGroup,
 } from 'react-icons/hi2';
-import { HiOutlineCommandLine, HiOutlineMegaphone } from 'react-icons/hi2';
 import { BsController } from 'react-icons/bs';
 import { useTheme } from '../context/ThemeContext';
 
