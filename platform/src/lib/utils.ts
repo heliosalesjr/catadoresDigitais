@@ -11,3 +11,16 @@ export function groupByDate(aulas: UpcomingAula[]): [string, UpcomingAula[]][] {
   }
   return Array.from(map.entries())
 }
+
+export function isValidCPF(cpf: string): boolean {
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false
+
+  for (const len of [9, 10]) {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += Number(digits[i]) * (len + 1 - i)
+    const check = ((sum * 10) % 11) % 10
+    if (check !== Number(digits[len])) return false
+  }
+  return true
+}

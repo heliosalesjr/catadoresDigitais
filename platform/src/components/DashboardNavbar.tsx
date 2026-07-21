@@ -1,9 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { signOut } from '@/lib/auth-helpers'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/context/ThemeContext'
+import { ProfileModal } from '@/components/ProfileModal'
 import { HiOutlineSun, HiOutlineMoon, HiArrowRightOnRectangle } from 'react-icons/hi2'
 
 const ROLE_TITLES: Record<string, string> = {
@@ -26,9 +29,10 @@ interface Props {
 
 
 export function DashboardNavbar({ title: titleProp }: Props) {
-  const { user } = useAuth()
+  const { user, refetch } = useAuth()
   const { isDark, toggle } = useTheme()
   const router = useRouter()
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const role = user?.role ?? ''
   const roleTitle = titleProp ?? ROLE_TITLES[role] ?? 'Dashboard'
@@ -79,16 +83,23 @@ export function DashboardNavbar({ title: titleProp }: Props) {
           {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
         </button>
 
-        {user?.photoURL && (
-          <img src={user.photoURL} alt={user.name} className="w-8 h-8 rounded-full" />
+        {user && (
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-3 rounded-full transition-opacity hover:opacity-80"
+            title="Editar meu perfil"
+          >
+            {user.photoURL && (
+              <img src={user.photoURL} alt={user.name} className="w-8 h-8 rounded-full" />
+            )}
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-sm font-medium leading-tight" style={{ color: 'var(--c-text)' }}>
+                {user.name}
+              </span>
+              <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>{user.email}</span>
+            </div>
+          </button>
         )}
-
-        <div className="hidden sm:flex flex-col items-end">
-          <span className="text-sm font-medium leading-tight" style={{ color: 'var(--c-text)' }}>
-            {user?.name}
-          </span>
-          <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>{user?.email}</span>
-        </div>
 
         <button
           onClick={handleSignOut}
@@ -100,6 +111,16 @@ export function DashboardNavbar({ title: titleProp }: Props) {
           <HiArrowRightOnRectangle className="w-4 h-4" />
         </button>
       </div>
+
+      <AnimatePresence>
+        {profileOpen && user && (
+          <ProfileModal
+            user={user}
+            onClose={() => setProfileOpen(false)}
+            onSaved={refetch}
+          />
+        )}
+      </AnimatePresence>
     </header>
   )
 }

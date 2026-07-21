@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
@@ -9,6 +9,13 @@ import type { UserProfile } from '@/types'
 export function useAuth() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const refetch = useCallback(async () => {
+    const uid = auth.currentUser?.uid
+    if (!uid) return
+    const snap = await getDoc(doc(db, 'users', uid))
+    setUser(snap.exists() ? (snap.data() as UserProfile) : null)
+  }, [])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -24,5 +31,5 @@ export function useAuth() {
     return unsub
   }, [])
 
-  return { user, loading }
+  return { user, loading, refetch }
 }

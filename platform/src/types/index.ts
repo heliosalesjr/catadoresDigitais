@@ -14,6 +14,9 @@ export interface UserProfile {
   photoURL: string | null
   role: Role
   createdAt: string
+  phone?: string
+  cpf?: string
+  birthDate?: string // ISO date YYYY-MM-DD
 }
 
 export interface Nota {
