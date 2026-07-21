@@ -24,3 +24,17 @@ export function isValidCPF(cpf: string): boolean {
   }
   return true
 }
+
+export function formatCPF(digits: string): string {
+  return digits
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+}
+
+export function formatPhone(digits: string): string {
+  const d = digits.slice(0, 11)
+  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+}

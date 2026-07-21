@@ -7,9 +7,15 @@ import type { UserProfile, Turma } from '@/types'
 
 import { ROLE_LABEL, ROLE_COLORS, ROLE_BG_COLORS } from '@/lib/constants'
 import { Tooltip } from './Tooltip'
+import { formatCPF, formatPhone } from '@/lib/utils'
+import { parseLocalDate } from '@/lib/date-utils'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+function formatBirthDate(iso: string) {
+  return parseLocalDate(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 interface Props {
@@ -200,6 +206,33 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
               Membro desde
             </p>
             <p className="text-sm" style={{ color: 'var(--c-text)' }}>{formatDate(user.createdAt)}</p>
+          </div>
+
+          {/* Contact info */}
+          <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)' }}>
+            <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: 'var(--c-faint)' }}>
+              Dados pessoais
+            </p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>Telefone</span>
+                <span className="text-sm" style={{ color: user.phone ? 'var(--c-text)' : 'var(--c-faint)' }}>
+                  {user.phone ? formatPhone(user.phone) : 'Não informado'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>CPF</span>
+                <span className="text-sm" style={{ color: user.cpf ? 'var(--c-text)' : 'var(--c-faint)' }}>
+                  {user.cpf ? formatCPF(user.cpf) : 'Não informado'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>Data de nascimento</span>
+                <span className="text-sm" style={{ color: user.birthDate ? 'var(--c-text)' : 'var(--c-faint)' }}>
+                  {user.birthDate ? formatBirthDate(user.birthDate) : 'Não informado'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Role selector */}

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { HiXMark, HiUser } from 'react-icons/hi2'
 import type { UserProfile } from '@/types'
 import { inputStyle } from '@/lib/styles'
-import { isValidCPF } from '@/lib/utils'
+import { isValidCPF, formatCPF, formatPhone } from '@/lib/utils'
 
 const ease = [0.32, 0.72, 0, 1] as const
 
@@ -15,22 +15,7 @@ interface Props {
   onSaved: (patch: Partial<UserProfile>) => void
 }
 
-function formatCPF(digits: string): string {
-  return digits
-    .slice(0, 11)
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-}
-
-function formatPhone(digits: string): string {
-  const d = digits.slice(0, 11)
-  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-}
-
 export function ProfileModal({ user, onClose, onSaved }: Props) {
-  const [name, setName] = useState(user.name)
   const [phone, setPhone] = useState(formatPhone(user.phone ?? ''))
   const [cpf, setCpf] = useState(formatCPF(user.cpf ?? ''))
   const [birthDate, setBirthDate] = useState(user.birthDate ?? '')
@@ -42,22 +27,20 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
 
   async function handleSave() {
     setError(null)
-    if (!name.trim()) return setError('Informe seu nome.')
     if (cpfDigits && !isValidCPF(cpfDigits)) return setError('CPF inválido.')
     if (phoneDigits && (phoneDigits.length < 10 || phoneDigits.length > 11)) return setError('Telefone inválido.')
 
-    const trimmedName = name.trim()
     setSaving(true)
     const res = await fetch('/api/users/me', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: trimmedName, phone: phoneDigits, cpf: cpfDigits, birthDate }),
+      body: JSON.stringify({ phone: phoneDigits, cpf: cpfDigits, birthDate }),
     })
     const data = await res.json()
     setSaving(false)
     if (!res.ok) return setError(data.error ?? 'Erro ao salvar.')
 
-    onSaved({ name: trimmedName, phone: phoneDigits, cpf: cpfDigits, birthDate })
+    onSaved({ phone: phoneDigits, cpf: cpfDigits, birthDate })
     onClose()
   }
 
@@ -106,13 +89,9 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
         <div className="flex flex-col gap-4 p-5">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: 'var(--c-subtle)' }}>Nome</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="rounded-xl px-3 py-2 text-sm border outline-none"
-              style={inputStyle}
-            />
+            <p className="rounded-xl px-3 py-2 text-sm border" style={{ ...inputStyle, opacity: 0.7 }}>
+              {user.name}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -163,7 +142,7 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || !name.trim()}
+              disabled={saving}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
               style={{ background: 'var(--c-gold)', color: 'var(--c-bg)' }}
             >

@@ -6,14 +6,8 @@ export async function PATCH(req: Request) {
   const auth = await requireAuthAny()
   if (auth instanceof Response) return auth
 
-  const body = await req.json() as { name?: string; phone?: string; cpf?: string; birthDate?: string }
+  const body = await req.json() as { phone?: string; cpf?: string; birthDate?: string }
   const update: Record<string, string> = {}
-
-  if (body.name !== undefined) {
-    const trimmed = body.name.trim()
-    if (!trimmed) return Response.json({ error: 'Name cannot be empty' }, { status: 400 })
-    update.name = trimmed
-  }
 
   if (body.phone !== undefined) {
     const digits = body.phone.replace(/\D/g, '')
