@@ -1,14 +1,19 @@
 import { motion } from 'framer-motion';
+import { Link, useLocation } from 'react-router-dom';
 import { HiOutlineEnvelope } from 'react-icons/hi2';
 import { Logo } from './Logo';
 
-const footerLinks = [
-  { label: 'Cursos', href: '#cursos' },
-  { label: 'Inscrições', href: '#inscricoes' },
-  { label: 'Realização', href: '#realizacao' },
+const sectionLinks = [
+  { label: 'Cursos', hash: '#cursos' },
+  { label: 'Inscrições', hash: '#inscricoes' },
+  { label: 'Realização', hash: '#realizacao' },
 ];
 
 export function Footer() {
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
+  const sectionHref = (hash: string) => (isHome ? hash : `/${hash}`);
+
   return (
     <footer className="relative border-t border-[var(--c-border)] bg-[var(--c-bg-alt)]">
       <div className="max-w-7xl mx-auto px-6 py-14 md:py-16">
@@ -26,16 +31,24 @@ export function Footer() {
               Navegação
             </p>
             <ul className="space-y-2">
-              {footerLinks.map((link) => (
-                <li key={link.href}>
+              {sectionLinks.map((link) => (
+                <li key={link.hash}>
                   <a
-                    href={link.href}
+                    href={sectionHref(link.hash)}
                     className="font-dm text-sm text-[var(--c-muted)] hover:text-brand-yellow transition-colors"
                   >
                     {link.label}
                   </a>
                 </li>
               ))}
+              <li>
+                <Link
+                  to="/vagas"
+                  className="font-dm text-sm text-[var(--c-muted)] hover:text-brand-yellow transition-colors"
+                >
+                  Vagas
+                </Link>
+              </li>
             </ul>
           </div>
 
