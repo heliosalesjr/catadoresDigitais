@@ -29,7 +29,7 @@ interface Props {
 
 
 export function DashboardNavbar({ title: titleProp }: Props) {
-  const { user, refetch } = useAuth()
+  const { user, updateLocal } = useAuth()
   const { isDark, toggle } = useTheme()
   const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -117,7 +117,7 @@ export function DashboardNavbar({ title: titleProp }: Props) {
           <ProfileModal
             user={user}
             onClose={() => setProfileOpen(false)}
-            onSaved={refetch}
+            onSaved={updateLocal}
           />
         )}
       </AnimatePresence>

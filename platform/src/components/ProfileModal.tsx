@@ -12,7 +12,7 @@ const ease = [0.32, 0.72, 0, 1] as const
 interface Props {
   user: UserProfile
   onClose: () => void
-  onSaved: () => Promise<void>
+  onSaved: (patch: Partial<UserProfile>) => void
 }
 
 function formatCPF(digits: string): string {
@@ -46,17 +46,18 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
     if (cpfDigits && !isValidCPF(cpfDigits)) return setError('CPF inválido.')
     if (phoneDigits && (phoneDigits.length < 10 || phoneDigits.length > 11)) return setError('Telefone inválido.')
 
+    const trimmedName = name.trim()
     setSaving(true)
     const res = await fetch('/api/users/me', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim(), phone: phoneDigits, cpf: cpfDigits, birthDate }),
+      body: JSON.stringify({ name: trimmedName, phone: phoneDigits, cpf: cpfDigits, birthDate }),
     })
     const data = await res.json()
     setSaving(false)
     if (!res.ok) return setError(data.error ?? 'Erro ao salvar.')
 
-    await onSaved()
+    onSaved({ name: trimmedName, phone: phoneDigits, cpf: cpfDigits, birthDate })
     onClose()
   }
 

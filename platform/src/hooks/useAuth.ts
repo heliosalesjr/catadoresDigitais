@@ -17,6 +17,10 @@ export function useAuth() {
     setUser(snap.exists() ? (snap.data() as UserProfile) : null)
   }, [])
 
+  const updateLocal = useCallback((patch: Partial<UserProfile>) => {
+    setUser((prev) => prev ? { ...prev, ...patch } : prev)
+  }, [])
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
@@ -31,5 +35,5 @@ export function useAuth() {
     return unsub
   }, [])
 
-  return { user, loading, refetch }
+  return { user, loading, refetch, updateLocal }
 }
