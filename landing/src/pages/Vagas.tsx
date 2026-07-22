@@ -108,23 +108,13 @@ export function Vagas() {
   }, []);
 
   return (
-    <main className="pt-32 md:pt-40">
+    <main>
       {/* Header */}
-      <section ref={headerRef} className="relative pb-16 md:pb-20 overflow-hidden">
+      <section ref={headerRef} className="relative pt-32 pb-16 md:pt-40 md:pb-20 overflow-hidden">
         <div
           className="absolute inset-0 transition-colors duration-500"
-          style={{
-            background: isDark
-              ? 'linear-gradient(135deg, #06030F 0%, #0F0A1E 40%, #1A0A3C 100%)'
-              : '#FFFFFF',
-          }}
+          style={{ background: isDark ? 'linear-gradient(to bottom, #06030F, #0F0A1E, #06030F)' : 'linear-gradient(to bottom, #FFFFFF, #F1F0FC, #FFFFFF)' }}
         />
-        {isDark && (
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none"
-            style={{ background: 'rgba(255,197,48,0.05)' }}
-          />
-        )}
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <motion.div
