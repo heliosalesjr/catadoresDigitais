@@ -1,7 +1,17 @@
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import { HiOutlineHeart } from 'react-icons/hi';
 import { useTheme } from '../context/ThemeContext';
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+};
 
 export function Sponsors() {
   const ref = useRef(null);
@@ -22,90 +32,83 @@ export function Sponsors() {
 
       <div ref={ref} className="relative z-10 max-w-5xl mx-auto px-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.6 }}
+          className="flex justify-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--c-border)] bg-[var(--c-input-bg)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--c-border)] bg-[var(--c-input-bg)]">
             <HiOutlineHeart className="w-4 h-4 text-[var(--c-accent-coral)]" />
             <span className="font-dm text-sm font-medium text-[var(--c-muted)] tracking-wide">
               Quem torna isso possível
             </span>
           </div>
-          <h2 className="font-syne font-extrabold text-4xl md:text-5xl text-[var(--c-text)] mb-4">
-            Realização e Patrocínio
-          </h2>
-          <p className="font-dm text-[var(--c-muted)] max-w-xl mx-auto">
-            O projeto Catadores Digitais existe graças ao compromisso de organizações
-            que acreditam no potencial transformador da educação tecnológica.
-          </p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="mb-12"
+          variants={containerVariants}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}
+          className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6"
         >
-          <p className="font-dm text-xs font-semibold tracking-widest uppercase text-[var(--c-subtle)] text-center mb-6">
-            Realização
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <img
-              src="/ipes-logo.webp"
-              alt="Instituto Ipês"
-              className="h-24 w-auto object-contain"
-              style={{ filter: isDark ? 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' : 'none' }}
-            />
-          </div>
-        </motion.div>
+          {/* Box 1 — Realização / Instituto Ipês, tall left column */}
+          <motion.div
+            variants={cardVariants}
+            className="md:row-span-2 rounded-3xl p-8 md:p-9 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[#A855F7]/10 to-transparent glass-card"
+            style={{ borderColor: 'rgba(168,85,247,0.2)' }}
+          >
+            <p className="font-dm text-xs font-semibold tracking-widest uppercase text-[var(--c-subtle)] mb-6">
+              Realização
+            </p>
+            <a href="https://institutoipes.org.br/" target="_blank" rel="noopener noreferrer">
+              <img
+                src="/ipes-logo.webp"
+                alt="Instituto Ipês"
+                className="h-28 w-auto object-contain"
+                style={{ filter: isDark ? 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' : 'none' }}
+              />
+            </a>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-16"
-        >
-          <p className="font-dm text-xs font-semibold tracking-widest uppercase text-[var(--c-subtle)] text-center mb-6">
-            Patrocínio
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <img
-              src="/CAIXA_2cores_positiva.png"
-              alt="Caixa Econômica Federal"
-              className="h-24 w-auto object-contain"
-              style={{ filter: isDark ? 'brightness(1.1) drop-shadow(0 0 12px rgba(255,255,255,0.08))' : 'none' }}
-            />
-          </div>
-        </motion.div>
+          {/* Box 2 — intro text */}
+          <motion.div
+            variants={cardVariants}
+            className="md:col-span-2 rounded-3xl p-8 glass-card flex flex-col justify-center"
+          >
+            <h2 className="font-syne font-extrabold text-3xl md:text-4xl text-[var(--c-text)] mb-3 leading-tight">
+              Realização e Patrocínio
+            </h2>
+            <p className="font-dm text-[var(--c-muted)] leading-relaxed max-w-lg">
+              O projeto Catadores Digitais existe graças ao compromisso de organizações
+              que acreditam no potencial transformador da educação tecnológica.
+            </p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.45 }}
-          className="rounded-2xl p-7 md:p-10 glass-card border-brand-yellow/10"
-        >
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img
-              src="/ipes-logo.webp"
-              alt="Instituto Ipês"
-              className="w-16 h-16 object-contain flex-shrink-0"
-              style={{ filter: isDark ? 'brightness(1.1)' : 'none' }}
-            />
-            <div>
-              <h3 className="font-syne font-bold text-xl text-[var(--c-text)] mb-2">
-                Instituto Ipês
-              </h3>
-              <p className="font-dm text-sm text-[var(--c-muted)] leading-relaxed">
-                O Instituto Ipês é uma organização da sociedade civil que atua no
-                desenvolvimento de projetos sociais e educacionais com foco em populações
-                em situação de vulnerabilidade. Com o Catadores Digitais, o Instituto
-                aposta na tecnologia como caminho concreto para ampliar horizontes e gerar
-                renda para quem mais precisa dessas oportunidades.
-              </p>
-            </div>
-          </div>
+          {/* Box 3 — Patrocínio / Caixa */}
+          <motion.div
+            variants={cardVariants}
+            className="md:col-span-2 rounded-3xl p-8 flex flex-wrap items-center gap-6"
+            style={{ background: '#003087', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <p className="font-dm text-xs font-semibold tracking-widest uppercase text-white/60 w-full mb-1 md:hidden">
+              Patrocínio
+            </p>
+            <a
+              href="https://www.caixa.gov.br/sustentabilidade/fundo-socioambiental-caixa/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/Caixa_Fundo-Socio-Ambiental_Negativa_SB.png"
+                alt="Caixa Econômica Federal"
+                className="h-12 md:h-14 w-auto object-contain"
+              />
+            </a>
+            <div className="hidden md:block h-12 w-px bg-white/15" />
+            <p className="hidden md:block font-dm text-xs font-semibold tracking-widest uppercase text-white/60">
+              Patrocínio
+            </p>
+          </motion.div>
         </motion.div>
       </div>
     </section>

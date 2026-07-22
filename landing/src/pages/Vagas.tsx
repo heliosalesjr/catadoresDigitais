@@ -6,6 +6,7 @@ import {
   HiOutlineChatBubbleBottomCenterText,
   HiOutlineClock,
   HiOutlineCommandLine,
+  HiOutlineDocumentText,
   HiOutlineEnvelope,
   HiOutlineHeart,
   HiOutlineMegaphone,
@@ -24,7 +25,8 @@ const tracks = [
     textColor: 'var(--c-accent-purple)',
     border: 'border-[#A855F7]/20',
     gradient: 'from-[#A855F7]/10 to-[#7C3AED]/5',
-    need: 'Alguém com vivência em desenvolvimento de jogos, design de personagens/cenários ou ferramentas de criação como Godot, Unity ou similares.',
+    need: 'Pessoas com vivência em desenvolvimento de jogos, design de personagens/cenários ou ferramentas de criação como Godot e outras soluções open source.',
+    pdf: 'Pedido orçamento PROFESSOR(A) — PRODUÇÃO DE GAMES.docx.pdf',
   },
   {
     id: 2,
@@ -34,7 +36,8 @@ const tracks = [
     textColor: 'var(--c-accent-yellow)',
     border: 'border-[#FFC530]/25',
     gradient: 'from-[#FFC530]/10 to-[#FF6B35]/5',
-    need: 'Alguém com experiência prática em HTML, CSS, JavaScript e no dia a dia de construir e publicar sites reais.',
+    need: 'Pessoas com experiência prática desde o HTML, CSS, JavaScript até chegar no ReactJS, com perfil Full Stack e generalista para guiar os alunos do código à publicação.',
+    pdf: 'Pedido orçamento PROFESSOR(A) — DESENVOLVIMENTO WEB.docx.pdf',
   },
   {
     id: 3,
@@ -44,7 +47,8 @@ const tracks = [
     textColor: 'var(--c-accent-coral)',
     border: 'border-[#FF6B35]/20',
     gradient: 'from-[#FF6B35]/10 to-[#FF9068]/5',
-    need: 'Alguém com experiência em estratégia de conteúdo, redes sociais e anúncios, disposto a ensinar na prática.',
+    need: 'Pessoas com experiência em estratégia de conteúdo, redes sociais e anúncios, dispostas a ensinar na prática como criar um plano de marketing no mundo real.  ',
+    pdf: 'Pedido orçamento PROFESSOR(A) — MARKETING DIGITAL E REDES SOCIAIS.docx.pdf',
   },
 ];
 
@@ -168,10 +172,10 @@ export function Vagas() {
             className="text-center mb-14"
           >
             <h2 className="font-syne font-extrabold text-3xl md:text-4xl text-[var(--c-text)] mb-4">
-              Trilhas com vaga aberta
+              Trilhas com vagas abertas
             </h2>
             <p className="font-dm text-[var(--c-muted)] max-w-2xl mx-auto">
-              Você pode se candidatar a mais de uma trilha, se tiver experiência em ambas.
+              Você pode acessar o PDF de cada trilha com os conteúdos propostos de cada curso. Você não precisa dominar todo o conteúdo de uma trilha, basta indicar quais segmentos você tem interesse em ensinar.
             </p>
           </motion.div>
 
@@ -199,9 +203,22 @@ export function Vagas() {
                   <h3 className="font-syne font-extrabold text-xl text-[var(--c-text)] mb-3 leading-tight">
                     {track.title}
                   </h3>
-                  <p className="font-dm text-sm text-[var(--c-muted)] leading-relaxed">
+                  <p className="font-dm text-sm text-[var(--c-muted)] leading-relaxed mb-6">
                     {track.need}
                   </p>
+
+                  <a
+                    href={`/${encodeURIComponent(track.pdf.normalize('NFD'))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 pt-4 border-t transition-opacity hover:opacity-80"
+                    style={{ borderColor: `${track.color}20` }}
+                  >
+                    <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0" style={{ color: track.textColor }} />
+                    <span className="font-dm text-sm font-semibold text-[var(--c-text)]">
+                      Ver detalhes da vaga (PDF)
+                    </span>
+                  </a>
                 </motion.div>
               );
             })}
