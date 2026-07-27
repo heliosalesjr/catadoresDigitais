@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { HiXMark, HiArrowTopRightOnSquare } from 'react-icons/hi2'
 import type { Material } from '@/types'
@@ -74,7 +75,7 @@ export function MaterialViewer({ link, accentColor, onClose }: Props) {
   const embedUrl = toEmbedUrl(link.url)
   const wide = isWidescreen(link.url)
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -138,5 +139,5 @@ export function MaterialViewer({ link, accentColor, onClose }: Props) {
         />
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HiXMark, HiExclamationTriangle } from 'react-icons/hi2'
 import { Tooltip } from './Tooltip'
@@ -35,7 +36,7 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
     return turmas.filter((t) => t.professors?.some((p) => p.uid === uid))
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -196,5 +197,5 @@ export function UserListModal({ filter, users, turmas, turmasLoading, onClose }:
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

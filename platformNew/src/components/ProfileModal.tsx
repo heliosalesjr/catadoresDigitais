@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiUser } from 'react-icons/hi2'
@@ -42,7 +43,7 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
     onClose()
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -150,5 +151,5 @@ export function ProfileModal({ user, onClose, onSaved }: Props) {
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

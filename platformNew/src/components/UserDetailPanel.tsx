@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiTrash, HiPencil, HiCheck } from 'react-icons/hi2'
@@ -92,7 +93,7 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
     setEditingName(false)
   }
 
-  return (
+  return createPortal((
     <>
       <motion.div
         initial={{ opacity: 0 }}
@@ -370,5 +371,5 @@ export function UserDetailPanel({ user, turmas, turmasLoading, onClose, onRoleUp
         </div>
       </motion.div>
     </>
-  )
+  ), document.body)
 }

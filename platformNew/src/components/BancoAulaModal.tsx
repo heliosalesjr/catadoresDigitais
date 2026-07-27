@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiPlus, HiTrash } from 'react-icons/hi2'
@@ -110,7 +111,7 @@ export function BancoAulaModal({ turmaId, turmaIconColor, banco, currentUser, on
     (t) => !form.teachers.find((ft) => ft.uid === t.uid)
   )
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -300,5 +301,5 @@ export function BancoAulaModal({ turmaId, turmaIconColor, banco, currentUser, on
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

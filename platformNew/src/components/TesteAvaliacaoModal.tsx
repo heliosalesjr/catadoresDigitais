@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiCheckCircle, HiXCircle } from 'react-icons/hi2'
@@ -83,7 +84,7 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
     onClose()
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -288,5 +289,5 @@ export function TesteAvaliacaoModal({ avaliacoes, accentColor, onClose, turmaId,
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

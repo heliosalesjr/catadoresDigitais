@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -137,7 +138,7 @@ export function AulaModal({
     (t) => !form.teachers.find((ft) => ft.uid === t.uid)
   )
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -451,5 +452,5 @@ export function AulaModal({
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

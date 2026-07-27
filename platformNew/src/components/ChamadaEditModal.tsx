@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HiXMark, HiChevronDown, HiCheckCircle, HiXCircle, HiLink } from 'react-icons/hi2'
@@ -86,7 +87,7 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
     setExpanded((p) => ({ ...p, [email]: !p[email] }))
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -293,5 +294,5 @@ export function ChamadaEditModal({ turmaId, turmaIconColor, aula, students, onCl
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

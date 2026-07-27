@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiLink, HiPencilSquare, HiListBullet } from 'react-icons/hi2'
@@ -58,7 +59,7 @@ export function AvaliacaoFormModal({ accentColor, onSave, onClose }: Props) {
     setOptions(next)
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -217,5 +218,5 @@ export function AvaliacaoFormModal({ accentColor, onSave, onClose }: Props) {
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }

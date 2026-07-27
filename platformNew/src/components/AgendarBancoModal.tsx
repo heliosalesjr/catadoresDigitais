@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HiXMark, HiCalendarDays } from 'react-icons/hi2'
@@ -47,7 +48,7 @@ export function AgendarBancoModal({
     onAgendado()
   }
 
-  return (
+  return createPortal((
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -160,5 +161,5 @@ export function AgendarBancoModal({
         </div>
       </motion.div>
     </motion.div>
-  )
+  ), document.body)
 }
