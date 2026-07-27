@@ -1,0 +1,125 @@
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+import { signOut } from '@/lib/auth-helpers'
+import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
+import { ProfileModal } from '@/components/ProfileModal'
+import { HiOutlineSun, HiOutlineMoon, HiArrowRightOnRectangle } from 'react-icons/hi2'
+
+const ROLE_TITLES: Record<string, string> = {
+  admin: 'Painel Admin',
+  teacher: 'Painel do Professor',
+  student: 'Painel do Aluno',
+}
+
+const ROLE_HOME: Record<string, string> = {
+  admin: '/dashboard/admin',
+  teacher: '/dashboard/teacher',
+  student: '/dashboard/student',
+}
+
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? '/'
+
+interface Props {
+  title?: string
+}
+
+export function DashboardNavbar({ title: titleProp }: Props) {
+  const { user, updateLocal } = useAuth()
+  const { isDark, toggle } = useTheme()
+  const navigate = useNavigate()
+  const [profileOpen, setProfileOpen] = useState(false)
+
+  const role = user?.role ?? ''
+  const roleTitle = titleProp ?? ROLE_TITLES[role] ?? 'Dashboard'
+  const roleHome = ROLE_HOME[role] ?? '/dashboard'
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/login')
+  }
+
+  return (
+    <header
+      className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between px-5 md:px-8 py-3 border-b backdrop-blur-xl"
+      style={{
+        background: 'color-mix(in srgb, var(--c-bg-alt) 75%, transparent)',
+        borderColor: 'var(--c-border)',
+      }}
+    >
+      {/* Left: logo + role title */}
+      <div className="flex items-center gap-3 min-w-0">
+        <a
+          href={LANDING_URL}
+          className="flex-shrink-0 text-2xl font-extrabold tracking-normal leading-none"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+        >
+          <span className="logo-gradient">Catadores</span>
+          {' '}
+          <span style={{ color: 'var(--c-text)' }}>Digitais</span>
+        </a>
+
+        <span className="w-px h-6 flex-shrink-0" style={{ background: 'var(--c-border-md)' }} />
+
+        <Link
+          to={roleHome}
+          className="text-sm font-semibold truncate transition-opacity hover:opacity-70"
+          style={{ color: 'var(--c-subtle)' }}
+        >
+          {roleTitle}
+        </Link>
+      </div>
+
+      {/* Right: controls */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <button
+          onClick={toggle}
+          aria-label="Alternar tema"
+          className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors cursor-pointer"
+          style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+        >
+          {isDark ? <HiOutlineSun className="w-4 h-4" /> : <HiOutlineMoon className="w-4 h-4" />}
+        </button>
+
+        {user && (
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-3 rounded-full transition-opacity hover:opacity-80 cursor-pointer"
+            title="Editar meu perfil"
+          >
+            {user.photoURL && (
+              <img src={user.photoURL} alt={user.name} className="w-8 h-8 rounded-full" />
+            )}
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-sm font-medium leading-tight" style={{ color: 'var(--c-text)' }}>
+                {user.name}
+              </span>
+              <span className="text-xs" style={{ color: 'var(--c-subtle)' }}>{user.email}</span>
+            </div>
+          </button>
+        )}
+
+        <button
+          onClick={handleSignOut}
+          className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors cursor-pointer"
+          style={{ borderColor: 'var(--c-border-md)', color: 'var(--c-subtle)' }}
+          title="Sair"
+          aria-label="Sair"
+        >
+          <HiArrowRightOnRectangle className="w-4 h-4" />
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {profileOpen && user && (
+          <ProfileModal
+            user={user}
+            onClose={() => setProfileOpen(false)}
+            onSaved={updateLocal}
+          />
+        )}
+      </AnimatePresence>
+    </header>
+  )
+}

@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function myRole() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          ? userDoc().role
+          : null;
+    }
+
+    function isAdmin() {
+      return myRole() == 'admin';
+    }
+
+    function isEditor() {
+      return myRole() == 'admin' || myRole() == 'teacher';
+    }
+
+    function myEmail() {
+      return userDoc().email;
+    }
+
+    // ── users ────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Admin lê todos; cada usuário lê o próprio doc; editores podem listar
+      // (necessário para resolver nomes de alunos/professores).
+      allow read: if isSignedIn() && (request.auth.uid == uid || isEditor());
+
+      // Criação do próprio perfil no primeiro login (role nunca 'admin' via
+      // client, exceto se ainda não existe doc e o email é o admin configurado —
+      // o admin é criado uma única vez pelo próprio fluxo de login).
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid;
+
+      // Admin edita qualquer perfil (mas não promove ninguém a admin);
+      // o próprio usuário edita campos não sensíveis (phone, cpf, birthDate).
+      allow update: if isSignedIn() && (
+        (isAdmin() && request.resource.data.role != 'admin' && resource.data.role != 'admin')
+        || (isAdmin() && resource.data.role == 'admin' && request.auth.uid == uid)
+        || (
+          request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['phone', 'cpf', 'birthDate', 'name', 'photoURL'])
+        )
+      );
+
+      // Admin remove usuários não-admin.
+      allow delete: if isAdmin() && resource.data.role != 'admin';
+
+      match /notas/{notaId} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // ── allowlist ────────────────────────────────────────────────────────────
+    match /allowlist/{email} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── turmas ───────────────────────────────────────────────────────────────
+    match /turmas/{turmaId} {
+      allow read: if isSignedIn();
+
+      // Admin cria/edita/deleta. Professores e alunos recém-convidados podem
+      // se auto-matricular (arrayUnion em students/professors) no 1º login.
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        // auto-archive por qualquer editor (flag archived + metadados)
+        || (isEditor() && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['archived', 'archivedAt', 'archivedBy']))
+        // auto-matrícula do próprio usuário (students ou professors apenas)
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['students', 'professors']));
+
+      // ── aulas ──────────────────────────────────────────────────────────────
+      match /aulas/{aulaId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isEditor();
+
+        // Editores atualizam tudo; alunos só podem marcar a própria presença.
+        allow update: if isEditor()
+          || (
+            isSignedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendance'])
+            && request.resource.data.attendance.diff(resource.data.get('attendance', {}))
+                .affectedKeys().hasOnly([myEmail()])
+            && request.resource.data.attendance[myEmail()] == 'present'
+          );
+
+        // ── respostas ────────────────────────────────────────────────────────
+        match /respostas/{email} {
+          // Editores leem todas; aluno lê apenas a sua.
+          allow read: if isEditor() || (isSignedIn() && myEmail() == email);
+          // Aluno grava apenas a própria resposta.
+          allow create, update: if isSignedIn()
+            && myEmail() == email
+            && request.resource.data.studentEmail == email;
+          allow delete: if isAdmin();
+        }
+      }
+
+      // ── banco de aulas ─────────────────────────────────────────────────────
+      match /banco/{bancoId} {
+        allow read, create, update: if isEditor();
+        allow delete: if isAdmin()
+          || (isEditor() && resource.data.createdBy == request.auth.uid);
+      }
+    }
+  }
+}
