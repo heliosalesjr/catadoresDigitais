@@ -6,6 +6,32 @@
 |---------|------------|
 | Landing | Vite + React + TypeScript + Tailwind + Framer Motion |
 | Platform | Next.js 16 (App Router, Turbopack) + Firebase (Auth + Firestore) + Tailwind v4 |
+| PlatformNew | Vite + React 19 + TypeScript + React Router 7 + TanStack Query + Tailwind v4 + Firebase (Auth + Firestore, SDK client) |
+
+---
+
+## PlatformNew (port sem Next.js / Vercel) — 2026-07-27
+
+Port completo da Platform para SPA Vite, em `/platformNew`. Todas as features
+mantidas. A versão Next em `/platform` continua intacta como referência.
+
+### O que mudou na arquitetura
+- As ~25 rotas `/api/*` (firebase-admin) viraram serviços client-side em `src/services/*`
+- Sessão server-side (cookie + proxy) virou guards de rota no React Router (`RequireAuth`)
+- Autorização migrou para `platformNew/firestore.rules` (**precisa de deploy antes de produção**)
+- Matrícula do 1º login (`/api/auth/enroll`) feita no cliente; cron de arquivamento virou auto-arquivamento ao admin abrir turmas
+- UI modernizada via design tokens (`src/index.css`: `.card`, `--c-surface`, Inter + Barlow Condensed)
+
+### Testes com emuladores (sem tocar no Firebase real)
+- `npm run emulators` (Auth :9099, Firestore :8080, UI :4000) + `npm run dev`
+- Flag `VITE_USE_EMULATORS=true` no `.env.local`; no modo emulador o projectId é forçado para `demo-catadores`
+- Emulador aplica o `firestore.rules` local com hot-reload; dados persistem em `./emulator-data`
+- Login fake do emulador: entrar com o e-mail de `VITE_ADMIN_EMAIL` para virar admin
+
+### Pendente ❌
+- Validar todos os fluxos nos emuladores (admin / professor / aluno)
+- Deploy: rules (`firebase deploy --only firestore:rules`), domínio autorizado no Auth, SPA fallback no host
+- Decidir destino de: exclusão de conta no Auth (hoje só remove o doc), validação do código de chamada no servidor (hoje é client-side) — ambos precisariam de Cloud Function
 
 ---
 
