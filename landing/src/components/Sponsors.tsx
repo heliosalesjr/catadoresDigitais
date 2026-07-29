@@ -57,9 +57,6 @@ export function Sponsors() {
             className="md:row-span-2 rounded-3xl p-8 md:p-9 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[#A855F7]/10 to-transparent glass-card"
             style={{ borderColor: 'rgba(168,85,247,0.2)' }}
           >
-            <p className="font-dm text-xs font-semibold tracking-widest uppercase text-[var(--c-subtle)] mb-6">
-              Realização
-            </p>
             <a href="https://institutoipes.org.br/" target="_blank" rel="noopener noreferrer">
               <img
                 src="/ipes-logo.webp"
@@ -76,7 +73,7 @@ export function Sponsors() {
             className="md:col-span-2 rounded-3xl p-8 glass-card flex flex-col justify-center"
           >
             <h2 className="font-syne font-extrabold text-3xl md:text-4xl text-[var(--c-text)] mb-3 leading-tight">
-              Realização e Patrocínio
+              Realização
             </h2>
             <p className="font-dm text-[var(--c-muted)] leading-relaxed max-w-lg">
               O projeto Catadores Digitais existe graças ao compromisso de organizações
@@ -87,27 +84,20 @@ export function Sponsors() {
           {/* Box 3 — Patrocínio / Caixa */}
           <motion.div
             variants={cardVariants}
-            className="md:col-span-2 rounded-3xl p-8 flex flex-wrap items-center gap-6"
+            className="md:col-span-2 rounded-3xl p-8 flex flex-wrap items-center justify-center gap-6"
             style={{ background: '#003087', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            <p className="font-dm text-xs font-semibold tracking-widest uppercase text-white/60 w-full mb-1 md:hidden">
-              Patrocínio
-            </p>
             <a
               href="https://www.caixa.gov.br/sustentabilidade/fundo-socioambiental-caixa/"
               target="_blank"
               rel="noopener noreferrer"
             >
               <img
-                src="/Caixa_Fundo-Socio-Ambiental_Negativa_SB.png"
+                src="/fsc_negativa_chapada.png"
                 alt="Caixa Econômica Federal"
                 className="h-12 md:h-14 w-auto object-contain"
               />
             </a>
-            <div className="hidden md:block h-12 w-px bg-white/15" />
-            <p className="hidden md:block font-dm text-xs font-semibold tracking-widest uppercase text-white/60">
-              Patrocínio
-            </p>
           </motion.div>
         </motion.div>
       </div>
